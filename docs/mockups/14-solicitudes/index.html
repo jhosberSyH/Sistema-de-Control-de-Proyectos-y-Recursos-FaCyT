@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Mis solicitudes FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Solicitudes del coordinador (F5.1 a F5.3): lista por estado del flujo, formularios con guardado automático y validación al enviar */
+.flujo { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 14px; color: var(--muted); }
+.flujo span.paso { padding: 4px 10px; border: 1px solid var(--line); border-radius: var(--r-s); background: var(--surface); color: var(--text); font-family: var(--f-mono); font-size: 12.5px; }
+
+.lista-s { padding: 0; overflow: hidden; }
+.lista-s .pestanas { padding: 0 12px; }
+.lista-s .tabla-env { padding: 0 8px; }
+.form-s { padding: 22px; display: grid; gap: 18px; }
+.guardado { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); }
+.guardado .ico { width: 16px; height: 16px; color: var(--ok); }
+.items { display: grid; gap: 0; border: 1px solid var(--line); border-radius: var(--r-l); overflow: hidden; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) 150px 200px 44px; gap: 12px; align-items: end; padding: 14px; border-top: 1px solid var(--line); }
+.item:first-child { border-top: 0; }
+.item .disp { font-size: 14px; color: var(--muted); padding-bottom: 12px; }
+.item .disp b { color: var(--text); font-variant-numeric: tabular-nums; }
+.item.excede .disp { color: var(--text); }
+.item .quitar { width: 44px; height: 44px; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: var(--r-m); cursor: pointer; display: grid; place-items: center; }
+.vista-lista, .vista-retiro, .vista-gasto { display: none; }
+.mk[data-modo="lista"] .vista-lista, .mk[data-modo="retiro"] .vista-retiro, .mk[data-modo="gasto"] .vista-gasto { display: grid; gap: 20px; }
+@container mk (max-width: 760px) {
+  .item { grid-template-columns: minmax(0, 1fr) 44px; }
+  .item .campo:first-child { grid-column: 1 / -1; }
+  .item .disp { grid-column: 1 / -1; padding: 0; }
+}
+</style>
+</head>
+<body>
+
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app" data-modo="lista">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+
+          <div class="vista-lista">
+            <div class="cab">
+              <div>
+                <ol class="migas"><li><a href="#contenido">Inicio</a></li><li>Solicitudes</li></ol>
+                <h1>Mis solicitudes</h1>
+                <p class="sub">Todo gasto o retiro de insumos sigue el mismo camino.</p>
+                <div class="flujo" style="margin-top:10px"><span class="paso">Borrador</span>→<span class="paso">Pendiente de Aprobación</span>→<span class="paso">Aprobado o Rechazado</span>→<span class="paso">Ejecutado</span></div>
+              </div>
+              <div class="acc"><button class="btn btn-sec" type="button" data-ir="gasto"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg>Solicitud de gasto</button><button class="btn btn-pri" type="button" data-ir="retiro"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg>Solicitud de retiro</button></div>
+            </div>
+            <section class="tarjeta lista-s" aria-label="Solicitudes">
+              <div class="pestanas" role="tablist" aria-label="Estado">
+                <button type="button" role="tab" aria-selected="true">Todas (6)</button><button type="button" role="tab" aria-selected="false">Borrador (1)</button><button type="button" role="tab" aria-selected="false">Pendientes (1)</button><button type="button" role="tab" aria-selected="false">Aprobadas (1)</button><button type="button" role="tab" aria-selected="false">Rechazadas (1)</button><button type="button" role="tab" aria-selected="false">Ejecutadas (2)</button>
+              </div>
+              <div class="tabla-env"><table class="datos apilable"><thead><tr><th scope="col">Solicitud</th><th scope="col">Proyecto</th><th scope="col">Detalle</th><th scope="col">Estado</th><th scope="col">Actualizada</th><th scope="col"><span class="vh">Acción</span></th></tr></thead><tbody id="filas"></tbody></table></div>
+            </section>
+          </div>
+
+          <div class="vista-retiro">
+            <div class="cab">
+              <div>
+                <ol class="migas"><li><a href="#contenido">Solicitudes</a></li><li>Nueva solicitud de retiro</li></ol>
+                <h1>Nueva solicitud de retiro</h1>
+                <p class="sub"><span class="guardado"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg>Borrador <span class="mono">SOL-125</span> guardado a las 10:42</span></p>
+              </div>
+            </div>
+            <form class="tarjeta form-s" novalidate aria-label="Solicitud de retiro">
+              <div class="form-rejilla">
+                <div class="campo"><label for="r-proy">Proyecto</label><select class="entrada" id="r-proy"><option>QUI-024 · Síntesis de catalizadores de óxido de cerio</option><option>QUI-031 · Degradación fotocatalítica de colorantes</option></select></div>
+                <div class="campo"><label for="r-uso">Para qué se usará <span class="obligatorio">(opcional)</span></label><input class="entrada" id="r-uso" value="Lavado de crisoles después de la calcinación"></div>
+              </div>
+              <div>
+                <h2 style="font-size:17px;font-family:var(--f-body);margin-bottom:10px">Insumos</h2>
+                <div class="items">
+                  <div class="item"><div class="campo"><label for="i1">Insumo</label><select class="entrada" id="i1"><option>Etanol 96 %</option></select></div><div class="campo"><label for="c1">Cantidad (L)</label><input class="entrada num" id="c1" value="2" inputmode="decimal" style="text-align:right"></div><p class="disp">Disponible <b>28 L</b></p><button class="quitar" type="button" aria-label="Quitar etanol"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></button></div>
+                  <div class="item excede"><div class="campo"><label for="i2">Insumo</label><select class="entrada" id="i2"><option>Acetona grado analítico</option></select></div><div class="campo"><label for="c2">Cantidad (L)</label><input class="entrada num" id="c2" value="4" inputmode="decimal" style="text-align:right"></div><p class="disp"><span class="estado warn"><svg class="ico" aria-hidden="true"><use href="#i-alerta"/></svg>Pides 4 L y hay 2,5 L</span></p><button class="quitar" type="button" aria-label="Quitar acetona"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></button></div>
+                </div>
+                <button class="btn btn-txt" type="button" style="margin-top:8px"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg>Agregar insumo</button>
+              </div>
+              <div class="aviso warn"><svg class="ico" aria-hidden="true"><use href="#i-alerta"/></svg><p>Puedes enviarla así: el aprobador verá que la acetona no alcanza. Ya hay una reposición de acetona en curso.</p></div>
+              <div class="acc-form"><button class="btn btn-sec" type="button" data-ir="lista">Volver a mis solicitudes</button><button class="btn btn-pri" type="submit">Enviar a aprobación</button></div>
+            </form>
+          </div>
+
+          <div class="vista-gasto">
+            <div class="cab">
+              <div>
+                <ol class="migas"><li><a href="#contenido">Solicitudes</a></li><li>Nueva solicitud de gasto</li></ol>
+                <h1>Nueva solicitud de gasto</h1>
+                <p class="sub"><span class="guardado"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg>Borrador <span class="mono">SOL-126</span> guardado a las 10:58</span></p>
+              </div>
+            </div>
+            <form class="tarjeta form-s" novalidate aria-label="Solicitud de gasto">
+              <div class="aviso err" role="alert"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><div><p><b>Faltan 2 datos para enviar.</b> Los marcamos abajo. Tu borrador sigue guardado.</p></div></div>
+              <div class="form-rejilla">
+                <div class="campo"><label for="g-proy">Proyecto</label><select class="entrada" id="g-proy"><option>QUI-031 · Degradación fotocatalítica de colorantes</option></select></div>
+                <div class="campo"><label for="g-tipo">Insumo o servicio</label><input class="entrada" id="g-tipo" value="Dióxido de titanio P25, 500 g"></div>
+                <div class="campo error"><label for="g-cant">Cantidad</label><input class="entrada" id="g-cant" value="" aria-invalid="true" aria-describedby="g-cant-e"><p class="msg-error" id="g-cant-e"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><span>Escribe la cantidad, por ejemplo 1 frasco.</span></p></div>
+                <div class="campo error"><label for="g-monto">Monto estimado (US$)</label><input class="entrada num" id="g-monto" value="" aria-invalid="true" aria-describedby="g-monto-e"><p class="msg-error" id="g-monto-e"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><span>Escribe el monto estimado. Si tienes cotización, usa ese valor.</span></p></div>
+                <div class="campo ancho"><label for="g-desc">Descripción</label><textarea class="entrada" id="g-desc">Catalizador de referencia para comparar la degradación del naranja de metilo.</textarea></div>
+                <div class="campo ancho"><label for="g-adj">Cotización <span class="obligatorio">(opcional, ayuda a que la aprueben)</span></label><input class="entrada" id="g-adj" type="file" style="padding-top:10px"></div>
+              </div>
+              <p class="sec" style="font-size:14px">QUI-031 lleva 83 % de ejecución presupuestaria. El aprobador lo verá junto a tu solicitud.</p>
+              <div class="acc-form"><button class="btn btn-sec" type="button" data-ir="lista">Volver a mis solicitudes</button><button class="btn btn-pri" type="submit">Enviar a aprobación</button></div>
+            </form>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Mis solicitudes", tanda: 4,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Pantalla"><button type="button" data-ir="lista" aria-pressed="true">Lista</button><button type="button" data-ir="retiro" aria-pressed="false">Retiro</button><button type="button" data-ir="gasto" aria-pressed="false">Gasto con datos faltantes</button></div>' };
+window.APP = { rol: "coo", activo: "solicitudes", titulo: "Solicitudes", ins: "Solicitudes y priorización" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var S = [
+    ["SOL-125", "Retiro", "QUI-024", "Etanol 96 %, acetona", "neutro", "Borrador", "Hoy, 10:42", "Seguir editando"],
+    ["SOL-119", "Gasto", "QUI-024", "Nitrato de cerio, US$ 640,00", "warn", "Pendiente de Aprobación", "Ayer, 16:05", "Ver"],
+    ["SOL-121", "Retiro", "QUI-024", "Hexano y papel de filtro", "ok", "Aprobado", "Hoy, 08:15", "Ver"],
+    ["SOL-120", "Retiro", "QUI-024", "Acetona 1 L, etanol 96 % 2 L", "ok", "Ejecutado", "26/10, 11:20", "Ver despacho"],
+    ["SOL-118", "Gasto", "QUI-031", "Filtros de jeringa 0,22 µm", "err", "Rechazado", "24/10, 09:30", "Crear una nueva"],
+    ["SOL-117", "Retiro", "QUI-031", "Guantes de nitrilo M", "ok", "Ejecutado", "22/10, 14:10", "Ver despacho"]
+  ];
+  document.getElementById("filas").innerHTML = S.map(function (s) {
+    return '<tr><td><b class="mono">' + s[0] + "</b><small>" + s[1] + '</small></td><td class="mono" data-e="">' + s[2] + "</td><td>" + s[3] + (s[5] === "Rechazado" ? '<small>«Falta la cotización del proveedor»</small>' : "") + "</td><td>" + est(s[4], s[5]) + '</td><td data-e="Actualizada:">' + s[6] + '</td><td class="acc-fila"><button class="btn btn-sec btn-chico" type="button">' + s[7] + "</button></td></tr>";
+  }).join("");
+  function ir(m) {
+    document.querySelector(".mk").setAttribute("data-modo", m);
+    document.querySelectorAll("#comparador [data-ir]").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.ir === m)); });
+  }
+  document.addEventListener("click", function (e) { var b = e.target.closest("[data-ir]"); if (b) ir(b.dataset.ir); });
+})();
+</script>
+
+</body>
+</html>

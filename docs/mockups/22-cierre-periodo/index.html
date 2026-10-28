@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Cierre de período FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Cierre de período (F7.1, F7.2): el solapamiento se valida al abrir la revisión; después, tablero de confirmaciones, recordatorio y cierre */
+.pasos { display: flex; gap: 0; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
+.pasos li { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 0; font-size: 15px; color: var(--muted); }
+.pasos li + li::before { content: ""; width: 28px; height: 2px; background: var(--line); margin-right: 6px; }
+.pasos .num { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; border: 2px solid var(--line); }
+.pasos li[aria-current="step"] { color: var(--text); font-weight: 600; }
+.pasos li[aria-current="step"] .num { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
+.pasos li.hecho .num { border-color: var(--ok); color: var(--ok); }
+.abrir { padding: 22px; display: grid; gap: 18px; max-width: 760px; }
+.tablero { padding: 0; overflow: hidden; }
+.tablero .cab-t { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; padding: 18px; border-bottom: 1px solid var(--line); }
+.tablero .tabla-env { padding: 0 8px; }
+.prog { display: grid; gap: 6px; min-width: 260px; }
+.prog .t { display: flex; justify-content: space-between; font-size: 15px; }
+.cerrar { padding: 20px; display: grid; gap: 14px; }
+.vista-abrir, .vista-tablero { display: none; }
+.mk[data-paso="abrir"] .vista-abrir, .mk[data-paso="tablero"] .vista-tablero { display: grid; gap: 20px; }
+</style>
+</head>
+<body>
+
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app" data-paso="tablero">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Inicio</a></li><li>Gastos compartidos</li></ol>
+              <h1>Cierre de período</h1>
+              <p class="sub">Primero los coordinadores revisan sus cargos. Después cierras el período y repartes los gastos compartidos.</p>
+            </div>
+          </div>
+          <ol class="pasos" aria-label="Pasos del cierre" id="pasos">
+            <li id="p1"><span class="num">1</span>Abrir revisión</li>
+            <li id="p2"><span class="num">2</span>Confirmaciones</li>
+            <li id="p3"><span class="num">3</span>Cierre</li>
+            <li id="p4"><span class="num">4</span>Reparto de gastos</li>
+          </ol>
+
+          <div class="vista-abrir">
+            <form class="tarjeta abrir" novalidate aria-label="Abrir revisión">
+              <h2 style="font-size:19px">Abrir la revisión del período</h2>
+              <fieldset style="border:0;padding:0;margin:0"><legend style="font-weight:600;font-size:15px;margin-bottom:6px">Tipo</legend>
+                <div class="radios"><label><input type="radio" name="tp" checked> Mensual</label><label><input type="radio" name="tp"> Trimestral</label></div></fieldset>
+              <div class="form-rejilla">
+                <div class="campo" id="c-desde"><label for="desde">Desde</label><input class="entrada" id="desde" type="date" value="2026-10-01"></div>
+                <div class="campo"><label for="hasta">Hasta</label><input class="entrada" id="hasta" type="date" value="2026-10-31"></div>
+              </div>
+              <div class="aviso err" id="msg-cruce" hidden role="alert"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><div><p><b>Se cruza con el período cerrado del tercer trimestre</b> (01/07/2026 al 30/09/2026).</p><p>Empieza el período el 01/10/2026 o después. No se envió nada a los coordinadores.</p></div></div>
+              <p class="sec" style="font-size:14.5px" id="msg-envio">Al abrir, cada coordinador recibe en su bandeja la lista de cargos de sus proyectos para revisarla.</p>
+              <div class="acc-form" style="justify-content:flex-start"><button class="btn btn-pri" type="submit">Abrir revisión y enviar cargos</button></div>
+            </form>
+          </div>
+
+          <div class="vista-tablero">
+            <section class="tarjeta tablero" aria-labelledby="t-tab">
+              <div class="cab-t">
+                <div><h2 id="t-tab" style="font-size:19px">Octubre de 2026 · del 01/10 al 31/10</h2><p class="sec" style="font-size:14.5px">Revisión abierta el 23/10 por Carmen Pérez</p></div>
+                <div class="prog"><div class="t"><span>2 de 7 proyectos confirmaron</span><b class="num">29 %</b></div><div class="barra-prog alto"><i style="width:29%"></i></div></div>
+              </div>
+              <div class="tabla-env"><table class="datos apilable"><thead><tr><th scope="col">Proyecto</th><th scope="col">Coordinador</th><th scope="col" class="n">Cargos</th><th scope="col" class="n">Monto</th><th scope="col">Estado</th></tr></thead><tbody id="filas"></tbody></table></div>
+            </section>
+            <section class="tarjeta cerrar" aria-labelledby="t-cerrar">
+              <h2 id="t-cerrar" style="font-size:19px">Cerrar el período</h2>
+              <div class="aviso warn"><svg class="ico" aria-hidden="true"><use href="#i-alerta"/></svg><div><p><b>5 proyectos todavía no confirmaron.</b> Puedes enviarles un recordatorio o cerrar igual; el cierre queda registrado con las confirmaciones que falten.</p><p>Al cerrar, no se aceptan despachos, gastos ni correcciones con fecha entre el 01/10 y el 31/10.</p></div></div>
+              <div class="acc-form" style="justify-content:flex-start"><button class="btn btn-sec" type="button">Enviar recordatorio a 3 coordinadores</button><button class="btn btn-pri" type="button">Cerrar octubre de 2026</button></div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Cierre de período", tanda: 5,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Paso"><button type="button" data-paso="abrir" aria-pressed="false">Abrir revisión</button><button type="button" data-paso="abrir" data-cruce="1" aria-pressed="false">Período cruzado</button><button type="button" data-paso="tablero" aria-pressed="true">Confirmaciones</button></div>' };
+window.APP = { rol: "apr", activo: "cierre", titulo: "Cierre", ins: "Cierre de período y gastos compartidos" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var F = [
+    ["BIO-011", "María Fernanda Ochoa", 18, "2.906,40", "ok", "Confirmado el 26/10"],
+    ["QUI-031", "Daniela Rivas", 7, "846,20", "ok", "Confirmado el 25/10"],
+    ["QUI-024", "Daniela Rivas", 12, "1.284,50", "warn", "Por confirmar"],
+    ["FIS-008", "Andrés Salazar", 6, "512,80", "warn", "Corrección pendiente"],
+    ["FIS-010", "Andrés Salazar", 2, "64,30", "warn", "Por confirmar"],
+    ["QUI-027", "Rosa Linares", 5, "388,00", "warn", "Por confirmar"],
+    ["BIO-015", null, 9, "1.730,10", "err", "Sin coordinador"]
+  ];
+  document.getElementById("filas").innerHTML = F.map(function (f) {
+    return '<tr><td class="mono">' + f[0] + '</td><td data-e="Coordinador:">' + (f[1] || '<a href="#contenido">Asignar coordinador</a>') + '</td><td class="n" data-e="Cargos:">' + f[2] + '</td><td class="n" data-e="Monto:">US$ ' + f[3] + "</td><td>" + est(f[4], f[5]) + "</td></tr>";
+  }).join("");
+  function paso(p, cruce) {
+    document.querySelector(".mk").setAttribute("data-paso", p);
+    var i = p === "abrir" ? 1 : 2;
+    ["p1", "p2", "p3", "p4"].forEach(function (id, k) { var li = document.getElementById(id); li.removeAttribute("aria-current"); li.classList.toggle("hecho", k + 1 < i); if (k + 1 === i) li.setAttribute("aria-current", "step"); });
+    document.getElementById("msg-cruce").hidden = !cruce;
+    document.getElementById("msg-envio").hidden = !!cruce;
+    document.getElementById("c-desde").classList.toggle("error", !!cruce);
+    document.getElementById("desde").value = cruce ? "2026-09-15" : "2026-10-01";
+  }
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-paso]"); if (!b) return;
+    paso(b.dataset.paso, b.dataset.cruce);
+    document.querySelectorAll("[data-paso]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+  paso("tablero");
+})();
+</script>
+
+</body>
+</html>

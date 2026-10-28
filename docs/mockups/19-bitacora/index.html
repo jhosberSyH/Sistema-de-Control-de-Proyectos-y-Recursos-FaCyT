@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Bitácora de despachos FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Bitácora inalterable (F6.3) y pedido de corrección desde el propio despacho (F6.5); la corrección aprobada aparece como movimiento enlazado */
+.bit { padding: 0; overflow: hidden; }
+.bit .herr { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.bit .tabla-env { padding: 0 8px; }
+.candado { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); }
+.candado .ico { width: 16px; height: 16px; }
+tr.comp td { background: var(--bg); }
+tr.comp td:first-child { box-shadow: inset 4px 0 0 var(--info); }
+.enlace-c { display: inline-flex; gap: 4px; align-items: center; font-size: 13.5px; color: var(--muted); }
+.enlace-c .ico { width: 14px; height: 14px; }
+.campo-orig { display: grid; gap: 4px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r-m); background: var(--bg); }
+.campo-orig span { font-size: 13.5px; color: var(--muted); }
+.campo-orig b { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Mis proyectos</a></li><li>Bitácora de despachos</li></ol>
+              <h1>Bitácora de despachos</h1>
+              <p class="sub">Cada salida del almacén hacia tus proyectos. <span class="candado"><svg class="ico" aria-hidden="true"><use href="#i-candado"/></svg>Nadie puede editar ni borrar un registro. Si hay un error, pide una corrección.</span></p>
+            </div>
+          </div>
+          <section class="tarjeta bit" aria-label="Despachos">
+            <form class="herr" aria-label="Filtros">
+              <div class="campo"><label for="f-proy">Proyecto</label><select class="entrada" id="f-proy"><option>Todos mis proyectos</option><option>QUI-024</option><option>QUI-031</option></select></div>
+              <div class="campo"><label for="f-desde">Desde</label><input class="entrada" id="f-desde" type="date" value="2026-10-01"></div>
+              <div class="campo"><label for="f-hasta">Hasta</label><input class="entrada" id="f-hasta" type="date" value="2026-10-27"></div>
+              <div class="campo busq"><label for="q">Insumo</label><svg class="ico" aria-hidden="true"><use href="#i-buscar"/></svg><input class="entrada" id="q" type="search" placeholder="Nombre del insumo"></div>
+            </form>
+            <div class="tabla-env"><table class="datos apilable"><thead><tr><th scope="col">Despacho</th><th scope="col">Fecha y hora</th><th scope="col">Proyecto</th><th scope="col">Insumo y lote</th><th scope="col" class="n">Cantidad</th><th scope="col">Retiró</th><th scope="col"><span class="vh">Acción</span></th></tr></thead><tbody>
+              <tr><td class="mono">DES-0318</td><td data-e="">26/10/2026 11:20</td><td class="mono">QUI-024</td><td>Acetona grado analítico<small class="mono">L-0402</small></td><td class="n" data-e="Cantidad:">1 L</td><td data-e="Retiró:">Daniela Rivas</td><td class="acc-fila"><button class="btn btn-sec btn-chico" type="button" data-abrir="1">Pedir corrección</button></td></tr>
+              <tr><td class="mono">DES-0318</td><td data-e="">26/10/2026 11:20</td><td class="mono">QUI-024</td><td>Etanol 96 %<small class="mono">L-0398</small></td><td class="n" data-e="Cantidad:">2 L</td><td data-e="Retiró:">Daniela Rivas</td><td class="acc-fila"><button class="btn btn-sec btn-chico" type="button">Pedir corrección</button></td></tr>
+              <tr><td class="mono">DES-0309</td><td data-e="">19/10/2026 09:05</td><td class="mono">QUI-031</td><td>Peróxido de hidrógeno 30 %<small class="mono">L-0391</small></td><td class="n" data-e="Cantidad:">0,5 L</td><td data-e="Retiró:">Ana Paredes</td><td class="acc-fila"><span class="estado warn"><svg class="ico" aria-hidden="true"><use href="#i-reloj"/></svg>Corrección pendiente</span></td></tr>
+              <tr class="comp"><td class="mono">DES-0305</td><td data-e="">16/10/2026 14:30</td><td class="mono">QUI-024</td><td>Nitrato de cerio hexahidratado<small><span class="enlace-c"><svg class="ico" aria-hidden="true"><use href="#i-flecha"/></svg>Corrige a <span class="mono">DES-0297</span>, aprobada por Carmen Pérez</span></small></td><td class="n" data-e="Cantidad:">−20 g</td><td data-e="">Movimiento de corrección</td><td class="acc-fila"></td></tr>
+              <tr><td class="mono">DES-0297</td><td data-e="">14/10/2026 10:10</td><td class="mono">QUI-024</td><td>Nitrato de cerio hexahidratado<small class="mono">L-0360</small></td><td class="n" data-e="Cantidad:">70 g</td><td data-e="Retiró:">Daniela Rivas</td><td class="acc-fila"><span class="enlace-c">Corregido por <span class="mono">DES-0305</span></span></td></tr>
+            </tbody></table></div>
+          </section>
+        </main>
+      </div>
+
+      <div class="capa" id="capa-cor" hidden>
+        <form class="dialogo" role="dialog" aria-modal="true" aria-labelledby="t-cor" novalidate>
+          <div class="dialogo-cab"><div><h2 id="t-cor">Pedir corrección de <span class="mono">DES-0318</span></h2><p class="sec">Acetona grado analítico · lote <span class="mono">L-0402</span> · 26/10/2026 11:20</p></div><button class="icono-btn" type="button" aria-label="Cerrar"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></button></div>
+          <fieldset style="border:0;padding:0;margin:0"><legend style="font-weight:600;font-size:15px;margin-bottom:6px">Qué está mal</legend>
+            <div class="radios"><label><input type="radio" name="dato" checked> La cantidad</label><label><input type="radio" name="dato"> El proyecto</label></div>
+          </fieldset>
+          <div class="form-rejilla">
+            <div class="campo-orig"><span>Registrado</span><b>1 L</b></div>
+            <div class="campo"><label for="nuevo">Cantidad correcta</label><div style="display:flex;gap:8px;align-items:center"><input class="entrada num" id="nuevo" value="0,5" style="text-align:right"><span class="sec">L</span></div></div>
+            <div class="campo ancho" id="c-mot"><label for="mot">Motivo</label><textarea class="entrada" id="mot" aria-describedby="mot-a mot-e">Devolví al almacén un frasco de 0,5 L sin abrir el mismo día.</textarea>
+              <span class="ayuda" id="mot-a">El aprobador lo verá junto al despacho original.</span>
+              <p class="msg-error" id="mot-e" hidden><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><span>Escribe el motivo de la corrección. Sin motivo no se puede enviar.</span></p></div>
+          </div>
+          <div class="aviso info"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><p>El despacho original no cambia. Si el aprobador acepta, se registra un movimiento nuevo de −0,5 L enlazado a este.</p></div>
+          <div class="acc-form"><button class="btn btn-sec" type="button">Cancelar</button><button class="btn btn-pri" type="submit">Enviar corrección</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Bitácora de despachos", tanda: 4,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-c="no" aria-pressed="true">Bitácora</button><button type="button" data-c="si" aria-pressed="false">Pedir corrección</button><button type="button" data-c="err" aria-pressed="false">Sin motivo</button></div>' };
+window.APP = { rol: "coo", activo: "proyectos", titulo: "Bitácora", ins: "Almacén" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  function estado(c) {
+    var err = c === "err";
+    document.getElementById("capa-cor").hidden = c === "no";
+    document.getElementById("c-mot").classList.toggle("error", err);
+    document.getElementById("mot-e").hidden = !err;
+    document.getElementById("mot").value = err ? "" : "Devolví al almacén un frasco de 0,5 L sin abrir el mismo día.";
+    document.getElementById("mot").setAttribute("aria-invalid", String(err));
+    document.querySelectorAll("[data-c]").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.c === c)); });
+  }
+  document.getElementById("comparador").addEventListener("click", function (e) { var b = e.target.closest("[data-c]"); if (b) estado(b.dataset.c); });
+  document.querySelector(".mk").addEventListener("click", function (e) { if (e.target.closest("[data-abrir]")) estado("si"); });
+})();
+</script>
+
+</body>
+</html>

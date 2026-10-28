@@ -7,6 +7,8 @@
 | Versión | Fecha | Autor | Descripción del cambio |
 |---|---|---|---|
 | 0.1 | 25/10/2026 | Equipo del proyecto | Borrador inicial con los requisitos del enunciado, las decisiones D1 a D13 y las propuestas aprobadas RF-35, RF-36, RF-37, IA-01 y RF-38 |
+| 0.1.1 | 27/10/2026 | Equipo del proyecto | Simplificación de los flujos aprobada el 27/10/2026 (cambios A1 a E4 de `docs/diagramas/flujos/revision_flujos.md`). Cambia el Cómo de F1.2, F2.3, F2.4, F3.1 a F3.7, F4.2, F5.1, F5.3, F5.4, F5.7, F6.1, F6.2, F6.6, F7.1 a F7.4, F8.2 a F8.4 y F8.6, los criterios de HU-05, HU-09, HU-15, HU-18 y HU-23, y el anexo C (SP-05 resuelto, SP-13 nuevo). Solo en Markdown |
+| 0.1.2 | 28/10/2026 | Equipo del proyecto | Glosario: en la interfaz el prorrateo se llama "reparto de gastos compartidos" y el overhead, "gastos compartidos", para que se entienda mejor. Los requisitos no cambian. Solo en Markdown |
 
 ## Índice
 
@@ -58,12 +60,12 @@ La línea **Origen** de cada funcionalidad remite al requisito de trabajo de `in
 |---|---|
 | Audit log | Registro de auditoría que guarda cada creación, edición, eliminación y cambio de estado, con fecha y hora, usuario y dirección IP |
 | Bitácora de despachos | Historial de salidas de almacén que registra fecha, hora, proyecto destino, insumo, cantidad despachada y usuario responsable del retiro |
-| Consumible de uso general | Consumible que se compra por lotes institucionales sin asignarlo a un proyecto, por ejemplo guantes de nitrilo, papel absorbente o solventes multipropósito. También se le llama *overhead* |
+| Consumible de uso general | Consumible que se compra por lotes institucionales sin asignarlo a un proyecto, por ejemplo guantes de nitrilo, papel absorbente o solventes multipropósito. También se le llama *overhead*. En la interfaz su costo aparece como "gastos compartidos" |
 | Hito | Etapa de un proyecto con un peso que indica cuánto aporta al avance físico total |
 | Insumo | Elemento del catálogo unificado de materia prima y consumibles |
 | Lote | Cantidad de un insumo que entra al almacén en una misma compra, con fecha de ingreso, costo unitario, proveedor y fecha de vencimiento |
 | Período contable | Rango de fechas, mensual o trimestral, cuyo cierre habilita el prorrateo |
-| Prorrateo | Reparto del costo de los lotes de consumibles de uso general entre los proyectos activos del período |
+| Prorrateo | Reparto del costo de los lotes de consumibles de uso general entre los proyectos activos del período. En la interfaz se llama "reparto de gastos compartidos" y el menú, "Gastos compartidos". Los criterios de RF-26 y RF-27 se muestran como "Según el consumo de cada proyecto" y "En partes iguales", y el reporte de RF-32, como "Resumen del reparto de gastos compartidos". El nombre en pantalla no cambia el requisito |
 | Proyecto activo | Proyecto con estatus operativo "En ejecución", según RN-05 |
 | Solicitud | Pedido de gasto o de retiro de insumos que sigue el flujo de estados de RN-03 |
 
@@ -106,7 +108,7 @@ Cubre las cuentas de usuario, el catálogo de ubicaciones y los parámetros gene
 
 **Qué:** Cubre la edición del nombre, el correo y el rol de una cuenta existente. El cambio de rol aplica desde la siguiente acción del usuario. Cada cambio queda en el audit log, según RN-06.
 
-**Cómo:** El administrador busca la cuenta en el listado, abre su ficha y modifica los datos. Al guardar, el sistema valida que el correo siga siendo único. Si el usuario era Coordinador y pasa a otro rol, el sistema avisa qué proyectos quedan sin coordinador para que se reasignen con F2.2.
+**Cómo:** El administrador busca la cuenta en el listado, abre su ficha y modifica los datos. Al guardar, el sistema valida que el correo siga siendo único. Si otra cuenta ya lo usa, la señala y conserva lo escrito. Si el usuario era Coordinador y pasa a otro rol, el sistema muestra qué proyectos quedarían sin coordinador y pide confirmar el cambio. Si el administrador confirma, esos proyectos quedan marcados en su bandeja para reasignarlos con F2.2. Si no confirma, la cuenta conserva su rol.
 
 **Para qué:** Las personas cambian de función durante la vida de un proyecto. Sin edición, habría que crear cuentas nuevas y el historial de una persona quedaría partido en dos.
 
@@ -178,7 +180,7 @@ Cubre el registro de los proyectos, su estatus operativo, sus hitos y el cálcul
 
 **Qué:** Cubre el paso de un proyecto entre Propuesta, En ejecución, Suspendido y Finalizado. El estatus "En ejecución" define qué proyectos son activos para el prorrateo y el dashboard, según RN-05. `[PROPUESTA]` Este documento asigna el cambio al Administrador porque él registra los proyectos. El enunciado no dice qué rol lo hace.
 
-**Cómo:** El administrador abre la ficha del proyecto y elige el nuevo estatus. El sistema registra el cambio en el audit log con el estatus anterior y el nuevo. Un proyecto "Finalizado" ya no admite solicitudes nuevas ni reservas de equipos.
+**Cómo:** El administrador abre la ficha del proyecto y elige el nuevo estatus. El sistema registra el cambio en el audit log con el estatus anterior y el nuevo. Un proyecto "Suspendido" puede volver a "En ejecución" o pasar a "Finalizado". Un proyecto "Finalizado" ya no admite solicitudes nuevas ni reservas de equipos. `[POR CONFIRMAR: si se permite reactivar un proyecto suspendido]`.
 
 **Para qué:** El estatus decide qué proyectos reciben costo de overhead y cuáles aparecen en el dashboard. Si cambia sin registro, el reparto de un período no se puede explicar después.
 
@@ -188,7 +190,7 @@ Cubre el registro de los proyectos, su estatus operativo, sus hitos y el cálcul
 
 **Qué:** Cubre la lista de hitos de un proyecto, cada uno con nombre, fecha prevista y peso. La suma de los pesos de un proyecto es 100.
 
-**Cómo:** El coordinador abre su proyecto y agrega los hitos. Al guardar, el sistema muestra la suma de pesos y no deja confirmar la lista si no llega a 100. Mientras la suma no sea 100, el proyecto muestra su avance físico como no disponible.
+**Cómo:** El coordinador abre su proyecto y agrega los hitos. Mientras los agrega, el sistema muestra la suma de pesos y cuánto falta para llegar a 100, y no deja confirmar la lista si no llega a 100. Mientras la suma no sea 100, el proyecto muestra su avance físico como no disponible.
 
 **Para qué:** El avance físico se calcula a partir de los hitos. Sin pesos, un hito menor pesaría lo mismo que la etapa principal del proyecto.
 
@@ -238,19 +240,19 @@ Cubre el catálogo unificado de insumos, el stock por lote y los avisos que se d
 
 #### F3.1 — El administrador registra un insumo en el catálogo unificado
 
-**Qué:** Cubre el alta de materia prima y de consumibles en un mismo catálogo, con nombre, unidad de medida y tipo. El tipo indica si el insumo es materia prima, consumible de un proyecto o consumible de uso general. Los consumibles de uso general siguen RN-02.
+**Qué:** Cubre el alta de materia prima y de consumibles en un mismo catálogo, con nombre, unidad de medida, tipo y stock mínimo. El tipo indica si el insumo es materia prima, consumible de un proyecto o consumible de uso general. Los consumibles de uso general siguen RN-02.
 
-**Cómo:** El administrador abre el catálogo y agrega un insumo. Elige el tipo y la unidad de medida. El sistema impide dos insumos activos con el mismo nombre y la misma unidad. El insumo nace con stock cero, que solo cambia con recepciones y despachos.
+**Cómo:** El administrador abre el catálogo y agrega un insumo. En el mismo formulario elige el tipo y la unidad de medida y escribe el stock mínimo (F3.2). El sistema impide dos insumos activos con el mismo nombre y la misma unidad. El insumo nace con stock cero, que solo cambia con recepciones y despachos.
 
 **Para qué:** Hoy la materia prima y los consumibles viven en hojas distintas. Un catálogo único da un solo lugar para consultar existencias y marca qué insumos entran al prorrateo.
 
-**Origen:** RF-03 y RF-17, `insumos/requisitos_base.md`.
+**Origen:** RF-03, RF-17 y RF-19, `insumos/requisitos_base.md`.
 
 #### F3.2 — El administrador configura el stock mínimo de cada insumo
 
 **Qué:** Cubre la cantidad mínima de cada insumo, en su unidad de medida. Un insumo sin stock mínimo configurado no genera alertas ni reposiciones.
 
-**Cómo:** Desde la ficha del insumo, el administrador escribe el stock mínimo y guarda. El sistema valida que sea un número positivo. Si el stock actual ya está por debajo del valor nuevo, la alerta de F3.4 aparece de inmediato.
+**Cómo:** El stock mínimo se captura al registrar el insumo en F3.1. Después, desde la ficha del insumo, el administrador lo puede cambiar y guardar. El sistema valida que sea un número positivo. Si el stock actual ya está por debajo del valor nuevo, la alerta de F3.4 aparece de inmediato.
 
 **Para qué:** Cada insumo se consume a un ritmo distinto. Un mínimo por insumo hace que la alerta llegue a tiempo para los de alto consumo sin llenar de avisos los que casi no se usan.
 
@@ -260,7 +262,7 @@ Cubre el catálogo unificado de insumos, el stock por lote y los avisos que se d
 
 **Qué:** Cubre el stock de cada insumo y de cada lote. Aumenta con cada recepción (F6.1) y disminuye con cada despacho (F6.2) en la misma operación que los registra, según RNF-10.
 
-**Cómo:** Cuando el aprobador confirma una recepción o un despacho, el sistema guarda el movimiento y ajusta el stock al mismo tiempo. Si una de las dos cosas falla, no se guarda ninguna y el aprobador ve el error. La ficha del insumo muestra el stock total y el stock de cada lote.
+**Cómo:** Cuando el aprobador confirma una recepción o un despacho, el sistema guarda el movimiento y ajusta el stock al mismo tiempo. Si una de las dos cosas falla, no se guarda ninguna y el aprobador ve el error. La ficha del insumo muestra el stock total y el stock de cada lote. El movimiento y el ajuste del stock son un solo paso del Módulo 6. El Módulo 3 solo reacciona al stock nuevo con F3.4 y F3.5.
 
 **Para qué:** Hoy el stock de la hoja de cálculo se actualiza cuando alguien se acuerda. Un stock que cambia con el propio movimiento evita despachar lo que ya no hay.
 
@@ -270,7 +272,7 @@ Cubre el catálogo unificado de insumos, el stock por lote y los avisos que se d
 
 **Qué:** Cubre el aviso que aparece cuando el stock total de un insumo queda por debajo de su stock mínimo. La alerta se mantiene mientras el stock siga por debajo y desaparece cuando una recepción lo devuelve al mínimo o más.
 
-**Cómo:** Después de cada despacho, el sistema compara el stock con el mínimo. Si queda por debajo, el insumo aparece marcado en el listado del inventario y en las alertas críticas del dashboard (F8.1). La marca muestra el stock actual y el mínimo configurado.
+**Cómo:** Después de cada recepción, despacho o corrección, el sistema compara el stock con el mínimo. Si queda por debajo, el insumo aparece marcado en el listado del inventario y en las alertas críticas del dashboard (F8.1). La marca muestra el stock actual y el mínimo configurado.
 
 **Para qué:** Hoy los faltantes se descubren cuando alguien va a buscar el insumo y no está. La alerta avisa antes de que el faltante detenga un experimento.
 
@@ -280,7 +282,7 @@ Cubre el catálogo unificado de insumos, el stock por lote y los avisos que se d
 
 **Qué:** Cubre la creación automática de una solicitud de gasto en estado "Borrador" para reponer el insumo. No se crea una segunda solicitud mientras exista otra abierta para el mismo insumo. La solicitud sigue el flujo de RN-03 y no compra nada por sí sola.
 
-**Cómo:** Cuando aparece la alerta de F3.4, el sistema crea la solicitud de reposición con el insumo y la marca "Reposición automática", y la deja en la bandeja del aprobador. El aprobador revisa la cantidad, la corrige si hace falta y la envía a aprobación, o la descarta. `[POR CONFIRMAR: qué rol aprueba una solicitud de reposición que el propio Aprobador envía]`.
+**Cómo:** Cuando aparece la alerta de F3.4, el sistema crea la solicitud de reposición con el insumo y la marca "Reposición automática", y la deja en la bandeja del aprobador. El aprobador la abre con el pronóstico de F3.7 a la vista, corrige la cantidad si hace falta y elige entre aprobarla o descartarla. Al aprobarla, el sistema registra en el audit log, en la misma operación, las dos transiciones de RN-03, de "Borrador" a "Pendiente de Aprobación" y de ahí a "Aprobado". La solicitud la creó el sistema y no el aprobador, así que no es una autoaprobación.
 
 **Para qué:** Una alerta que nadie atiende no evita el faltante. Convertirla en una solicitud la pone dentro del flujo de aprobación, donde alguien tiene que decidir. ERPNext advierte que una solicitud automática se revisa antes de comprar, porque la regla de reorden puede estar desactualizada.
 
@@ -290,7 +292,7 @@ Cubre el catálogo unificado de insumos, el stock por lote y los avisos que se d
 
 **Qué:** Cubre el aviso para cada lote cuya fecha de vencimiento cae dentro de los días de anticipación configurados en F1.5. Un lote vencido aparece con el estado "Vencido" y no se puede despachar, según F6.2.
 
-**Cómo:** Cada día el sistema compara la fecha de vencimiento de cada lote con stock contra la fecha actual. Los lotes dentro del plazo aparecen marcados como "Próximo a vencer" en el inventario, con los días que faltan. Al pasar la fecha, el lote cambia a "Vencido". `[POR CONFIRMAR: días de anticipación iniciales]`.
+**Cómo:** Cada vez que se consulta el inventario o se va a despachar un lote, el sistema compara su fecha de vencimiento con la fecha actual. No hay una tarea diaria en segundo plano, porque el estado se calcula al consultar. Los lotes dentro del plazo aparecen marcados como "Próximo a vencer" en el inventario, con los días que faltan. Al pasar la fecha, el lote cambia a "Vencido". `[POR CONFIRMAR: días de anticipación iniciales]`.
 
 **Para qué:** Reactivos, solventes y medios biológicos vencen. Hoy se puede despachar un lote caducado sin que nadie lo note, y eso arruina el experimento que lo usa.
 
@@ -300,7 +302,7 @@ Cubre el catálogo unificado de insumos, el stock por lote y los avisos que se d
 
 **Qué:** Cubre el cálculo del consumo esperado de cada insumo en el próximo período contable, a partir del historial de la bitácora de despachos. El pronóstico solo se muestra para insumos con al menos los meses de historial configurados en F1.5. El pronóstico no crea solicitudes ni compras.
 
-**Cómo:** Al cerrar cada período, el sistema recalcula el pronóstico de cada insumo con los despachos registrados hasta ese momento. La ficha del insumo muestra el consumo esperado junto al stock actual y al stock mínimo. Si el insumo no tiene historial suficiente, la ficha dice "Sin historial suficiente para pronosticar".
+**Cómo:** Cuando alguien abre la ficha del insumo, el sistema calcula el pronóstico con los despachos registrados hasta ese momento. La ficha del insumo muestra el consumo esperado junto al stock actual y al stock mínimo. Si el insumo no tiene historial suficiente, la ficha dice "Sin historial suficiente para pronosticar".
 
 **Para qué:** Hoy el stock mínimo se fija a ojo y la alerta llega cuando el insumo ya está bajo. El pronóstico da una base para anticipar el consumo con datos que el sistema ya guarda.
 
@@ -332,7 +334,7 @@ Cubre el catálogo de equipos y maquinaria, su estado operacional, las reservas 
 
 **Qué:** Cubre el paso de un equipo entre Disponible, En uso y En mantenimiento. Un equipo En mantenimiento no admite reservas nuevas.
 
-**Cómo:** El administrador abre la ficha del equipo y elige el nuevo estado. Si el equipo pasa a "En mantenimiento" y tiene reservas aprobadas a futuro, el sistema las lista y avisa a cada coordinador afectado. El cambio queda en el audit log.
+**Cómo:** El administrador abre la ficha del equipo y elige el nuevo estado. Si el equipo pasa a "En mantenimiento" y tiene reservas aprobadas a futuro, el sistema las lista y avisa a cada coordinador afectado. Cuando termina el mantenimiento, el administrador registra el fin y el equipo vuelve a "Disponible". El cambio queda en el audit log.
 
 **Para qué:** Hoy un coordinador se entera de que el equipo está en reparación cuando llega al laboratorio. El estado visible evita reservar o planificar sobre un equipo que no se puede usar.
 
@@ -394,7 +396,7 @@ Cubre las solicitudes de gasto y de retiro de insumos, su paso por el flujo de e
 
 **Qué:** Cubre la solicitud de una adquisición, con proyecto, descripción, insumo o servicio, cantidad y monto estimado. La solicitud nace en estado "Borrador" según RN-03 y solo para proyectos del coordinador, según RN-07.
 
-**Cómo:** El coordinador elige "Nueva solicitud de gasto", selecciona uno de sus proyectos y llena los datos. Puede guardarla y volver a editarla mientras siga en "Borrador". El sistema no deja crear solicitudes para proyectos "Finalizado".
+**Cómo:** El coordinador elige "Nueva solicitud de gasto", selecciona uno de sus proyectos y llena los datos. El sistema guarda el borrador solo mientras el coordinador escribe, y el coordinador lo puede volver a editar mientras siga en "Borrador". El sistema no deja crear solicitudes para proyectos "Finalizado".
 
 **Para qué:** Hoy los gastos se piden por correo o de palabra y no queda registro de qué se pidió. La solicitud deja el pedido escrito y atado a un proyecto.
 
@@ -414,7 +416,7 @@ Cubre las solicitudes de gasto y de retiro de insumos, su paso por el flujo de e
 
 **Qué:** Cubre el paso de una solicitud de "Borrador" a "Pendiente de Aprobación". Una solicitud enviada ya no se edita.
 
-**Cómo:** Desde el borrador, el coordinador elige enviar. El sistema valida que todos los datos obligatorios estén completos y pide confirmación. La solicitud pasa a "Pendiente de Aprobación" y aparece en la bandeja del aprobador.
+**Cómo:** Desde el borrador, el coordinador elige enviar, sin tener que guardar antes. El sistema valida que todos los datos obligatorios estén completos y pide confirmación. Si falta algo, lo señala en el mismo formulario y el coordinador lo completa y vuelve a enviar. La solicitud pasa a "Pendiente de Aprobación" y aparece en la bandeja del aprobador.
 
 **Para qué:** Separar el borrador del envío deja al coordinador preparar la solicitud con calma y fija el momento desde el que cuenta la espera de aprobación.
 
@@ -424,7 +426,7 @@ Cubre las solicitudes de gasto y de retiro de insumos, su paso por el flujo de e
 
 **Qué:** Cubre la decisión sobre cada solicitud en "Pendiente de Aprobación". Solo una solicitud aprobada puede pasar a "Ejecutado", y una rechazada queda cerrada, según RN-03. La decisión queda asociada a quien la tomó.
 
-**Cómo:** El aprobador ve las solicitudes pendientes ordenadas por la prioridad del proyecto y luego por antigüedad. Abre una y ve el proyecto, el detalle, el monto o la cantidad, y la ejecución presupuestaria actual del proyecto. Si la aprueba, pasa a "Aprobado". Si la rechaza, pasa a "Rechazado" y el coordinador la ve así en su bandeja.
+**Cómo:** El aprobador ve las solicitudes pendientes ordenadas por la prioridad del proyecto y luego por antigüedad. Abre una y ve el proyecto, el detalle, el monto o la cantidad, y la ejecución presupuestaria actual del proyecto. Si la aprueba, pasa a "Aprobado", y si es de retiro queda lista para su despacho en el almacén (F6.2). Si la rechaza, pasa a "Rechazado" y el coordinador la ve así en su bandeja.
 
 **Para qué:** Hoy los gastos se autorizan sin registro y después nadie sabe quién aprobó cada uno. La decisión registrada da control del gasto y soporte para la auditoría.
 
@@ -454,7 +456,7 @@ Cubre las solicitudes de gasto y de retiro de insumos, su paso por el flujo de e
 
 **Qué:** Cubre el cambio del nivel de prioridad de un proyecto. El cambio exige una justificación escrita que queda en el audit log, según RN-04.
 
-**Cómo:** El aprobador abre el proyecto, elige el nuevo nivel y escribe la justificación. El sistema no deja guardar si la justificación está vacía. Al guardar, el audit log registra el nivel anterior, el nuevo, la justificación, el usuario y la fecha.
+**Cómo:** El aprobador abre el proyecto y, en un mismo diálogo, elige el nuevo nivel y escribe la justificación. El sistema no deja guardar si la justificación está vacía. Al guardar, el audit log registra el nivel anterior, el nuevo, la justificación, el usuario y la fecha.
 
 **Para qué:** Subir la prioridad de un proyecto lo pone delante de los demás en la aprobación de gastos. Exigir el motivo evita cambios sin explicación y deja la decisión a la vista de la auditoría.
 
@@ -476,7 +478,7 @@ Cubre la entrada y la salida física de los insumos, la bitácora inalterable de
 
 **Qué:** Cubre la entrada al almacén de un lote, con insumo, cantidad, fecha de ingreso, costo unitario, proveedor, fecha de vencimiento y ubicación. Los seis datos son obligatorios, salvo la fecha de vencimiento en insumos que no vencen. Un lote de consumible de uso general no se asigna a ningún proyecto, según RN-02.
 
-**Cómo:** El aprobador elige registrar una recepción, selecciona el insumo y llena los datos del lote. Si la recepción corresponde a una solicitud de gasto, la asocia. Al guardar, el stock aumenta en la misma operación (F3.3). Si el lote ya está vencido a la fecha de ingreso, el sistema avisa y pide confirmación.
+**Cómo:** El aprobador elige registrar una recepción, selecciona el insumo y llena los datos del lote. Si la recepción corresponde a una solicitud de gasto, la asocia. Al guardar, el stock aumenta en la misma operación (F3.3). Si la fecha de vencimiento ya pasó, el sistema lo avisa y no registra el lote. El aprobador corrige la fecha, si fue un error de captura, o no recibe el lote.
 
 **Para qué:** El costo unitario y el proveedor de cada lote son la base del costo de cada despacho y del prorrateo. Hoy esos datos están en facturas sueltas y no se cruzan con el inventario.
 
@@ -486,7 +488,7 @@ Cubre la entrada y la salida física de los insumos, la bitácora inalterable de
 
 **Qué:** Cubre la salida del almacén de los insumos de una solicitud en "Aprobado". El aprobador elige de qué lote sale cada cantidad. Un lote vencido no se despacha.
 
-**Cómo:** El aprobador abre la solicitud aprobada y, para cada insumo, elige el lote entre los que tienen stock y no están vencidos. Indica quién retira. Al confirmar, el sistema descuenta el stock (F3.3), registra el despacho en la bitácora (F6.3) y pasa la solicitud a "Ejecutado". Si un lote está vencido, el sistema no lo muestra como opción.
+**Cómo:** El aprobador abre la solicitud aprobada. Para cada insumo, el sistema sugiere el lote que vence primero entre los que tienen stock y no están vencidos. En la misma pantalla, el aprobador confirma los lotes o cambia alguno e indica quién retira. Al confirmar, el sistema registra el despacho en la bitácora (F6.3) y descuenta el stock (F3.3) en una sola operación, y pasa la solicitud a "Ejecutado". Si un lote está vencido, el sistema no lo muestra como opción.
 
 **Para qué:** Hoy los insumos salen sin quedar asociados a un proyecto, y el consumo real de cada proyecto se desconoce. El despacho atado a la solicitud carga cada salida al proyecto que la pidió.
 
@@ -526,7 +528,7 @@ Cubre la entrada y la salida física de los insumos, la bitácora inalterable de
 
 **Qué:** Cubre la decisión sobre cada solicitud de corrección. Una corrección aprobada se registra como un movimiento nuevo que compensa el original, y los dos quedan visibles en la bitácora.
 
-**Cómo:** El aprobador ve el despacho original, el valor pedido y el motivo. Si aprueba, el sistema registra el movimiento de corrección, ajusta el stock y recalcula la ejecución presupuestaria de los proyectos afectados. Si deniega, la solicitud queda cerrada y el coordinador la ve denegada.
+**Cómo:** El aprobador ve el despacho original, el valor pedido y el motivo. Si aprueba, el sistema registra el movimiento de corrección. Ese movimiento ajusta el stock (F3.3) y la ejecución presupuestaria de los proyectos afectados (F2.7), igual que cualquier otro movimiento. Si deniega, la solicitud queda cerrada y el coordinador la ve denegada.
 
 **Para qué:** Permite arreglar errores sin borrar la historia. Quien revise la bitácora ve el error, la corrección, quién la pidió y quién la aprobó.
 
@@ -548,7 +550,7 @@ Cubre la revisión de los cargos del período, el cierre del período contable y
 
 **Qué:** Cubre la revisión, por parte de cada coordinador, de los gastos ejecutados y los despachos cargados a sus proyectos en el período. El coordinador confirma los cargos o pide la corrección de los que estén mal con F6.5. `[POR CONFIRMAR: si el cierre se bloquea mientras falte la confirmación de algún coordinador]`.
 
-**Cómo:** Cuando el aprobador abre la revisión del período, cada coordinador ve en su bandeja la lista de cargos de cada proyecto, con fecha, concepto y monto. Puede confirmar la lista completa o abrir un cargo y pedir su corrección. El aprobador ve qué proyectos ya confirmaron y cuáles no.
+**Cómo:** El aprobador abre la revisión eligiendo el tipo de período y sus fechas. El sistema valida en ese momento que el rango no se cruce con otro período cerrado y, si se cruza, muestra el período en conflicto antes de enviar nada. Después, cada coordinador ve en su bandeja la lista de cargos de cada proyecto, con fecha, concepto y monto. Puede confirmar la lista completa o abrir un cargo y pedir su corrección. El aprobador ve qué proyectos ya confirmaron y cuáles no.
 
 **Para qué:** Un error detectado después del cierre obliga a reabrir el período. La revisión previa lo encuentra cuando todavía se corrige con una solicitud.
 
@@ -558,7 +560,7 @@ Cubre la revisión de los cargos del período, el cierre del período contable y
 
 **Qué:** Cubre el cierre de un período mensual o trimestral. Un período cerrado no admite despachos, gastos ni correcciones con fecha dentro de su rango. Los períodos no se solapan.
 
-**Cómo:** El aprobador elige el tipo de período y sus fechas, revisa el resumen de confirmaciones de F7.1 y confirma el cierre. El sistema valida que el período no se cruce con otro ya cerrado. Al cerrar, el período queda listo para el prorrateo.
+**Cómo:** El tipo de período y sus fechas se fijan al abrir la revisión en F7.1, donde ya se validó que no se crucen con otro período cerrado. El aprobador revisa el resumen de confirmaciones de F7.1 y confirma el cierre. Al cerrar, el período queda listo para el prorrateo.
 
 **Para qué:** El prorrateo necesita un rango de fechas fijo. Si después del cierre siguieran entrando movimientos, el reparto calculado dejaría de coincidir con los datos.
 
@@ -568,7 +570,7 @@ Cubre la revisión de los cargos del período, el cierre del período contable y
 
 **Qué:** Cubre el reparto del costo de los lotes de consumibles de uso general del período entre los proyectos activos, en proporción al consumo total de cada uno. El consumo total suma la materia prima y los insumos despachados al proyecto en el período. Solo participan los proyectos activos, según RN-05. `[POR CONFIRMAR: qué lotes entran en un período, si los recibidos o los consumidos en ese rango]`.
 
-**Cómo:** Sobre un período cerrado, el aprobador elige el criterio proporcional y ejecuta el cálculo. El sistema muestra, para cada proyecto activo, su consumo, su porcentaje del total y el monto que le toca, y el aprobador confirma. Al confirmar, el monto de cada proyecto entra a su gasto ejecutado (F2.7). Un período ya prorrateado no se vuelve a prorratear.
+**Cómo:** Al cerrar el período, el sistema calcula los dos repartos, el proporcional y el equitativo de F7.4, y los muestra lado a lado. La columna proporcional muestra, para cada proyecto activo, su consumo, su porcentaje del total y el monto que le toca. El aprobador elige este criterio y confirma en un solo paso. Al confirmar, el monto de cada proyecto entra a su gasto ejecutado (F2.7). Un período ya prorrateado no se vuelve a prorratear.
 
 **Para qué:** Hoy el costo de guantes, papel o solventes compartidos no se carga a ningún proyecto, así que su costo real queda subestimado. El reparto por consumo carga más a quien más consume.
 
@@ -578,7 +580,7 @@ Cubre la revisión de los cargos del período, el cierre del período contable y
 
 **Qué:** Cubre el reparto del costo de los lotes de consumibles de uso general del período en partes iguales entre los proyectos activos, según RN-05.
 
-**Cómo:** Sobre un período cerrado, el aprobador elige el criterio equitativo y ejecuta el cálculo. El sistema divide el costo total entre el número de proyectos activos y muestra el monto de cada uno. Si queda un residuo por redondeo, el sistema lo muestra y lo asigna al proyecto de código menor. Al confirmar, cada monto entra al gasto ejecutado del proyecto.
+**Cómo:** En la misma comparación de F7.3, la columna equitativa divide el costo total entre el número de proyectos activos y muestra el monto de cada uno. Si queda un residuo por redondeo, el sistema lo muestra y lo asigna al proyecto de código menor. Si el aprobador elige este criterio y confirma, cada monto entra al gasto ejecutado del proyecto.
 
 **Para qué:** Cuando el consumo registrado no refleja el uso real del overhead, el reparto en partes iguales es la alternativa que el enunciado permite.
 
@@ -610,7 +612,7 @@ Cubre el dashboard ejecutivo, la exportación de reportes a PDF y Excel, y el re
 
 **Qué:** Cubre el reporte de gastos por proyecto y por período, con gastos ejecutados, despachos valorizados y overhead prorrateado. El Aprobador y el Administrador exportan todos los proyectos. El Coordinador exporta solo los suyos, según RN-07.
 
-**Cómo:** El usuario abre el reporte, elige período y proyectos, y elige PDF o Excel. El sistema genera el archivo con los filtros aplicados en el encabezado. Si el filtro no tiene datos, el sistema lo avisa y no genera un archivo vacío.
+**Cómo:** El usuario abre el reporte, elige período y proyectos, y pulsa "Descargar PDF" o "Descargar Excel" en el mismo formulario. El sistema busca los datos dentro del alcance de su rol y genera el archivo con los filtros aplicados en el encabezado. Si el filtro no tiene datos, el sistema lo avisa y no genera un archivo vacío.
 
 **Para qué:** El análisis de gastos se presenta a terceros y se trabaja fuera del sistema. Un reporte formal evita copiar datos a mano a otra hoja.
 
@@ -620,7 +622,7 @@ Cubre el dashboard ejecutivo, la exportación de reportes a PDF y Excel, y el re
 
 **Qué:** Cubre el reporte de un período prorrateado, con el criterio usado, el costo total del overhead y el monto, el consumo y el porcentaje de cada proyecto. Rige el mismo alcance por rol de F8.2.
 
-**Cómo:** El usuario elige un período ya prorrateado y el formato. El sistema genera el archivo. Si el período no está prorrateado, el sistema lo dice y no ofrece la exportación.
+**Cómo:** El usuario elige un período ya prorrateado y pulsa el botón del formato que quiere. El sistema genera el archivo. Si el período no está prorrateado, el sistema lo dice y no ofrece la exportación.
 
 **Para qué:** Cada coordinador necesita poder explicar el overhead que se cargó a su proyecto. El resumen muestra cómo se calculó.
 
@@ -630,7 +632,7 @@ Cubre el dashboard ejecutivo, la exportación de reportes a PDF y Excel, y el re
 
 **Qué:** Cubre el reporte de un equipo con sus datos, sus cambios de estado operacional, sus reservas y sus usos registrados por proyecto, en un rango de fechas. El Coordinador solo ve los usos de sus proyectos, según RN-07.
 
-**Cómo:** El usuario abre la ficha del equipo, elige el rango de fechas y el formato. El sistema genera el archivo con el historial ordenado por fecha y el total de horas de uso por proyecto.
+**Cómo:** El usuario abre la ficha del equipo, elige el rango de fechas y pulsa el botón del formato que quiere. El sistema genera el archivo con el historial ordenado por fecha y el total de horas de uso por proyecto.
 
 **Para qué:** Saber cuánto se usa cada equipo y cuánto tiempo pasa en mantenimiento sirve para decidir reparaciones y compras. Hoy ese historial no existe.
 
@@ -650,7 +652,7 @@ Cubre el dashboard ejecutivo, la exportación de reportes a PDF y Excel, y el re
 
 **Qué:** Cubre la búsqueda en el audit log de todo el sistema, con filtros por fecha, usuario, tipo de acción y objeto afectado. La consulta es de solo lectura.
 
-**Cómo:** El administrador abre la auditoría, aplica filtros y ve los registros ordenados del más reciente al más antiguo. Al abrir un registro ve el valor anterior y el nuevo. Puede llegar al objeto afectado desde el registro.
+**Cómo:** El administrador abre la auditoría y ve de entrada los registros ordenados del más reciente al más antiguo. Si necesita acotar la búsqueda, aplica filtros. Al abrir un registro ve el valor anterior y el nuevo. Puede llegar al objeto afectado desde el registro.
 
 **Para qué:** Cuando aparece una diferencia en el inventario o en un gasto, la auditoría muestra la secuencia de acciones que la produjo.
 
@@ -719,7 +721,7 @@ Cubre el dashboard ejecutivo, la exportación de reportes a PDF y Excel, y el re
 *Funcionalidades relacionadas: F2.4, F2.5, F2.6*
 
 **Criterios de aceptación**
-- **Dado** que mis hitos suman 90 de peso, **cuando** intento confirmar la lista, **entonces** el sistema no lo permite y me muestra la suma.
+- **Dado** que mis hitos suman 90 de peso, **cuando** intento confirmar la lista, **entonces** el sistema no lo permite y me muestra que faltan 10 para llegar a 100.
 - **Dado** un hito de peso 60 al 50 % y otro de peso 40 al 100 %, **cuando** consulto el proyecto, **entonces** veo un avance físico de 70 %.
 - **Dado** que cargo un avance de 120 %, **cuando** guardo, **entonces** el sistema lo rechaza.
 
@@ -771,6 +773,7 @@ Cubre el dashboard ejecutivo, la exportación de reportes a PDF y Excel, y el re
 - **Dado** un mínimo de 20 y un stock de 25, **cuando** se despachan 10, **entonces** el insumo aparece con alerta y se crea una solicitud de reposición en "Borrador".
 - **Dado** que ya existe una solicitud de reposición abierta para ese insumo, **cuando** el stock vuelve a bajar, **entonces** el sistema no crea otra.
 - **Dado** un borrador de reposición, **cuando** lo descarto, **entonces** no se compra nada y la alerta sigue visible.
+- **Dado** un borrador de reposición, **cuando** lo apruebo, **entonces** pasa a "Aprobado" y el audit log guarda el paso por "Pendiente de Aprobación".
 
 ### HU-10 — Vencimiento de lotes
 **Como** aprobador y gestor de inventario,
@@ -842,7 +845,7 @@ Cubre el dashboard ejecutivo, la exportación de reportes a PDF y Excel, y el re
 *Funcionalidades relacionadas: F5.1, F5.2, F5.3*
 
 **Criterios de aceptación**
-- **Dado** que guardo una solicitud sin enviarla, **cuando** vuelvo a abrirla, **entonces** sigue en "Borrador" y la puedo editar.
+- **Dado** que escribo una solicitud y salgo sin enviarla, **cuando** vuelvo a abrirla, **entonces** sigue en "Borrador" con lo que escribí y la puedo editar.
 - **Dado** una solicitud con datos obligatorios vacíos, **cuando** intento enviarla, **entonces** el sistema lo impide y marca los datos faltantes.
 - **Dado** que envío una solicitud, **cuando** intento editarla, **entonces** el sistema no lo permite.
 - **Dado** que intento crear una solicitud para un proyecto que no es mío, **cuando** busco el proyecto, **entonces** no aparece entre las opciones.
@@ -881,7 +884,7 @@ Cubre el dashboard ejecutivo, la exportación de reportes a PDF y Excel, y el re
 
 **Criterios de aceptación**
 - **Dado** que registro un lote de 100 unidades a costo unitario 3, **cuando** guardo, **entonces** el stock del insumo aumenta en 100.
-- **Dado** que la fecha de vencimiento es anterior a la de ingreso, **cuando** guardo, **entonces** el sistema me avisa y pide confirmación.
+- **Dado** que la fecha de vencimiento es anterior a la de ingreso, **cuando** guardo, **entonces** el sistema me avisa y no registra el lote hasta que corrija la fecha.
 
 ### HU-19 — Despacho con bitácora
 **Como** aprobador y gestor de inventario,
@@ -939,10 +942,11 @@ Cubre el dashboard ejecutivo, la exportación de reportes a PDF y Excel, y el re
 *Funcionalidades relacionadas: F7.2, F7.3, F7.4*
 
 **Criterios de aceptación**
-- **Dado** un período que se cruza con otro ya cerrado, **cuando** intento cerrarlo, **entonces** el sistema lo impide.
-- **Dado** un overhead de 900 y tres proyectos activos, **cuando** ejecuto el reparto equitativo, **entonces** cada proyecto recibe 300.
-- **Dado** dos proyectos activos con consumos de 300 y 100 y un overhead de 800, **cuando** ejecuto el reparto proporcional, **entonces** reciben 600 y 200.
-- **Dado** un proyecto "Suspendido" durante el período, **cuando** ejecuto cualquier reparto, **entonces** ese proyecto no recibe monto.
+- **Dado** un período que se cruza con otro ya cerrado, **cuando** abro su revisión, **entonces** el sistema lo impide y me muestra el período en conflicto.
+- **Dado** un período cerrado, **cuando** abro el prorrateo, **entonces** veo el reparto proporcional y el equitativo lado a lado y confirmo uno solo.
+- **Dado** un overhead de 900 y tres proyectos activos, **cuando** confirmo el reparto equitativo, **entonces** cada proyecto recibe 300.
+- **Dado** dos proyectos activos con consumos de 300 y 100 y un overhead de 800, **cuando** confirmo el reparto proporcional, **entonces** reciben 600 y 200.
+- **Dado** un proyecto "Suspendido" durante el período, **cuando** confirmo cualquier reparto, **entonces** ese proyecto no recibe monto.
 - **Dado** un período ya prorrateado, **cuando** intento prorratearlo otra vez, **entonces** el sistema no lo permite.
 
 ## Módulo 8 — Reportes y auditoría
@@ -1121,11 +1125,12 @@ La Tabla 2 lista las restricciones y los entregables que fija el enunciado. No s
 | SP-02 | `[PROPUESTA]` | El gasto ejecutado de F2.7 suma las solicitudes de gasto ejecutadas, el costo de los despachos al proyecto y el overhead prorrateado | Equipo del proyecto |
 | SP-03 | `[POR CONFIRMAR]` | Lista completa de los parámetros generales del Administrador (F1.5) | Profesor de la asignatura |
 | SP-04 | `[POR CONFIRMAR]` | Días de anticipación iniciales de la alerta de vencimiento (F3.6) y meses mínimos de historial para el pronóstico (F3.7) | Equipo del proyecto |
-| SP-05 | `[POR CONFIRMAR]` | Qué rol aprueba una solicitud de reposición automática que el propio Aprobador envía (F3.5) | Equipo del proyecto |
+| SP-05 | Resuelto | Qué rol aprueba una solicitud de reposición automática (F3.5). Resuelto el 27/10/2026 con el cambio B7, porque el aprobador la decide en un solo paso y el sistema registra las dos transiciones | Equipo del proyecto |
 | SP-06 | `[POR CONFIRMAR]` | Si se puede registrar el uso de un equipo sin reserva previa (F4.6) | Equipo del proyecto |
 | SP-07 | `[POR CONFIRMAR]` | Si el registro de uso de materia prima descuenta stock o solo documenta el consumo de lo ya despachado (F6.4) | Equipo del proyecto |
 | SP-08 | `[POR CONFIRMAR]` | Si el cierre del período se bloquea mientras falte la confirmación de algún coordinador (F7.1) | Equipo del proyecto |
 | SP-09 | `[POR CONFIRMAR]` | Qué lotes de consumibles de uso general entran en un período, si los recibidos o los consumidos en ese rango (F7.3, F7.4) | Profesor de la asignatura |
 | SP-10 | `[POR CONFIRMAR]` | Anchos de pantalla en que se verifica el diseño responsive (RNF-03) y entorno en que se verifica el despliegue (RNF-04) | Profesor de la asignatura |
 | SP-11 | Hallazgo | El enunciado no define el atributo "presupuesto asignado". Se agregó por la decisión D9 para poder calcular la ejecución presupuestaria | Equipo del proyecto |
+| SP-13 | `[POR CONFIRMAR]` | Si un proyecto "Suspendido" puede volver a "En ejecución" (F2.3). El enunciado lista los estatus pero no las transiciones permitidas | Profesor de la asignatura |
 | SP-12 | Hallazgo | La propuesta RF-38 incluía revisar el overhead prorrateado antes del cierre, pero el prorrateo se calcula después del cierre (RF-24). F7.1 revisa solo los cargos directos del período | Equipo del proyecto |

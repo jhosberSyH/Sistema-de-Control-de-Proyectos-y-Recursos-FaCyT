@@ -148,7 +148,7 @@ Las versiones se verificaron el 27/10/2026 en endoflife.date, PyPI y npm.
 | Pieza | Elección | Por qué | Requisitos |
 |---|---|---|---|
 | Framework | React 19 + TypeScript + Vite 8 + React Router | El ecosistema más amplio para las piezas que necesitamos (calendario, gráficos, formularios, componentes accesibles). Se compila a archivos estáticos que sirve Nginx | RNF-01, RNF-05 |
-| Estilo | Tailwind CSS 4 + shadcn/ui (sobre Radix UI) | Los tokens de color neutros, el radio de los bordes y el espaciado se definen en un solo lugar. El modo oscuro usa variables CSS con `prefers-color-scheme` y un selector manual. La fuente es la del sistema (`-apple-system, system-ui`), que muestra San Francisco en equipos Apple sin problemas de licencia. Radix da diálogos y menús accesibles | RNF-03 |
+| Estilo | Tailwind CSS 4 + shadcn/ui (sobre Radix UI) | Los tokens de color neutros, el radio de los bordes y el espaciado se definen en un solo lugar. El modo oscuro usa variables CSS con `prefers-color-scheme` y un selector manual. La tipografía es IBM Plex Sans + IBM Plex Mono (SIL OFL 1.1), servida como woff2 desde el propio sitio. La paleta es la de la FaCyT: azul noche `#003A6A` y azul `#0092D0` (ver `docs/identidad-visual/identidad_visual.md` §5.1). Radix da diálogos y menús accesibles | RNF-03 |
 | Datos del servidor | TanStack Query | Vuelve a pedir el stock después de cada recepción o despacho, así la pantalla muestra la cantidad nueva enseguida | RNF-10 |
 | Formularios | React Hook Form + Zod | Validación junto a cada campo, con el mensaje que explica cómo corregir | L4 de la investigación UX |
 | Calendario | FullCalendar (núcleo con licencia MIT) | Es el que usa eLabFTW para sus reservas. Muestra lo ocupado y los equipos en mantenimiento antes de pedir | RF-22 |
@@ -332,11 +332,14 @@ Los paquetes `autenticacion/`, `exportacion/` y `pronostico/` del backend corres
 │   ├── requisitos/                   Enunciado, requisitos_base.md y documento de requisitos v0.1 (.md y .html)
 │   │   └── generacion/               Archivos intermedios del Google Doc (solo en local, fuera de git)
 │   ├── benchmarking/                 benchmarking.md: proyectos de referencia
-│   ├── investigacion-ux/             investigacion_ux.md y el material de UX de la asignatura
+│   ├── investigacion-ux/             investigacion_ux.md, investigacion_usuarios.md y el material de UX de la asignatura
+│   ├── identidad-visual/             identidad_visual.md: paleta, tipografías y direcciones visuales
+│   │   └── logos/                    Logos oficiales de la UC y la FaCyT, con FUENTES.md
+│   ├── mockups/                      Mockups HTML, una subcarpeta por vista
 │   ├── propuestas/                   propuestas.md: propuestas de requisitos
 │   └── diagramas/
 │       ├── arquitectura/             arquitectura.drawio
-│       ├── flujos/                   flujos_trazabilidad.md: enlaces a los BPMN de MC Modeler y su trazabilidad
+│       ├── flujos/                   flujos_trazabilidad.md (enlaces a los BPMN de MC Modeler) y revision_flujos.md
 │       └── base-de-datos/            Diagrama entidad-relación
 │
 ├── prompts/
@@ -693,6 +696,9 @@ El pronóstico de consumo (IA-01) **no** usa IA generativa: es un modelo estadí
 | [benchmarking.md](docs/benchmarking/benchmarking.md) | Nueve proyectos de referencia y sus funcionalidades |
 | [propuestas.md](docs/propuestas/propuestas.md) | 27 propuestas de requisitos, de las que se aprobaron cinco |
 | [investigacion_ux.md](docs/investigacion-ux/investigacion_ux.md) | Investigación de experiencia de usuario y lecciones L1 a L10 |
+| [investigacion_usuarios.md](docs/investigacion-ux/investigacion_usuarios.md) | Usuarios, dispositivos, personalidad del aplicativo y criterios de accesibilidad |
+| [identidad_visual.md](docs/identidad-visual/identidad_visual.md) | Paleta, tipografías, logos y las cuatro direcciones visuales |
+| [revision_flujos.md](docs/diagramas/flujos/revision_flujos.md) | Revisión de los diagramas de flujo antes del diseño |
 | [flujos_trazabilidad.md](docs/diagramas/flujos/flujos_trazabilidad.md) | Enlaces a los diagramas de flujo de los ocho módulos y su trazabilidad |
 | [Documento de requisitos v0.1](docs/requisitos/2026-10-25_ControlProyectos_DocRequerimientos_v0.1.md) | Funcionalidades, historias de usuario, requisitos de calidad y matriz de trazabilidad |
 | [arquitectura.drawio](docs/diagramas/arquitectura/arquitectura.drawio) | Diagrama de arquitectura del sistema |

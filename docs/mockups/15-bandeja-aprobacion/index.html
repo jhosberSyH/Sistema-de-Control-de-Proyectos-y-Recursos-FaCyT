@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Bandeja de aprobación FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Bandeja del aprobador (F4.5, F5.4, F6.6). Un solo scroll, el de la página: la lista crece con su contenido
+   agrupada por prioridad, el detalle queda fijo al costado y los filtros se acomodan en varias líneas.
+   En el teléfono la lista y el detalle son dos pasos: tocar un pedido abre el detalle y "Volver" regresa. */
+.bandeja { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 20px; align-items: start; }
+.filtros { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.filtros button {
+  font: inherit; font-size: 14.5px; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; cursor: pointer;
+  color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-m);
+}
+.filtros button .n { font-family: var(--f-mono); font-size: 12.5px; padding: 1px 7px; border-radius: var(--r-s); background: var(--surface-2); }
+.filtros button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); border-color: var(--primary); font-weight: 600; }
+.filtros button[aria-pressed="true"] .n { background: rgba(255, 255, 255, .18); }
+
+.col-lista { overflow: clip; }
+.grupo-cab {
+  display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 16px; font-family: var(--f-mono); font-size: 12px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--bg); border-bottom: 1px solid var(--line);
+}
+.grupo-cab i { width: 8px; height: 8px; border-radius: 2px; background: var(--muted); }
+.grupo-cab.critica i { background: var(--err); } .grupo-cab.alta i { background: var(--warn); } .grupo-cab.media i, .grupo-cab.auto i { background: var(--info); }
+.pedidos { list-style: none; margin: 0; padding: 0; }
+.pedidos button {
+  font: inherit; color: inherit; text-align: left; width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--line);
+  padding: 12px 16px; display: grid; gap: 2px; cursor: pointer;
+}
+.pedidos button:hover { background: var(--bg); }
+.pedidos button[aria-current="true"] { background: var(--surface-2); box-shadow: inset 4px 0 0 var(--primary); }
+.pedidos .l1 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.pedidos .l1 b { font-family: var(--f-mono); font-weight: 600; }
+.pedidos .l1 span { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.pedidos .l2 { font-size: 14.5px; }
+.pedidos .l3 { font-size: 13.5px; color: var(--muted); }
+.vacio { padding: 28px 16px; text-align: center; color: var(--muted); }
+
+/* El detalle se queda a la vista mientras la página baja (debajo de la barra del comparador) */
+.col-det { position: sticky; top: calc(var(--cmp-h, 0px) + 16px); padding: 24px; display: grid; gap: 18px; min-width: 0; }
+.volver { display: none; justify-self: start; }
+.det-cab { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.det-cab h2 { font-size: 24px; font-weight: 600; letter-spacing: -.01em; }
+.efecto { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.efecto div { padding: 14px; border: 1px solid var(--line); border-radius: var(--r-m); display: grid; gap: 2px; }
+.efecto span { font-size: 13.5px; color: var(--muted); }
+.efecto b { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--primary); }
+.comparar { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; }
+.comparar .caja { padding: 14px; border: 1px solid var(--line); border-radius: var(--r-m); display: grid; gap: 4px; }
+.comparar .caja span { font-size: 13.5px; color: var(--muted); }
+.comparar .caja b { font-size: 22px; font-variant-numeric: tabular-nums; }
+.comparar .nuevo { border-color: var(--primary); background: var(--surface-2); }
+.cant { max-width: 220px; }
+.decision { display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 18px; }
+#motivo { min-height: 96px; padding: 10px 12px; resize: vertical; }
+
+@container mk (max-width: 760px) {
+  .bandeja { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .bandeja[data-paso="lista"] .col-det { display: none; }
+  .bandeja[data-paso="detalle"] .filtros, .bandeja[data-paso="detalle"] .col-lista { display: none; }
+  .bandeja[data-paso="detalle"] .volver { display: inline-flex; }
+  .filtros { flex-wrap: nowrap; overflow-x: auto; margin-inline: -14px; padding: 0 14px 2px; scrollbar-width: none; }
+  .filtros::-webkit-scrollbar { display: none; }
+  .filtros button { flex: none; }
+  .col-det { position: static; padding: 16px; }
+  .efecto, .comparar { grid-template-columns: minmax(0, 1fr); }
+  .efecto { gap: 0; border: 1px solid var(--line); border-radius: var(--r-m); }
+  .efecto div { border: 0; border-radius: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 14px; }
+  .efecto div + div { border-top: 1px solid var(--line); }
+  .efecto b { font-size: 17px; }
+  .comparar > .ico { transform: rotate(90deg); justify-self: center; }
+  .decision .btn { flex: 1; }
+}
+</style>
+</head>
+<body>
+
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Inicio</a></li><li>Bandeja de aprobación</li></ol>
+              <h1>Bandeja de aprobación</h1>
+              <p class="sub" id="sub"></p>
+            </div>
+          </div>
+
+          <section class="bandeja" id="bandeja" data-paso="lista" aria-label="Pedidos pendientes">
+            <div class="filtros" role="group" aria-label="Tipo de pedido" id="filtros"></div>
+
+            <div class="tarjeta col-lista" id="lista"></div>
+
+            <div class="tarjeta col-det" aria-live="polite">
+              <button class="btn btn-txt volver" type="button" id="volver"><svg class="ico" aria-hidden="true" style="transform:scaleX(-1)"><use href="#i-flecha"/></svg>Volver a la bandeja</button>
+              <div class="aviso ok" id="hecho" role="status" hidden></div>
+              <div id="detalle" style="display:grid;gap:18px"></div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Bandeja de aprobación", tanda: 4,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-d="sol" aria-pressed="true">Solicitud</button><button type="button" data-d="rech" aria-pressed="false">Rechazar sin motivo</button><button type="button" data-d="cor" aria-pressed="false">Corrección</button><button type="button" data-d="rep" aria-pressed="false">Reposición</button></div>' };
+window.APP = { rol: "apr", activo: "bandeja", titulo: "Bandeja", ins: "Solicitudes y priorización" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var GRUPOS = [["critica", "Crítica"], ["alta", "Alta"], ["media", "Media"], ["baja", "Baja"], ["auto", "Reposiciones automáticas"]];
+  var TIPOS = [["todos", "Todos"], ["sol", "Solicitudes"], ["res", "Reservas"], ["cor", "Correcciones"], ["rep", "Reposiciones"]];
+  var M = function (c) { return '<span class="mono">' + c + "</span>"; };
+  // Dentro de cada prioridad, el más antiguo primero
+  var P = [
+    { id: "SOL-124", g: "critica", t: "sol", l2: "Retiro de insumos · BIO-011", l3: "3 insumos", hace: "hace 3 h", quien: "María Fernanda Ochoa",
+      meta: "Solicitud de retiro · enviada hoy a las 07:44 por María Fernanda Ochoa", titulo: M("SOL-124") + " · Retiro de insumos",
+      kv: [["Proyecto", M("BIO-011") + " Resistencia antimicrobiana en aislados clínicos"], ["Insumos", "Medio LB agar 250 g · Placas de Petri 100 u · Etanol 70 % 1 L"], ["Retira", "María Fernanda Ochoa"], ["Valor estimado", "US$ 61,80"]],
+      aviso: ["info", "Hay stock de los tres insumos. Al aprobar, Almacén prepara el despacho con los lotes que vencen primero."],
+      si: "Aprobar retiro", no: "Rechazar" },
+    { id: "COR-006", g: "critica", t: "cor", l2: "Corrección de despacho · BIO-011", l3: M("DES-0312"), hace: "hoy 08:12", quien: "María Fernanda Ochoa",
+      meta: "Corrección de despacho · pedida hoy a las 08:12 por María Fernanda Ochoa", titulo: M("COR-006") + " sobre " + M("DES-0312"),
+      kv: [["Insumo", "Medio LB agar · lote " + M("L-0425")], ["Proyecto", M("BIO-011") + " Resistencia antimicrobiana en aislados clínicos"], ["Despachado", "22/10/2026, 15:40, retiró Luis Mendoza"]],
+      comparar: ["500 g", "50 g"],
+      aviso: ["info", "<b>Motivo:</b> «Se escribió un cero de más. Retiramos un frasco de 50 g». Si apruebas, un movimiento devuelve 450 g al lote y descuenta US$ 26,10 del gasto de BIO-011. El despacho original no cambia."],
+      si: "Aprobar corrección", no: "Denegar con nota" },
+    { id: "SOL-119", g: "alta", t: "sol", l2: "Gasto · QUI-024", l3: "US$ 640,00", hace: "ayer 16:05", quien: "Daniela Rivas",
+      meta: "Solicitud de gasto · enviada ayer a las 16:05 por Daniela Rivas", titulo: M("SOL-119") + " · Nitrato de cerio hexahidratado",
+      kv: [["Proyecto", M("QUI-024") + " Síntesis de catalizadores de óxido de cerio"], ["Cantidad", "500 g"], ["Monto estimado", "US$ 640,00"], ["Descripción", "Precursor para las pruebas catalíticas del hito 4. Se agotó el lote anterior."], ["Cotización", '<a href="#contenido">cotizacion-quimica-valencia.pdf</a>']],
+      efecto: [["Ejecución actual de QUI-024", "48 %"], ["Con esta solicitud", "54,5 %"], ["Presupuesto restante", "US$ 4.548"]],
+      si: "Aprobar solicitud", no: "Rechazar" },
+    { id: "RES-053", g: "alta", t: "res", l2: "Reserva · difractómetro · QUI-024", l3: "Lun 09/11 · 08:00 a 12:00", hace: "hoy 07:55", quien: "Daniela Rivas",
+      meta: "Reserva de equipo · pedida hoy a las 07:55 por Daniela Rivas", titulo: M("RES-053") + " · Difractómetro de rayos X",
+      kv: [["Proyecto", M("QUI-024") + " Síntesis de catalizadores de óxido de cerio"], ["Fecha", "Lunes 09/11/2026, de 08:00 a 12:00 (4 h)"], ["Uso", "Caracterización por DRX del hito 3"], ["Estado del equipo", "Operativo"]],
+      aviso: ["ok", "No choca con otras reservas. El horario sigue libre."],
+      si: "Aprobar reserva", no: "Rechazar" },
+    { id: "SOL-116", g: "media", t: "sol", l2: "Retiro de insumos · FIS-008", l3: "2 insumos", hace: "hace 2 días", quien: "Andrés Salazar",
+      meta: "Solicitud de retiro · enviada el 25/10 a las 10:30 por Andrés Salazar", titulo: M("SOL-116") + " · Retiro de insumos",
+      kv: [["Proyecto", M("FIS-008") + " Caracterización de películas delgadas"], ["Insumos", "Etanol absoluto 500 mL · Papel de filtro 1 paquete"], ["Retira", "Andrés Salazar"], ["Valor estimado", "US$ 14,20"]],
+      aviso: ["info", "Hay stock de los dos insumos."],
+      si: "Aprobar retiro", no: "Rechazar" },
+    { id: "RES-052", g: "media", t: "res", l2: "Reserva · centrífuga · FIS-008", l3: "Jue 05/11 · 14:00 a 16:00", hace: "ayer 09:10", quien: "Andrés Salazar",
+      meta: "Reserva de equipo · pedida ayer a las 09:10 por Andrés Salazar", titulo: M("RES-052") + " · Centrífuga refrigerada",
+      kv: [["Proyecto", M("FIS-008") + " Caracterización de películas delgadas"], ["Fecha", "Jueves 05/11/2026, de 14:00 a 16:00 (2 h)"], ["Uso", "Separación de suspensiones coloidales"], ["Estado del equipo", "Operativo"]],
+      aviso: ["ok", "No choca con otras reservas. El horario sigue libre."],
+      si: "Aprobar reserva", no: "Rechazar" },
+    { id: "SOL-122", g: "baja", t: "sol", l2: "Gasto · QUI-027", l3: "US$ 210,00", hace: "hace 4 h", quien: "Rosa Linares",
+      meta: "Solicitud de gasto · enviada hoy a las 06:50 por Rosa Linares", titulo: M("SOL-122") + " · Calibración de la balanza analítica",
+      kv: [["Proyecto", M("QUI-027") + " Extracción de aceites esenciales"], ["Monto estimado", "US$ 210,00"], ["Descripción", "Calibración anual con certificado, exigida para las mediciones del informe final."], ["Cotización", '<a href="#contenido">cotizacion-metrologia-carabobo.pdf</a>']],
+      efecto: [["Ejecución actual de QUI-027", "68 %"], ["Con esta solicitud", "71,5 %"], ["Presupuesto restante", "US$ 1.710"]],
+      si: "Aprobar solicitud", no: "Rechazar" },
+    { id: "REP-016", g: "auto", t: "rep", l2: "Reposición · ácido nítrico 65 %", l3: "Queda 0,5 L, mínimo 2 L", hace: "ayer 18:00", quien: "",
+      meta: "Reposición automática · creada ayer a las 18:00 por el sistema", titulo: M("REP-016") + " · Ácido nítrico 65 %",
+      kv: [["Stock actual", "0,5 L"], ["Stock mínimo", "2 L"], ["Consumo previsto", "3,4 L en las próximas 8 semanas"]], cant: "4",
+      aviso: ["info", "La cantidad sugerida viene del pronóstico de consumo. Puedes ajustarla antes de aprobar."],
+      si: "Aprobar reposición", no: "Descartar" },
+    { id: "REP-015", g: "auto", t: "rep", l2: "Reposición · metanol HPLC", l3: "Queda 1 L, mínimo 4 L", hace: "hoy 09:15", quien: "",
+      meta: "Reposición automática · creada hoy a las 09:15 por el sistema", titulo: M("REP-015") + " · Metanol grado HPLC",
+      kv: [["Stock actual", "1 L"], ["Stock mínimo", "4 L"], ["Consumo previsto", "6,2 L en las próximas 8 semanas"]], cant: "8",
+      aviso: ["info", "La cantidad sugerida viene del pronóstico de consumo. Puedes ajustarla antes de aprobar."],
+      si: "Aprobar reposición", no: "Descartar" }
+  ];
+  var filtro = "todos", sel = "SOL-119", rechazando = false, conError = false;
+  var bandeja = document.getElementById("bandeja");
+  var ico = window.ico;
+
+  function visibles() { return P.filter(function (p) { return filtro === "todos" || p.t === filtro; }); }
+  function pintarFiltros() {
+    document.getElementById("filtros").innerHTML = TIPOS.map(function (t) {
+      var n = t[0] === "todos" ? P.length : P.filter(function (p) { return p.t === t[0]; }).length;
+      return '<button type="button" data-filtro="' + t[0] + '" aria-pressed="' + (t[0] === filtro) + '">' + t[1] + '<span class="n">' + n + "</span></button>";
+    }).join("");
+    document.getElementById("sub").textContent = P.length + (P.length === 1 ? " decisión pendiente" : " decisiones pendientes") + ", ordenadas por la prioridad del proyecto y luego por antigüedad.";
+  }
+  function pintarLista() {
+    var v = visibles(), h = "";
+    GRUPOS.forEach(function (g) {
+      var del = v.filter(function (p) { return p.g === g[0]; });
+      if (!del.length) return;
+      h += '<h2 class="grupo-cab ' + g[0] + '"><i aria-hidden="true"></i>' + g[1] + " · " + del.length + '</h2><ul class="pedidos">' + del.map(function (p) {
+        return '<li><button type="button" data-id="' + p.id + '" aria-current="' + (p.id === sel) + '"><span class="l1"><b>' + p.id + "</b><span>" + p.hace + '</span></span><span class="l2">' + p.l2 + '</span><span class="l3">' + p.l3 + "</span></button></li>";
+      }).join("") + "</ul>";
+    });
+    document.getElementById("lista").innerHTML = h || '<p class="vacio">No quedan pedidos de este tipo.</p>';
+  }
+  function pintarDetalle() {
+    var p = P.filter(function (x) { return x.id === sel; })[0];
+    var d = document.getElementById("detalle");
+    if (!p) { d.innerHTML = '<p class="vacio">Elige un pedido de la lista.</p>'; return; }
+    var prioTxt = { critica: "Crítica", alta: "Alta", media: "Media", baja: "Baja" }[p.g];
+    var h = '<div class="det-cab"><div style="display:grid;gap:4px"><span class="sec">' + p.meta + "</span><h2>" + p.titulo + "</h2></div>" +
+      (prioTxt ? window.prio(prioTxt) : '<span class="estado info">' + ico("info") + "Automática</span>") + "</div>";
+    h += '<dl class="kv">' + p.kv.map(function (k) { return "<dt>" + k[0] + "</dt><dd>" + k[1] + "</dd>"; }).join("") + "</dl>";
+    if (p.efecto) h += '<div class="efecto">' + p.efecto.map(function (e) { return "<div><span>" + e[0] + "</span><b>" + e[1] + "</b></div>"; }).join("") + "</div>";
+    if (p.comparar) h += '<div class="comparar"><div class="caja"><span>Registrado en la bitácora</span><b>' + p.comparar[0] + "</b></div>" + ico("flecha") + '<div class="caja nuevo"><span>Corrección pedida</span><b>' + p.comparar[1] + "</b></div></div>";
+    if (p.cant) h += '<div class="campo cant"><label for="cant">Cantidad a pedir (L)</label><input class="entrada" id="cant" inputmode="decimal" value="' + p.cant + '"><span class="ayuda">Sugerida: ' + p.cant + " L</span></div>";
+    if (p.aviso) h += '<div class="aviso ' + p.aviso[0] + '">' + ico(p.aviso[0] === "ok" ? "ok" : "info") + "<div><p>" + p.aviso[1] + "</p></div></div>";
+    if (rechazando) {
+      var nota = p.t === "cor" ? "Nota para " + p.quien : p.t === "rep" ? "Motivo para descartar" : "Motivo del rechazo";
+      var ayuda = p.quien ? p.quien.split(" ")[0] + " lo verá junto al pedido." : "Queda en la auditoría del insumo.";
+      h += '<div class="campo' + (conError ? " error" : "") + '"><label for="motivo">' + nota + '</label><textarea class="entrada" id="motivo" aria-describedby="mot-a' + (conError ? " mot-e" : "") + '"' + (conError ? ' aria-invalid="true"' : "") + "></textarea>" +
+        '<span class="ayuda" id="mot-a">' + ayuda + "</span>" +
+        (conError ? '<p class="msg-error" id="mot-e">' + ico("error") + "<span>Escribe el motivo. Sin motivo no se puede " + (p.t === "rep" ? "descartar" : "rechazar") + ".</span></p>" : "") + "</div>";
+      h += '<div class="decision"><button class="btn btn-peligro" type="button" data-acc="confirmar-no">' + (p.t === "cor" ? "Denegar corrección" : p.t === "rep" ? "Descartar reposición" : "Rechazar " + (p.t === "res" ? "reserva" : "solicitud")) + '</button><button class="btn btn-sec" type="button" data-acc="cancelar">Cancelar</button></div>';
+    } else {
+      h += '<div class="decision"><button class="btn btn-pri" type="button" data-acc="si">' + p.si + '</button><button class="btn btn-sec" type="button" data-acc="no">' + p.no + "</button></div>";
+    }
+    d.innerHTML = h;
+  }
+  function pintar() { pintarFiltros(); pintarLista(); pintarDetalle(); }
+  function elegir(id, paso) {
+    sel = id; rechazando = false; conError = false;
+    document.getElementById("hecho").hidden = true;
+    if (paso) bandeja.setAttribute("data-paso", paso);
+    pintar();
+    // En el teléfono el detalle reemplaza a la lista: se vuelve al inicio del contenido
+    if (paso && document.querySelector(".marco").offsetWidth <= 760) document.getElementById("contenido").scrollIntoView({ block: "start" });
+  }
+  function resolver(aprobado) {
+    var i = P.findIndex(function (x) { return x.id === sel; }), p = P[i];
+    P.splice(i, 1);
+    var sig = visibles()[0];
+    var aviso = (aprobado ? "Aprobaste " : p.t === "rep" ? "Descartaste " : "Rechazaste ") + p.id + "." + (p.quien ? " " + p.quien + " recibe el aviso." : "");
+    elegir(sig ? sig.id : null);
+    var hecho = document.getElementById("hecho");
+    hecho.innerHTML = ico("ok") + "<div><p><b>" + aviso + "</b>" + (sig ? " Sigue " + sig.id + "." : "") + "</p></div>";
+    hecho.hidden = false;
+  }
+
+  document.querySelector(".mk").addEventListener("click", function (e) {
+    var f = e.target.closest("[data-filtro]");
+    if (f) { filtro = f.dataset.filtro; var v = visibles(); if (!v.some(function (p) { return p.id === sel; })) sel = v[0] ? v[0].id : null; pintar(); return; }
+    var it = e.target.closest("[data-id]");
+    if (it) { elegir(it.dataset.id, "detalle"); return; }
+    if (e.target.closest("#volver")) { bandeja.setAttribute("data-paso", "lista"); var b = document.querySelector('[data-id="' + sel + '"]'); if (b) b.focus(); return; }
+    var a = e.target.closest("[data-acc]");
+    if (!a) return;
+    if (a.dataset.acc === "si") resolver(true);
+    if (a.dataset.acc === "no") { rechazando = true; pintarDetalle(); document.getElementById("motivo").focus(); }
+    if (a.dataset.acc === "cancelar") { rechazando = false; conError = false; pintarDetalle(); }
+    if (a.dataset.acc === "confirmar-no") {
+      if (!document.getElementById("motivo").value.trim()) { conError = true; pintarDetalle(); document.getElementById("motivo").focus(); }
+      else resolver(false);
+    }
+  });
+
+  // Estados del comparador
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-d]"); if (!b) return;
+    var d = b.dataset.d;
+    filtro = "todos";
+    elegir({ sol: "SOL-119", rech: "SOL-119", cor: "COR-006", rep: "REP-015" }[d], "detalle");
+    if (d === "rech") { rechazando = true; conError = true; pintarDetalle(); }
+    document.querySelectorAll("[data-d]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+  pintar();
+})();
+</script>
+
+</body>
+</html>

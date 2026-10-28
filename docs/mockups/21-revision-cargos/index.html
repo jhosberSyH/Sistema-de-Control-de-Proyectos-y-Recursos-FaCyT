@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Revisión de cargos FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Revisión de cargos antes del cierre (F7.1): lista de cargos del período por proyecto, corrección desde la fila y una confirmación */
+.selector { display: flex; gap: 10px; flex-wrap: wrap; }
+.selector button { font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 14px 16px; display: grid; gap: 4px; min-width: 240px; background: var(--surface); }
+.selector button[aria-pressed="true"] { outline: 2px solid var(--primary); outline-offset: -1px; }
+.selector b { font-family: var(--f-mono); }
+.cargos { padding: 0; overflow: hidden; }
+.cargos .cab-c { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 16px 18px; border-bottom: 1px solid var(--line); align-items: center; }
+.cargos .tabla-env { padding: 0 8px; }
+.total { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; padding: 16px 18px; border-top: 1px solid var(--line); background: var(--bg); }
+.total b { font-size: 22px; font-family: var(--f-display); font-variant-numeric: tabular-nums; }
+tr.neg td.n { color: var(--text); }
+.confirmado { padding: 20px; display: flex; gap: 14px; align-items: flex-start; border-left: 4px solid var(--ok); }
+.confirmado .ico { width: 28px; height: 28px; color: var(--ok); flex: none; }
+</style>
+</head>
+<body>
+
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Inicio</a></li><li>Cierre de período</li></ol>
+              <h1>Cargos de octubre de 2026</h1>
+              <p class="sub">Revisa lo que se cargó a tus proyectos del 01/10 al 31/10. Carmen Pérez cierra el período el sábado 31/10; después ya no se pueden corregir.</p>
+            </div>
+          </div>
+          <div class="selector" role="group" aria-label="Proyecto">
+            <button type="button" class="tarjeta" aria-pressed="true"><b>QUI-024</b><span id="est-024"></span><span class="sec" style="font-size:14px">12 cargos · US$ 1.284,50</span></button>
+            <button type="button" class="tarjeta" aria-pressed="false"><b>QUI-031</b><span class="estado ok"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg>Confirmado el 25/10</span><span class="sec" style="font-size:14px">7 cargos · US$ 846,20</span></button>
+          </div>
+
+          <section class="tarjeta confirmado" id="ok" hidden role="status"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg><div><h2 style="font-size:19px">Confirmaste los cargos de <span class="mono">QUI-024</span></h2><p class="sec">Hoy a las 10:31. Carmen Pérez ya lo ve en su tablero de cierre.</p></div></section>
+
+          <section class="tarjeta cargos" aria-labelledby="t-c">
+            <div class="cab-c"><h2 id="t-c" style="font-size:18px">Cargos de <span class="mono">QUI-024</span></h2><span class="sec" style="font-size:14px">Los gastos compartidos se reparten después del cierre y no entran en esta revisión.</span></div>
+            <div class="tabla-env"><table class="datos apilable"><thead><tr><th scope="col">Fecha</th><th scope="col">Concepto</th><th scope="col">Origen</th><th scope="col" class="n">Monto</th><th scope="col"><span class="vh">Acción</span></th></tr></thead><tbody id="filas"></tbody></table></div>
+            <div class="total"><span>Total de octubre</span><b>US$ 1.284,50</b></div>
+          </section>
+          <div class="acc-form" id="acciones"><button class="btn btn-pri" type="button">Confirmar los 12 cargos de QUI-024</button></div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Revisión de cargos", tanda: 5,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-k="no" aria-pressed="true">Por confirmar</button><button type="button" data-k="si" aria-pressed="false">Confirmado</button></div>' };
+window.APP = { rol: "coo", activo: "cierre", titulo: "Cierre de período", ins: "Cierre de período y gastos compartidos" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var C = [
+    ["02/10", "Etanol 96 % · 1 L", "DES-0288", 8.6], ["06/10", "Crisoles de alúmina adicionales", "SOL-109", 205], ["09/10", "Acetona grado analítico · 1 L", "DES-0293", 12.8],
+    ["14/10", "Nitrato de cerio hexahidratado · 70 g", "DES-0297", 89.6], ["16/10", "Corrección de DES-0297 · −20 g", "DES-0305", -25.6], ["21/10", "Nitrato de cerio hexahidratado · 500 g", "SOL-112", 640],
+    ["21/10", "Hexano grado reactivo · 1 L", "DES-0310", 9.9], ["22/10", "Papel de filtro cualitativo · 1 caja", "DES-0314", 21.7], ["23/10", "Análisis de área superficial BET (servicio externo)", "SOL-113", 266.9],
+    ["24/10", "Etanol 96 % · 2 L", "DES-0316", 17.2], ["26/10", "Acetona grado analítico · 1 L", "DES-0318", 13.1], ["26/10", "Etanol 96 % · 2 L", "DES-0318", 25.3]
+  ];
+  function usd(n) { return (n < 0 ? "−" : "") + "US$ " + Math.abs(n).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  document.getElementById("filas").innerHTML = C.map(function (c) {
+    var desp = c[2].indexOf("DES") === 0, corr = c[3] < 0;
+    return '<tr class="' + (corr ? "neg" : "") + '"><td>' + c[0] + "/2026</td><td>" + c[1] + '</td><td data-e="Origen:"><span class="mono">' + c[2] + "</span> " + (desp ? "despacho" : "gasto") + '</td><td class="n" data-e="Monto:">' + usd(c[3]) + '</td><td class="acc-fila">' + (corr ? '<span class="sec" style="font-size:13.5px">Corrección aprobada</span>' : '<button class="btn btn-txt btn-chico" type="button">Pedir corrección</button>') + "</td></tr>";
+  }).join("");
+  function k(v) {
+    var si = v === "si";
+    document.getElementById("ok").hidden = !si;
+    document.getElementById("acciones").hidden = si;
+    document.getElementById("est-024").innerHTML = si ? est("ok", "Confirmado hoy") : est("warn", "Por confirmar");
+    document.querySelectorAll("#filas .btn-txt").forEach(function (b) { b.hidden = si; });
+    document.querySelectorAll("[data-k]").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.k === v)); });
+  }
+  document.getElementById("comparador").addEventListener("click", function (e) { var b = e.target.closest("[data-k]"); if (b) k(b.dataset.k); });
+  k("no");
+})();
+</script>
+
+</body>
+</html>

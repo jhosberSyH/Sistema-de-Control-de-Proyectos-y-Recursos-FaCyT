@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Inicio por rol FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Estilos propios de la vista: están en compartido/app.css */
+</style>
+</head>
+<body>
+
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+      <aside class="nav-lat" aria-label="Navegación principal">
+        <a class="marca" href="#contenido">
+          <img src="logos/facyt-isotipo.png" alt="" width="38" height="38">
+          <div><strong>Control de Proyectos</strong><span>FaCyT · UC</span></div>
+        </a>
+        <nav><ul id="nav"></ul></nav>
+        <div class="nav-pie">
+          <span class="avatar" id="avatar">DR</span>
+          <div class="quien"><strong id="quien-nombre">Daniela Rivas</strong><span id="quien-rol">Coordinadora de Proyecto</span></div>
+          <button class="salir" type="button" aria-label="Cerrar sesión"><svg class="ico" aria-hidden="true"><use href="#i-salir"/></svg></button>
+        </div>
+      </aside>
+
+      <div class="principal">
+        <div class="editorial" aria-hidden="false">
+          <span class="placa-escudo"><img src="logos/escudo-uc.jpg" alt="Escudo de la Universidad de Carabobo" width="40" height="53"></span>
+          <div class="txt">
+            <span class="ins">Universidad de Carabobo · FaCyT · Control de Proyectos y Recursos</span>
+            <span class="fecha">Martes 27 de octubre de 2026 · El período de octubre cierra el sábado 31/10</span>
+          </div>
+        </div>
+        <header class="barra">
+          <button class="icono-btn menu" type="button" aria-label="Abrir menú"><svg class="ico" aria-hidden="true"><use href="#i-menu"/></svg></button>
+          <span class="marca-tel"><img src="logos/facyt-isotipo.png" alt="" width="28" height="28">Inicio</span>
+          <div class="buscar">
+            <label for="buscar" class="vh">Buscar</label>
+            <svg class="ico" aria-hidden="true"><use href="#i-buscar"/></svg>
+            <input class="entrada" id="buscar" type="search" placeholder="Buscar proyecto, insumo, equipo o solicitud">
+          </div>
+          <div class="der">
+            <button class="icono-btn" type="button" aria-label="Avisos, 3 sin leer" id="btn-avisos"><svg class="ico" aria-hidden="true"><use href="#i-campana"/></svg><span class="punto" id="punto">3</span></button>
+          </div>
+        </header>
+        <main class="contenido" id="contenido" tabindex="-1"></main>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = {
+  vista: "Inicio por rol",
+  extras: '<div class="cmp-grupo" role="group" aria-label="Rol"><button type="button" data-rol="coo" aria-pressed="true">Coordinador</button><button type="button" data-rol="apr" aria-pressed="false">Aprobador</button><button type="button" data-rol="adm" aria-pressed="false">Administrador</button></div>'
+};
+</script>
+<script src="compartido/comun.js"></script>
+<script>
+(function () {
+  function ico(n) { return '<svg class="ico" aria-hidden="true"><use href="#i-' + n + '"/></svg>'; }
+  function est(tipo, texto) {
+    var i = { ok: "ok", warn: "reloj", err: "error", info: "info", neutro: "lapiz" }[tipo];
+    return '<span class="estado ' + tipo + '">' + ico(i) + texto + "</span>";
+  }
+  function prio(n) { return '<span class="prio ' + n.toLowerCase().replace("í", "i") + '"><i aria-hidden="true"></i>' + n + "</span>"; }
+  function barra(p, alto) { return '<div class="barra-prog' + (alto ? " alto" : "") + '" role="presentation"><i style="width:' + Math.min(p, 100) + '%"></i></div>'; }
+  function bloque(titulo, enlace, cuerpo) {
+    return '<section class="tarjeta bloque"><div class="bloque-cab"><h2>' + titulo + "</h2>" + (enlace ? '<a href="#contenido">' + enlace + "</a>" : "") + "</div>" + cuerpo + "</section>";
+  }
+  function pendientes(items) {
+    return '<ul class="pend">' + items.map(function (p) {
+      return '<li><span class="ic ' + p.t + '">' + ico(p.i) + '</span><div><p class="tit">' + p.tit + '</p><p class="det">' + p.det + "</p></div>" +
+        (p.btn ? '<a class="btn ' + (p.pri ? "btn-pri" : "btn-sec") + '" href="#contenido">' + p.btn + "</a>" : "") + "</li>";
+    }).join("") + "</ul>";
+  }
+  function proyecto(p) {
+    return '<article class="proy"><div><span class="cod mono">' + p.cod + "</span><h3>" + p.nom + '</h3></div><div class="chips">' + est("ok", "En ejecución") + prio(p.prio) + "</div>" +
+      '<div class="metrica"><div class="fila"><span>Avance físico</span><b>' + p.av + " %</b></div>" + barra(p.av) + "</div>" +
+      '<div class="metrica"><div class="fila"><span>Ejecución presupuestaria</span><b>' + p.ej + ' %</b></div>' + barra(p.ej, p.ej >= 80) +
+      '<span class="sec num">' + p.gasto + "</span></div></article>";
+  }
+  function lista(items) {
+    return '<ul class="lista">' + items.map(function (x) { return '<li><div class="izq">' + x.a + (x.b ? "<small>" + x.b + "</small>" : "") + "</div>" + (x.c || "") + "</li>"; }).join("") + "</ul>";
+  }
+
+  var ROLES = {
+    coo: {
+      ini: "DR", nombre: "Daniela Rivas", rol: "Coordinadora de Proyecto", avisos: 3,
+      nav: [["inicio", "Inicio"], ["proyectos", "Mis proyectos"], ["solicitudes", "Solicitudes", 1], ["calendario", "Equipos y reservas"], ["inventario", "Inventario"], ["prorrateo", "Cierre de período", 1], ["reportes", "Reportes"]],
+      html: function () {
+        return '<div class="saludo"><div><h1>Buenos días, Daniela</h1><p>Tienes 3 pendientes. El período de octubre cierra el sábado 31/10.</p></div></div>' +
+          '<div class="acciones"><a class="btn btn-pri" href="#contenido">' + ico("mas") + 'Solicitud de retiro</a><a class="btn btn-sec" href="#contenido">' + ico("mas") + 'Solicitud de gasto</a><a class="btn btn-sec" href="#contenido">' + ico("calendario") + 'Reservar equipo</a><a class="btn btn-sec" href="#contenido">' + ico("inventario") + "Registrar uso</a></div>" +
+          '<div class="rejilla"><div class="col">' +
+          bloque("Pendientes", "Ver todos", pendientes([
+            { t: "warn", i: "reloj", tit: 'Confirma los cargos de octubre de <span class="mono">QUI-024</span>', det: '12 cargos por US$ 1.284,50. El aprobador cierra el período el sábado 31/10.', btn: "Revisar cargos", pri: true },
+            { t: "err", i: "error", tit: 'Carmen Pérez rechazó tu solicitud <span class="mono">SOL-118</span>', det: "«Falta la cotización del proveedor». Puedes crear una nueva con la cotización adjunta.", btn: "Ver solicitud" },
+            { t: "ok", i: "ok", tit: "Reserva aprobada: espectrofotómetro UV-Vis", det: 'Jueves 29/10, de 10:00 a 12:00, para <span class="mono">QUI-024</span>.', btn: "Ver en el calendario" }
+          ])) +
+          bloque("Mis proyectos", "Ver todos", '<div class="proyectos">' +
+            proyecto({ cod: "QUI-024", nom: "Síntesis de catalizadores de óxido de cerio", prio: "Alta", av: 62, ej: 48, gasto: "US$ 4.812,00 de 10.000,00" }) +
+            proyecto({ cod: "QUI-031", nom: "Degradación fotocatalítica de colorantes textiles", prio: "Media", av: 35, ej: 83, gasto: "US$ 6.640,00 de 8.000,00" }) + "</div>") +
+          '</div><div class="col">' +
+          bloque("Próximas reservas", "Calendario", lista([
+            { a: "Espectrofotómetro UV-Vis", b: 'Jue 29/10 · 10:00 a 12:00 · <span class="mono">QUI-024</span>', c: est("ok", "Aprobada") },
+            { a: "Rotavapor R-300", b: 'Mié 04/11 · 08:00 a 11:00 · <span class="mono">QUI-031</span>', c: est("warn", "Pendiente") }
+          ])) +
+          bloque("Mis solicitudes", "Ver todas", lista([
+            { a: '<span class="mono">SOL-121</span> Retiro de insumos', b: "Hexano y papel de filtro", c: est("ok", "Aprobado") },
+            { a: '<span class="mono">SOL-119</span> Gasto', b: "Nitrato de cerio, US$ 640,00", c: est("warn", "Pendiente de Aprobación") },
+            { a: '<span class="mono">SOL-118</span> Gasto', b: "Filtros de jeringa 0,22 µm", c: est("err", "Rechazado") },
+            { a: '<span class="mono">SOL-117</span> Retiro de insumos', b: "Guantes de nitrilo M", c: est("ok", "Ejecutado") }
+          ])) + "</div></div>";
+      }
+    },
+    apr: {
+      ini: "CP", nombre: "Carmen Pérez", rol: "Aprobadora / Gestora de Inventario", avisos: 5,
+      nav: [["inicio", "Inicio"], ["solicitudes", "Bandeja de aprobación", 9], ["inventario", "Inventario"], ["almacen", "Almacén", 2], ["calendario", "Equipos y reservas"], ["proyectos", "Priorización"], ["prorrateo", "Gastos compartidos"], ["reportes", "Reportes"]],
+      html: function () {
+        return '<div class="saludo"><div><h1>Buenos días, Carmen</h1><p>Tienes 9 decisiones pendientes y 2 despachos por entregar.</p></div><a class="btn btn-sec" href="#contenido">' + ico("almacen") + "Registrar recepción</a></div>" +
+          '<div class="contadores">' +
+          [["4", "solicitudes pendientes"], ["2", "reservas por decidir"], ["1", "corrección de despacho"], ["2", "despachos por entregar"]].map(function (c) { return '<a class="tarjeta cont" href="#contenido"><b>' + c[0] + "</b><span>" + c[1] + "</span></a>"; }).join("") + "</div>" +
+          '<div class="rejilla"><div class="col">' +
+          bloque("Bandeja de aprobación", "Abrir bandeja", '<div class="tabla-env"><table class="band"><thead><tr><th scope="col">Pedido</th><th scope="col">Proyecto</th><th scope="col">Prioridad</th><th scope="col">Detalle</th><th scope="col"><span class="vh">Acción</span></th></tr></thead><tbody>' +
+            [["SOL-124", "Retiro de insumos", "BIO-011", "Crítica", "3 insumos · hace 3 h"],
+             ["SOL-119", "Gasto", "QUI-024", "Alta", "US$ 640,00 · hace 1 día"],
+             ["RES-052", "Reserva de equipo", "FIS-008", "Media", "Centrífuga · 05/11 14:00 a 16:00"],
+             ["COR-006", "Corrección de despacho", "BIO-011", "Crítica", "DES-0312: 500 g en lugar de 50 g"],
+             ["REP-014", "Reposición automática", "Inventario", "—", "Acetona: quedan 2,5 L, mínimo 5 L"]].map(function (r) {
+               return '<tr><td><span class="mono">' + r[0] + "</span><small>" + r[1] + '</small></td><td class="mono">' + r[2] + "</td><td>" + (r[3] === "—" ? '<span class="sec">—</span>' : prio(r[3])) + "</td><td>" + r[4] + '</td><td><a class="btn btn-sec" style="min-height:36px;padding:0 12px;font-size:14px" href="#contenido">Revisar</a></td></tr>';
+             }).join("") + "</tbody></table></div>") +
+          bloque("Cierre de octubre", "Ver confirmaciones", '<div class="metrica"><div class="fila"><span>2 de 7 proyectos confirmaron sus cargos</span><b>29 %</b></div>' + barra(29, true) + '</div><div class="acciones"><a class="btn btn-sec" href="#contenido">Enviar recordatorio</a></div>') +
+          '</div><div class="col">' +
+          bloque("Alertas de inventario", "Ver inventario", lista([
+            { a: "Acetona grado analítico", b: "Quedan 2,5 L · mínimo 5 L", c: est("err", "Bajo el mínimo") },
+            { a: "Guantes de nitrilo talla M", b: "Quedan 3 cajas · mínimo 10", c: est("err", "Bajo el mínimo") },
+            { a: 'Medio LB agar · lote <span class="mono">L-0425</span>', b: "Vence el 05/11, en 9 días", c: est("warn", "Próximo a vencer") },
+            { a: 'Tripsina 0,25 % · lote <span class="mono">L-0311</span>', b: "Venció el 20/10 · no se puede despachar", c: est("err", "Vencido") }
+          ])) +
+          bloque("Despachos por entregar", "Ir al almacén", lista([
+            { a: '<span class="mono">SOL-121</span> · QUI-024', b: "Hexano 2 L, papel de filtro cualitativo", c: '<a href="#contenido">Despachar</a>' },
+            { a: '<span class="mono">SOL-116</span> · FIS-008', b: "Pasta térmica, alcohol isopropílico", c: '<a href="#contenido">Despachar</a>' }
+          ])) + "</div></div>";
+      }
+    },
+    adm: {
+      ini: "JR", nombre: "José Rodríguez", rol: "Administrador del Sistema", avisos: 2,
+      nav: [["inicio", "Inicio"], ["reportes", "Dashboard"], ["proyectos", "Proyectos", 1], ["usuarios", "Usuarios"], ["inventario", "Catálogo de insumos"], ["equipos", "Catálogo de equipos"], ["almacen", "Ubicaciones y parámetros"], ["auditoria", "Auditoría"]],
+      html: function () {
+        return '<div class="saludo"><div><h1>Buenos días, José</h1><p>Tienes 2 pendientes. Hay 7 proyectos activos.</p></div><a class="btn btn-pri" href="#contenido">' + ico("mas") + "Registrar proyecto</a></div>" +
+          '<div class="contadores">' +
+          [["7", "proyectos activos"], ["72 %", "presupuesto global ejecutado"], ["4", "alertas críticas de stock"], ["2", "lotes próximos a vencer"]].map(function (c) { return '<a class="tarjeta cont" href="#contenido"><b>' + c[0] + "</b><span>" + c[1] + "</span></a>"; }).join("") + "</div>" +
+          '<div class="rejilla"><div class="col">' +
+          bloque("Pendientes", null, pendientes([
+            { t: "warn", i: "usuarios", tit: '<span class="mono">BIO-015</span> no tiene coordinador', det: "Quedó sin coordinador al cambiar el rol de Luis Mendoza el 26/10.", btn: "Asignar coordinador", pri: true },
+            { t: "info", i: "info", tit: '<span class="mono">FIS-012</span> tiene su plan de hitos confirmado', det: "Está en Propuesta. Puedes pasarlo a En ejecución.", btn: "Cambiar estatus" }
+          ])) +
+          bloque("Actividad reciente", "Ver auditoría", lista([
+            { a: "Carmen Pérez cambió la prioridad de <span class=\"mono\">BIO-011</span> de Alta a Crítica", b: "«La entrega del informe al consejo de facultad se adelantó al 15/11» · hoy 08:42 · 10.20.4.17" },
+            { a: "Daniela Rivas envió la solicitud <span class=\"mono\">SOL-119</span> a aprobación", b: "Ayer 16:05 · 10.20.6.33" },
+            { a: "Carmen Pérez registró la recepción del lote <span class=\"mono\">L-0431</span>", b: "Etanol 96 %, 20 L · ayer 11:20 · 10.20.4.17" }
+          ])) +
+          '</div><div class="col">' +
+          bloque("Proyectos por prioridad", "Ver priorización", lista([
+            { a: '<span class="mono">BIO-011</span> Resistencia antimicrobiana en aislados clínicos', c: prio("Crítica") },
+            { a: '<span class="mono">QUI-024</span> Síntesis de catalizadores de óxido de cerio', c: prio("Alta") },
+            { a: '<span class="mono">FIS-008</span> Caracterización de películas delgadas', c: prio("Media") },
+            { a: '<span class="mono">QUI-031</span> Degradación fotocatalítica de colorantes', c: prio("Media") }
+          ])) +
+          bloque("Accesos de administración", null, lista([
+            { a: "Usuarios", b: "14 cuentas activas en los tres roles", c: '<a href="#contenido">Abrir</a>' },
+            { a: "Ubicaciones y parámetros", b: "Anticipación de vencimiento: 30 días", c: '<a href="#contenido">Abrir</a>' }
+          ])) + "</div></div>";
+      }
+    }
+  };
+
+  var rolActual = (location.search.match(/rol=(coo|apr|adm)/) || [0, "coo"])[1];
+  function pintar() {
+    var r = ROLES[rolActual];
+    document.getElementById("nav").innerHTML = r.nav.map(function (n, i) {
+      return '<li><a class="item" href="#contenido"' + (i === 0 ? ' aria-current="page"' : "") + ">" + ico(n[0]) + "<span>" + n[1] + "</span>" + (n[2] ? '<span class="cuenta" aria-label="' + n[2] + ' pendientes">' + n[2] + "</span>" : "") + "</a></li>";
+    }).join("");
+    document.getElementById("avatar").textContent = r.ini;
+    document.getElementById("quien-nombre").textContent = r.nombre;
+    document.getElementById("quien-rol").textContent = r.rol;
+    document.getElementById("punto").textContent = r.avisos;
+    document.getElementById("btn-avisos").setAttribute("aria-label", "Avisos, " + r.avisos + " sin leer");
+    document.getElementById("contenido").innerHTML = r.html();
+  }
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-rol]");
+    if (!b) return;
+    rolActual = b.dataset.rol;
+    document.querySelectorAll("[data-rol]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+    pintar();
+  });
+  document.querySelectorAll("[data-rol]").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.rol === rolActual)); });
+  pintar();
+})();
+</script>
+
+</body>
+</html>

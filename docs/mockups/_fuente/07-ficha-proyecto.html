@@ -1,0 +1,199 @@
+<title>Ficha de proyecto FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Ficha del proyecto (F2.2 a F2.7): encabezado con estado y acciones por rol, métricas, y pestañas con el detalle */
+.cab-p { display: grid; gap: 10px; }
+.cab-p .cod { font-family: var(--f-mono); font-size: 15px; color: var(--muted); }
+.cab-p .chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.cab-p .coord { font-size: 15px; color: var(--muted); }
+.cab-p .coord b { color: var(--text); font-weight: 600; }
+.metricas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.met { padding: 18px; display: grid; gap: 8px; align-content: start; }
+.met .eti { font-size: 14.5px; color: var(--muted); }
+.met .val { font-family: var(--f-display); font-size: 34px; font-weight: 600; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--primary); }
+
+.met .desg { display: grid; gap: 4px; font-size: 14px; margin-top: 4px; }
+.met .desg div { display: flex; justify-content: space-between; gap: 8px; }
+.met .desg b { font-variant-numeric: tabular-nums; font-weight: 600; }
+.panel { display: grid; gap: 20px; padding-top: 20px; }
+.hitos-t td:first-child { width: 36px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.linea-t { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.linea-t li { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 14px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.linea-t li:first-child { border-top: 0; }
+.linea-t time { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.linea-t small { display: block; color: var(--muted); font-size: 14px; }
+.dos { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.mk .solo-adm, .mk .solo-coo { display: none; }
+.mk[data-rol="adm"] .solo-adm, .mk[data-rol="coo"] .solo-coo { display: flex; }
+@container mk (max-width: 760px) {
+  .metricas, .dos { grid-template-columns: minmax(0, 1fr); }
+  .linea-t li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app" data-rol="adm">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div class="cab-p">
+              <ol class="migas"><li><a href="#contenido">Proyectos</a></li><li class="mono">QUI-024</li></ol>
+              <span class="cod">QUI-024 · Química</span>
+              <h1>Síntesis de catalizadores de óxido de cerio</h1>
+              <div class="chips"><span class="estado ok"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg>En ejecución</span><span id="prio-chip"></span></div>
+              <p class="coord">Coordinadora <b>Daniela Rivas</b> · Registrado el 03/06/2026</p>
+            </div>
+            <div class="acc solo-adm"><button class="btn btn-sec" type="button">Asignar coordinador</button><button class="btn btn-pri" type="button" data-abrir="capa-estatus">Cambiar estatus</button></div>
+            <div class="acc solo-coo"><button class="btn btn-sec" type="button">Nueva solicitud</button><button class="btn btn-pri" type="button">Cargar avance</button></div>
+          </div>
+
+          <div class="metricas">
+            <section class="tarjeta met" aria-label="Avance físico">
+              <span class="eti">Avance físico</span><span class="val">62 %</span>
+              <div class="barra-prog"><i style="width:62%"></i></div>
+              <span class="sec" style="font-size:14px">2 de 5 hitos completos. Calculado con los pesos de cada hito.</span>
+            </section>
+            <section class="tarjeta met" aria-label="Ejecución presupuestaria">
+              <span class="eti">Ejecución presupuestaria</span><span class="val">48 %</span>
+              <div class="barra-prog"><i style="width:48%"></i></div>
+              <div class="desg">
+                <div><span>Solicitudes de gasto ejecutadas</span><b>US$ 3.150,00</b></div>
+                <div><span>Insumos despachados</span><b>US$ 1.402,00</b></div>
+                <div><span>Parte de los gastos compartidos</span><b>US$ 260,00</b></div>
+                <div style="border-top:1px solid var(--line);padding-top:4px"><span>Gasto ejecutado de US$ 10.000,00</span><b>US$ 4.812,00</b></div>
+              </div>
+            </section>
+            <section class="tarjeta met" aria-label="Próximo hito">
+              <span class="eti">Próximo hito</span>
+              <span style="font-weight:600;font-size:17px">Calcinación y caracterización por DRX</span>
+              <div class="mini-barra"><div class="barra-prog"><i style="width:70%"></i></div><b>70 %</b></div>
+              <span class="sec" style="font-size:14px">Fecha prevista 15/11/2026 · peso 30 %</span>
+            </section>
+          </div>
+
+          <section>
+            <div class="pestanas" role="tablist" aria-label="Detalle del proyecto">
+              <button type="button" role="tab" aria-selected="true" data-p="res">Resumen</button>
+              <button type="button" role="tab" aria-selected="false" data-p="gas">Gastos y despachos</button>
+              <button type="button" role="tab" aria-selected="false" data-p="res2">Reservas</button>
+              <button type="button" role="tab" aria-selected="false" data-p="his">Historial</button>
+            </div>
+
+            <div class="panel" data-panel="res" role="tabpanel">
+              <div class="dos">
+                <section class="tarjeta bloque" aria-labelledby="t-hitos">
+                  <div class="bloque-cab"><h2 id="t-hitos">Hitos</h2><a href="#contenido" class="solo-coo">Editar plan</a></div>
+                  <div class="tabla-env"><table class="datos hitos-t apilable"><thead><tr><th scope="col">#</th><th scope="col">Hito</th><th scope="col" class="n">Peso</th><th scope="col">Avance</th><th scope="col">Fecha prevista</th></tr></thead><tbody id="hitos"></tbody></table></div>
+                </section>
+                <section class="tarjeta bloque" aria-labelledby="t-mov">
+                  <div class="bloque-cab"><h2 id="t-mov">Movimientos recientes</h2><a href="#contenido">Ver todos</a></div>
+                  <ul class="linea-t">
+                    <li><time>26/10/2026</time><div>Despacho de acetona 1 L y etanol 96 % 2 L<small><span class="mono">DES-0318</span> · US$ 38,40</small></div></li>
+                    <li><time>21/10/2026</time><div>Solicitud de gasto ejecutada, nitrato de cerio hexahidratado<small><span class="mono">SOL-112</span> · US$ 640,00</small></div></li>
+                    <li><time>06/10/2026</time><div>Avance del hito 3 cargado: 70 %<small>«DRX de 4 de 6 muestras»</small></div></li>
+                    <li><time>30/09/2026</time><div>Gastos compartidos de septiembre (según consumo)<small>US$ 92,00</small></div></li>
+                  </ul>
+                </section>
+              </div>
+            </div>
+            <div class="panel" data-panel="gas" role="tabpanel" hidden>
+              <section class="tarjeta bloque"><div class="tabla-env"><table class="datos apilable"><thead><tr><th scope="col">Fecha</th><th scope="col">Concepto</th><th scope="col">Tipo</th><th scope="col" class="n">Monto</th></tr></thead><tbody>
+                <tr><td>26/10/2026</td><td>Acetona 1 L, etanol 96 % 2 L <small class="mono">DES-0318</small></td><td>Despacho</td><td class="n">US$ 38,40</td></tr>
+                <tr><td>21/10/2026</td><td>Nitrato de cerio hexahidratado <small class="mono">SOL-112</small></td><td>Gasto</td><td class="n">US$ 640,00</td></tr>
+                <tr><td>30/09/2026</td><td>Gastos compartidos de septiembre</td><td>Gastos compartidos</td><td class="n">US$ 92,00</td></tr>
+                <tr><td>18/09/2026</td><td>Crisoles de alúmina, 10 unidades <small class="mono">SOL-104</small></td><td>Gasto</td><td class="n">US$ 410,00</td></tr>
+              </tbody></table></div></section>
+            </div>
+            <div class="panel" data-panel="res2" role="tabpanel" hidden>
+              <section class="tarjeta bloque"><ul class="lista">
+                <li><div class="izq">Espectrofotómetro UV-Vis<small>Jue 29/10 · 10:00 a 12:00</small></div><span class="estado ok"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg>Aprobada</span></li>
+                <li><div class="izq">Difractómetro de rayos X<small>Lun 09/11 · 08:00 a 12:00</small></div><span class="estado warn"><svg class="ico" aria-hidden="true"><use href="#i-reloj"/></svg>Pendiente</span></li>
+              </ul></section>
+            </div>
+            <div class="panel" data-panel="his" role="tabpanel" hidden>
+              <section class="tarjeta bloque"><ul class="linea-t">
+                <li><time>14/07/2026</time><div>José Rodríguez cambió el estatus de Propuesta a En ejecución<small>10.20.4.11</small></div></li>
+                <li><time>10/07/2026</time><div>Daniela Rivas confirmó el plan de hitos (5 hitos, 100 %)<small>10.20.6.33</small></div></li>
+                <li><time>03/06/2026</time><div>José Rodríguez registró el proyecto y asignó a Daniela Rivas<small>10.20.4.11</small></div></li>
+              </ul></section>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <div class="capa" id="capa-estatus" hidden>
+        <form class="dialogo" role="dialog" aria-modal="true" aria-labelledby="t-est">
+          <div class="dialogo-cab"><div><h2 id="t-est">Cambiar estatus de <span class="mono">QUI-024</span></h2><p class="sec">Estatus actual: En ejecución</p></div><button class="icono-btn" type="button" aria-label="Cerrar" data-cerrar><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></button></div>
+          <fieldset style="border:0;padding:0;margin:0"><legend class="vh">Nuevo estatus</legend>
+            <div class="radios" id="radios-est">
+              <label><input type="radio" name="est" value="ej"> En ejecución</label>
+              <label><input type="radio" name="est" value="su" checked> Suspendido</label>
+              <label><input type="radio" name="est" value="fi"> Finalizado</label>
+            </div>
+          </fieldset>
+          <div class="aviso warn" id="aviso-est" role="status"><svg class="ico" aria-hidden="true"><use href="#i-alerta"/></svg><div><p><b>QUI-024 deja de contar como proyecto activo.</b></p><p>No recibe parte de los gastos compartidos y no aparece en los indicadores. Puedes reactivarlo después.</p></div></div>
+          <div class="campo"><label for="est-com">Comentario para el historial <span class="obligatorio">(opcional)</span></label><textarea class="entrada" id="est-com">El laboratorio de DRX estará en mantenimiento hasta diciembre.</textarea></div>
+          <div class="acc-form"><button class="btn btn-sec" type="button" data-cerrar>Cancelar</button><button class="btn btn-pri" type="submit">Cambiar a Suspendido</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Ficha de proyecto", tanda: 2,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Rol"><button type="button" data-rol="adm" aria-pressed="true">Administrador</button><button type="button" data-rol="coo" aria-pressed="false">Coordinador</button></div><div class="cmp-grupo" role="group" aria-label="Diálogo"><button type="button" data-capa="" aria-pressed="true">Ficha</button><button type="button" data-capa="capa-estatus" aria-pressed="false">Cambiar estatus</button></div>' };
+window.APP = { rol: "adm", activo: "proyectos", titulo: "QUI-024", ins: "Proyectos y avance" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  document.getElementById("prio-chip").innerHTML = prio("Alta");
+  var H = [[1, "Revisión bibliográfica y diseño experimental", 10, 100, "30/06/2026"], [2, "Síntesis de precursores", 25, 100, "31/08/2026"], [3, "Calcinación y caracterización por DRX", 30, 70, "15/11/2026"], [4, "Pruebas catalíticas", 25, 24, "31/01/2027"], [5, "Informe final", 10, 0, "31/03/2027"]];
+  document.getElementById("hitos").innerHTML = H.map(function (h) {
+    return "<tr><td>" + h[0] + "</td><td>" + h[1] + '</td><td class="n" data-e="Peso:">' + h[2] + ' %</td><td><div class="mini-barra"><div class="barra-prog"><i style="width:' + h[3] + '%"></i></div><b>' + h[3] + ' %</b></div></td><td data-e="Prevista:">' + h[4] + "</td></tr>";
+  }).join("");
+  var AV = { ej: null, su: ["warn", "<b>QUI-024 deja de contar como proyecto activo.</b>", "No recibe parte de los gastos compartidos y no aparece en los indicadores. Puedes reactivarlo después.", "Cambiar a Suspendido"], fi: ["warn", "<b>QUI-024 ya no admitirá solicitudes nuevas ni reservas de equipos.</b>", "Las solicitudes y reservas pendientes se mantienen hasta resolverse.", "Cambiar a Finalizado"] };
+  document.getElementById("radios-est").addEventListener("change", function (e) {
+    var a = AV[e.target.value], box = document.getElementById("aviso-est"), btn = document.querySelector("#capa-estatus [type=submit]");
+    box.hidden = !a; if (a) box.querySelector("div").innerHTML = "<p>" + a[1] + "</p><p>" + a[2] + "</p>";
+    btn.textContent = a ? a[3] : "Sin cambios"; btn.disabled = !a;
+  });
+  function capa(id) {
+    document.querySelectorAll(".capa").forEach(function (c) { c.hidden = c.id !== id; });
+    document.querySelectorAll("[data-capa]").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.capa === id)); });
+  }
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-capa]"); if (b) capa(b.dataset.capa);
+    var r = e.target.closest("[data-rol]");
+    if (r) {
+      document.querySelector(".mk").setAttribute("data-rol", r.dataset.rol);
+      window.APP.rol = r.dataset.rol; window.pintarMarco();
+      document.querySelectorAll("[data-rol]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === r)); });
+      if (r.dataset.rol === "coo") capa("");
+    }
+  });
+  document.querySelector(".mk").addEventListener("click", function (e) {
+    var a = e.target.closest("[data-abrir]"); if (a) capa(a.dataset.abrir);
+    if (e.target.closest("[data-cerrar]")) capa("");
+    var t = e.target.closest("[role=tab]");
+    if (t) {
+      document.querySelectorAll("[role=tab]").forEach(function (x) { x.setAttribute("aria-selected", String(x === t)); });
+      document.querySelectorAll("[data-panel]").forEach(function (p) { p.hidden = p.dataset.panel !== t.dataset.p; });
+    }
+  });
+})();
+</script>

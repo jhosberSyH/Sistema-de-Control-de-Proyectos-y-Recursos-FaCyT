@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Ubicaciones y parámetros FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Ubicaciones (F1.4) a la izquierda y parámetros generales (F1.5) a la derecha; validación junto a cada campo */
+.dos { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.alta { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 12px; align-items: start; padding: 16px; border: 1px dashed var(--border); border-radius: var(--r-l); background: var(--bg); }
+.alta .btn { margin-top: 28px; }
+.param { display: grid; gap: 8px; padding: 16px 0; border-top: 1px solid var(--line); }
+.param:first-of-type { border-top: 0; padding-top: 0; }
+.param .fila { display: flex; gap: 10px; align-items: center; }
+.param .fila .entrada { max-width: 120px; text-align: right; font-variant-numeric: tabular-nums; }
+.param .unidad { color: var(--muted); }
+.param .hist { font-size: 13.5px; color: var(--muted); display: flex; gap: 6px; align-items: flex-start; }
+.param .hist .ico { width: 16px; height: 16px; margin-top: 2px; }
+@container mk (max-width: 760px) {
+  .dos { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .alta { grid-template-columns: minmax(0, 1fr); }
+  .alta .btn { margin-top: 0; }
+}
+</style>
+</head>
+<body>
+
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Inicio</a></li><li>Ubicaciones y parámetros</li></ol>
+              <h1>Ubicaciones y parámetros</h1>
+              <p class="sub">Los lugares donde se guardan los lotes y los valores que usan las alertas y el pronóstico.</p>
+            </div>
+          </div>
+
+          <div class="dos">
+            <section class="tarjeta bloque" aria-labelledby="t-ubic">
+              <div class="bloque-cab"><h2 id="t-ubic">Ubicaciones de almacenamiento</h2><span class="conteo">6 activas</span></div>
+              <form class="alta" novalidate aria-label="Agregar ubicación">
+                <div class="campo" id="c-ubic"><label for="u-nombre">Nombre</label><input class="entrada" id="u-nombre" value="Estante de vidriería" aria-describedby="u-err">
+                  <p class="msg-error" id="u-err" hidden><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><span>Ya existe una ubicación activa con ese nombre. Usa otro nombre o edita la existente.</span></p></div>
+                <div class="campo"><label for="u-desc">Descripción <span class="obligatorio">(opcional)</span></label><input class="entrada" id="u-desc" value="Planta baja, ala de Química, estante metálico"></div>
+                <button class="btn btn-pri" type="submit">Agregar</button>
+              </form>
+              <div class="tabla-env">
+                <table class="datos apilable">
+                  <thead><tr><th scope="col">Nombre</th><th scope="col">Descripción</th><th scope="col" class="n">Lotes</th><th scope="col">Estado</th><th scope="col"><span class="vh">Acciones</span></th></tr></thead>
+                  <tbody id="filas"></tbody>
+                </table>
+              </div>
+              <p class="sec" style="font-size:14px">Una ubicación con lotes no se elimina: se desactiva y deja de aparecer al registrar recepciones.</p>
+            </section>
+
+            <section class="tarjeta bloque" aria-labelledby="t-param">
+              <div class="bloque-cab"><h2 id="t-param">Parámetros generales</h2></div>
+              <form novalidate aria-labelledby="t-param" style="display:grid;gap:4px">
+                <div class="param campo" id="c-p1">
+                  <label for="p1">Anticipación de la alerta de vencimiento</label>
+                  <div class="fila"><input class="entrada" id="p1" inputmode="numeric" value="30" aria-describedby="p1-a p1-err"><span class="unidad">días</span></div>
+                  <span class="ayuda" id="p1-a">Un lote aparece como "Próximo a vencer" cuando le quedan estos días o menos.</span>
+                  <p class="msg-error" id="p1-err" hidden><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><span>Escribe un número entero mayor que cero, por ejemplo 30.</span></p>
+                  <p class="hist"><svg class="ico" aria-hidden="true"><use href="#i-auditoria"/></svg><span>José Rodríguez lo cambió de 45 a 30 el 12/10/2026.</span></p>
+                </div>
+                <div class="param campo">
+                  <label for="p2">Historial mínimo para mostrar el pronóstico</label>
+                  <div class="fila"><input class="entrada" id="p2" inputmode="numeric" value="6" aria-describedby="p2-a"><span class="unidad">meses</span></div>
+                  <span class="ayuda" id="p2-a">Con menos meses de despachos, la ficha del insumo dice "Sin historial suficiente para pronosticar".</span>
+                  <p class="hist"><svg class="ico" aria-hidden="true"><use href="#i-auditoria"/></svg><span>Valor inicial del sistema.</span></p>
+                </div>
+                <div class="acc-form"><button class="btn btn-sec" type="button">Descartar cambios</button><button class="btn btn-pri" type="submit">Guardar parámetros</button></div>
+              </form>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Ubicaciones y parámetros", tanda: 2,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-est="normal" aria-pressed="true">Normal</button><button type="button" data-est="error" aria-pressed="false">Con errores</button></div>' };
+window.APP = { rol: "adm", activo: "ubicaciones", titulo: "Ubicaciones y parámetros", ins: "Usuarios, catálogos y parámetros" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var F = [["Depósito de reactivos A", "Planta baja, ala de Química", 18, true], ["Depósito de reactivos B", "Sótano, cuarto ventilado", 9, true], ["Cuarto frío de Biología", "Refrigeración entre 2 y 8 °C", 7, true],
+           ["Congelador −20 °C", "Laboratorio de Microbiología", 4, true], ["Gabinete de solventes inflamables", "Pasillo de Química, gabinete certificado", 6, true], ["Almacén de consumibles generales", "Planta baja, junto a la recepción", 12, true], ["Estante temporal 3", "Usado durante la mudanza de 2025", 0, false]];
+  document.getElementById("filas").innerHTML = F.map(function (f) {
+    return "<tr><td><b>" + f[0] + '</b></td><td data-e="">' + f[1] + '</td><td class="n" data-e="Lotes:">' + f[2] + "</td><td>" + (f[3] ? est("ok", "Activa") : est("neutro", "Desactivada")) + '</td><td class="acc-fila"><button class="btn btn-sec btn-chico" type="button">' + (f[3] ? "Editar" : "Reactivar") + "</button></td></tr>";
+  }).join("");
+  function estado(err) {
+    document.getElementById("c-ubic").classList.toggle("error", err);
+    document.getElementById("u-err").hidden = !err;
+    document.getElementById("u-nombre").setAttribute("aria-invalid", String(err));
+    document.getElementById("c-p1").classList.toggle("error", err);
+    document.getElementById("p1-err").hidden = !err;
+    document.getElementById("p1").value = err ? "-5" : "30";
+    document.getElementById("u-nombre").value = err ? "Depósito de reactivos B" : "Estante de vidriería";
+    document.getElementById("p1").setAttribute("aria-invalid", String(err));
+  }
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-est]"); if (!b) return;
+    estado(b.dataset.est === "error");
+    document.querySelectorAll("[data-est]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+})();
+</script>
+
+</body>
+</html>

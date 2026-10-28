@@ -1,0 +1,147 @@
+<title>Ficha de insumo FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Ficha del insumo: stock y alerta (F3.3, F3.4), reposición automática decidida en un paso (F3.5), lotes con vencimiento (F3.6) y pronóstico (F3.7) */
+.resumen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.res { padding: 18px; display: grid; gap: 6px; align-content: start; }
+.res .eti { font-size: 14.5px; color: var(--muted); }
+.res .val { font-family: var(--f-display); font-size: 32px; font-weight: 600; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--primary); }
+
+.repo { padding: 20px; display: grid; gap: 14px; border-left: 4px solid var(--info); }
+.repo .fila { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.repo .cant { display: flex; gap: 8px; align-items: flex-end; }
+.repo .cant .entrada { width: 110px; text-align: right; }
+.dos { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+/* Pronóstico: columnas de consumo mensual, una escala; el mes pronosticado va rayado con su intervalo */
+.graf-c { position: relative; height: 200px; margin-left: 40px; border-bottom: 1px solid var(--border); }
+.graf-c .linea { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
+.graf-c .linea span { position: absolute; right: calc(100% + 8px); top: -9px; white-space: nowrap; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.graf-c .cols { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; align-items: end; padding: 0 4px; }
+.graf-c .c { position: relative; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.graf-c .c i { display: block; width: min(30px, 64%); background: var(--primary); border-radius: 4px 4px 0 0; }
+.graf-c .c.pron i { background: repeating-linear-gradient(135deg, var(--primary) 0 5px, transparent 5px 8px); border: 2px solid var(--primary); border-bottom: 0; }
+.graf-c .c .rango { position: absolute; left: 50%; width: 2px; background: var(--text); transform: translateX(-50%); }
+.graf-c .c .rango::before, .graf-c .c .rango::after { content: ""; position: absolute; left: -6px; width: 14px; height: 2px; background: var(--text); }
+.graf-c .c .rango::before { top: 0; } .graf-c .c .rango::after { bottom: 0; }
+.graf-c .c b { position: absolute; font-size: 12px; font-weight: 600; transform: translateY(-4px); font-variant-numeric: tabular-nums; }
+.graf-c .min { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--err); }
+.graf-c .min span { position: absolute; left: 4px; top: -20px; font-size: 12px; color: var(--text); background: var(--surface); padding: 0 4px; }
+.meses-c { margin-left: 40px; display: grid; grid-template-columns: repeat(8, 1fr); padding: 6px 4px 0; font-size: 12.5px; color: var(--muted); text-align: center; }
+.leyenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); }
+.leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+.leyenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; background: var(--primary); }
+.vacio { display: grid; gap: 10px; justify-items: start; padding: 20px; border: 1px dashed var(--border); border-radius: var(--r-l); }
+.vacio .ico { width: 28px; height: 28px; color: var(--muted); }
+tr.vencido td { color: var(--muted); }
+@container mk (max-width: 760px) { .resumen, .dos { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Inventario</a></li><li>Acetona grado analítico</li></ol>
+              <h1>Acetona grado analítico</h1>
+              <p class="sub">Materia prima · litros · Gabinete de solventes inflamables</p>
+            </div>
+            <div class="acc"><button class="btn btn-sec" type="button">Cambiar stock mínimo</button><button class="btn btn-pri" type="button"><svg class="ico" aria-hidden="true"><use href="#i-almacen"/></svg>Registrar recepción</button></div>
+          </div>
+
+          <div class="resumen">
+            <section class="tarjeta res bajo" aria-label="Stock actual"><span class="eti">Stock actual</span><span class="val">2,5 L</span><span class="estado err"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg>Bajo el mínimo de 5 L</span></section>
+            <section class="tarjeta res" aria-label="Consumo pronosticado"><span class="eti">Consumo pronosticado para noviembre</span><span class="val" id="v-pron">6,2 L</span><span class="sec" style="font-size:14px" id="v-pron-sub">Entre 4,9 y 7,5 L · Holt-Winters con 7 meses de despachos</span></section>
+            <section class="tarjeta res" aria-label="Último movimiento"><span class="eti">Último movimiento</span><span style="font-weight:600;font-size:17px">Despacho de 1 L a <span class="mono">QUI-024</span></span><span class="sec" style="font-size:14px">26/10/2026, 11:20 · lote <span class="mono">L-0402</span> · <span class="mono">DES-0318</span></span></section>
+          </div>
+
+          <section class="tarjeta repo" aria-labelledby="t-repo">
+            <div class="fila">
+              <div style="display:grid;gap:4px">
+                <span class="estado info" style="justify-self:start"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg>Reposición automática</span>
+                <h2 id="t-repo" style="font-size:20px"><span class="mono">REP-014</span> en Borrador</h2>
+                <p class="sec">El sistema la creó el 26/10/2026 a las 11:20, cuando el stock bajó de 5 L. No se compra nada hasta que la apruebes.</p>
+              </div>
+              <div class="cant campo"><div style="display:grid;gap:6px"><label for="cant">Cantidad a reponer</label><div style="display:flex;gap:8px;align-items:center"><input class="entrada num" id="cant" inputmode="decimal" value="10"><span class="sec">L</span></div></div></div>
+            </div>
+            <p style="font-size:15px">Con 10 L quedarías en 12,5 L. El pronóstico de noviembre es 6,2 L, así que alcanzaría para el mes con margen sobre el mínimo.</p>
+            <div class="acc-form" style="justify-content:flex-start"><button class="btn btn-pri" type="button">Aprobar reposición</button><button class="btn btn-sec" type="button">Descartar</button><span class="sec" style="font-size:14px;align-self:center">Al aprobar, queda registrado su paso por Pendiente de Aprobación.</span></div>
+          </section>
+
+          <div class="dos">
+            <section class="tarjeta bloque" aria-labelledby="t-lotes">
+              <div class="bloque-cab"><h2 id="t-lotes">Lotes</h2><span class="conteo">2 con stock</span></div>
+              <div class="tabla-env"><table class="datos apilable"><thead><tr><th scope="col">Lote</th><th scope="col">Ingreso</th><th scope="col">Vence</th><th scope="col" class="n">Stock</th><th scope="col" class="n">Costo unitario</th><th scope="col">Proveedor</th></tr></thead><tbody>
+                <tr><td class="mono">L-0402</td><td data-e="Ingreso:">12/08/2026</td><td data-e="Vence:">18/03/2027</td><td class="n" data-e="Stock:">1,5 L</td><td class="n" data-e="Costo:">US$ 12,80</td><td data-e="Proveedor:">Química Valencia, C.A.</td></tr>
+                <tr><td class="mono">L-0417</td><td data-e="Ingreso:">02/10/2026</td><td data-e="Vence:">30/06/2027</td><td class="n" data-e="Stock:">1 L</td><td class="n" data-e="Costo:">US$ 13,10</td><td data-e="Proveedor:">Suministros Científicos del Centro</td></tr>
+              </tbody></table></div>
+              <p class="sec" style="font-size:14px">Al despachar se sugiere primero el lote que vence antes. Los lotes vencidos aparecen aquí, pero no se pueden elegir.</p>
+            </section>
+
+            <section class="tarjeta bloque" aria-labelledby="t-pron">
+              <div class="bloque-cab"><h2 id="t-pron">Consumo mensual y pronóstico</h2><button class="btn btn-sec btn-chico" type="button" id="btn-tabla" aria-expanded="false">Ver como tabla</button></div>
+              <div id="con-hist">
+                <div class="graf-c" id="graf"></div>
+                <div class="meses-c" aria-hidden="true"><span>Abr</span><span>May</span><span>Jun</span><span>Jul</span><span>Ago</span><span>Sep</span><span>Oct</span><span>Nov</span></div>
+                <div class="leyenda" style="margin-top:10px"><span><i aria-hidden="true"></i>Consumo despachado</span><span><i aria-hidden="true" style="background:repeating-linear-gradient(135deg,var(--primary) 0 4px,transparent 4px 6px);outline:1px solid var(--primary)"></i>Pronóstico con intervalo</span><span><i aria-hidden="true" style="background:none;border-top:2px dashed var(--err);height:0;width:16px;border-radius:0"></i>Stock mínimo</span></div>
+                <div class="tabla-env" id="tabla-pron" hidden></div>
+                <p class="sec" style="font-size:13.5px;margin-top:8px">El pronóstico no crea solicitudes ni compras. Octubre llega hasta el 27/10.</p>
+              </div>
+              <div class="vacio" id="sin-hist" hidden>
+                <svg class="ico" aria-hidden="true"><use href="#i-reportes"/></svg>
+                <p><b>Sin historial suficiente para pronosticar.</b></p>
+                <p class="sec">Este insumo tiene 3 meses de despachos y hacen falta 6. El pronóstico aparecerá solo cuando haya historial.</p>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Ficha de insumo", tanda: 3,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Pronóstico"><button type="button" data-h="1" aria-pressed="true">Con historial</button><button type="button" data-h="0" aria-pressed="false">Historial insuficiente</button></div>' };
+window.APP = { rol: "apr", activo: "inventario", titulo: "Acetona", ins: "Inventario de materia prima y consumibles" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var D = [["Abril", 2.5], ["Mayo", 3], ["Junio", 3.5], ["Julio", 4.5], ["Agosto", 5], ["Septiembre", 6], ["Octubre", 5.5]];
+  var MAX = 8, P = 6.2, LO = 4.9, HI = 7.5;
+  function n(x) { return x.toLocaleString("es-VE"); }
+  var h = '<div class="linea" style="bottom:0"><span>0</span></div>' + [2, 4, 6, 8].map(function (t) { return '<div class="linea" style="bottom:' + (t / MAX * 100) + '%"><span>' + t + " L</span></div>"; }).join("");
+  h += '<div class="min" style="bottom:' + (5 / MAX * 100) + '%"><span>Mínimo 5 L</span></div>';
+  h += '<div class="cols">' + D.map(function (d) { return '<div class="c"><b style="position:absolute;bottom:' + (d[1] / MAX * 100) + '%">' + n(d[1]) + '</b><i style="height:' + (d[1] / MAX * 100) + '%"></i></div>'; }).join("") +
+    '<div class="c pron"><span class="rango" style="bottom:' + (LO / MAX * 100) + '%;height:' + ((HI - LO) / MAX * 100) + '%"></span><i style="height:' + (P / MAX * 100) + '%"></i></div></div>';
+  document.getElementById("graf").innerHTML = h;
+  document.getElementById("tabla-pron").innerHTML = '<table class="datos"><caption>Consumo mensual de acetona y pronóstico</caption><thead><tr><th scope="col">Mes</th><th scope="col" class="n">Consumo</th></tr></thead><tbody>' +
+    D.map(function (d) { return "<tr><td>" + d[0] + ' de 2026</td><td class="n">' + n(d[1]) + " L</td></tr>"; }).join("") + '<tr><td>Noviembre de 2026 (pronóstico)</td><td class="n">6,2 L (4,9 a 7,5)</td></tr></tbody></table>';
+  document.getElementById("btn-tabla").addEventListener("click", function () {
+    var t = document.getElementById("tabla-pron"), ab = t.hidden; t.hidden = !ab; this.setAttribute("aria-expanded", String(ab)); this.textContent = ab ? "Ocultar tabla" : "Ver como tabla";
+  });
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-h]"); if (!b) return;
+    var con = b.dataset.h === "1";
+    document.getElementById("con-hist").hidden = !con; document.getElementById("sin-hist").hidden = con;
+    document.getElementById("btn-tabla").hidden = !con;
+    document.getElementById("v-pron").textContent = con ? "6,2 L" : "No disponible";
+    document.getElementById("v-pron-sub").textContent = con ? "Entre 4,9 y 7,5 L · Holt-Winters con 7 meses de despachos" : "Hacen falta 6 meses de despachos";
+    document.querySelectorAll("[data-h]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+})();
+</script>

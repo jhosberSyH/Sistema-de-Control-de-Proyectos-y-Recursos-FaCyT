@@ -1,0 +1,117 @@
+<title>Auditoría FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Auditoría global (F8.5, F8.6): los registros más recientes primero, filtros opcionales y el detalle con valor anterior y nuevo */
+.dos { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+.aud { padding: 0; overflow: hidden; }
+.aud .cab-a { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.aud .herr { padding: 16px 18px; border-bottom: 1px solid var(--line); background: var(--bg); }
+.aud .tabla-env { padding: 0 8px; }
+.aud tbody tr { cursor: pointer; }
+.aud tbody td:first-child { white-space: nowrap; }
+.aud tbody tr[aria-selected="true"] td { background: var(--surface-2); }
+.aud tbody tr[aria-selected="true"] td:first-child { box-shadow: inset 4px 0 0 var(--primary); }
+.accion { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; font-weight: 600; }
+.accion i { width: 8px; height: 8px; border-radius: 2px; background: var(--muted); display: inline-block; }
+.accion.estado-c i { background: var(--info); } .accion.crea i { background: var(--ok); } .accion.edita i { background: var(--warn); } .accion.sesion i { background: var(--border); }
+.det { padding: 20px; display: grid; gap: 14px; position: sticky; top: 16px; }
+.det h2 { font-size: 19px; }
+.cambio { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; }
+.cambio div { padding: 12px; border: 1px solid var(--line); border-radius: var(--r-m); display: grid; gap: 2px; }
+.cambio span { font-size: 13px; color: var(--muted); }
+.cambio .nuevo { border-color: var(--primary); background: var(--surface-2); }
+.inmutable { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: var(--muted); }
+.inmutable .ico { width: 16px; height: 16px; margin-top: 2px; }
+@container mk (max-width: 760px) { .dos { grid-template-columns: minmax(0, 1fr); } .det { position: static; } }
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Inicio</a></li><li>Auditoría</li></ol>
+              <h1>Auditoría</h1>
+              <p class="sub">Cada creación, edición y cambio de estado del sistema, con fecha, usuario y dirección IP. Es de solo lectura.</p>
+            </div>
+          </div>
+          <div class="dos">
+            <section class="tarjeta aud" aria-label="Registros de auditoría">
+              <div class="cab-a"><span class="conteo" id="conteo">Mostrando los registros más recientes · 2.418 en total</span><button class="btn btn-sec btn-chico" type="button" id="btn-f" aria-expanded="false" aria-controls="filtros"><svg class="ico" aria-hidden="true"><use href="#i-filtro"/></svg>Filtrar</button></div>
+              <form class="herr" id="filtros" hidden aria-label="Filtros">
+                <div class="campo"><label for="f-usr">Usuario</label><select class="entrada" id="f-usr"><option>Todos</option><option>Carmen Pérez</option><option>Daniela Rivas</option><option>José Rodríguez</option></select></div>
+                <div class="campo"><label for="f-acc">Acción</label><select class="entrada" id="f-acc"><option>Todas</option><option>Cambio de estado</option><option>Creación</option><option>Edición</option><option>Inicio y cierre de sesión</option></select></div>
+                <div class="campo busq"><label for="f-obj">Objeto</label><svg class="ico" aria-hidden="true"><use href="#i-buscar"/></svg><input class="entrada" id="f-obj" type="search" placeholder="Código: BIO-011, SOL-119, L-0425…"></div>
+                <div class="campo"><label for="f-desde">Desde</label><input class="entrada" id="f-desde" type="date"></div>
+              </form>
+              <div class="tabla-env"><table class="datos apilable"><thead><tr><th scope="col">Fecha y hora</th><th scope="col">Usuario</th><th scope="col">Acción</th><th scope="col">Objeto</th><th scope="col">IP</th></tr></thead><tbody id="filas"></tbody></table></div>
+              <div class="paginacion" style="padding:12px 18px 16px;border-top:1px solid var(--line)"><span>1 a 9</span><div class="pags"><button type="button" aria-current="page">1</button><button type="button">2</button><button type="button">3</button></div></div>
+            </section>
+
+            <aside class="tarjeta det" aria-labelledby="t-det" aria-live="polite">
+              <h2 id="t-det">Cambio de prioridad de <span class="mono">BIO-011</span></h2>
+              <dl class="kv"><dt>Fecha</dt><dd>27/10/2026 08:42:16</dd><dt>Usuario</dt><dd>Carmen Pérez · Aprobadora</dd><dt>IP</dt><dd class="mono">10.20.4.17</dd><dt>Objeto</dt><dd><a href="#contenido">Proyecto BIO-011</a></dd></dl>
+              <div class="cambio"><div><span>Antes</span><b>Alta</b></div><svg class="ico" aria-hidden="true"><use href="#i-flecha"/></svg><div class="nuevo"><span>Después</span><b>Crítica</b></div></div>
+              <div><b style="font-size:14px">Justificación</b><p style="margin-top:4px">«La entrega del informe al consejo de facultad se adelantó al 15/11».</p></div>
+              <p class="inmutable"><svg class="ico" aria-hidden="true"><use href="#i-candado"/></svg>Nadie puede editar ni borrar este registro, ni siquiera el administrador.</p>
+            </aside>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Auditoría", tanda: 5,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-f="no" aria-pressed="true">Recientes</button><button type="button" data-f="si" aria-pressed="false">Con filtros</button></div>' };
+window.APP = { rol: "adm", activo: "auditoria", titulo: "Auditoría", ins: "Reportes y auditoría" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var A = [
+    ["27/10/2026 10:17", "Carmen Pérez", "crea", "Creación", "Despacho DES-0321", "10.20.4.17"],
+    ["27/10/2026 09:15", "Sistema", "estado-c", "Cambio de estado", "Reposición REP-015 a Borrador", "—"],
+    ["27/10/2026 08:42", "Carmen Pérez", "edita", "Cambio de prioridad", "Proyecto BIO-011", "10.20.4.17"],
+    ["27/10/2026 08:31", "Daniela Rivas", "sesion", "Inicio de sesión", "Cuenta coord.quimica@cpq.local", "10.20.6.33"],
+    ["27/10/2026 08:15", "Carmen Pérez", "estado-c", "Cambio de estado", "Solicitud SOL-121 a Aprobado", "10.20.4.17"],
+    ["27/10/2026 08:12", "María Fernanda Ochoa", "crea", "Creación", "Corrección COR-006", "10.20.7.41"],
+    ["26/10/2026 16:05", "Daniela Rivas", "estado-c", "Cambio de estado", "Solicitud SOL-119 a Pendiente de Aprobación", "10.20.6.33"],
+    ["26/10/2026 14:22", "José Rodríguez", "edita", "Cambio de rol", "Cuenta l.mendoza@cpq.local", "10.20.4.11"],
+    ["26/10/2026 11:20", "Carmen Pérez", "crea", "Creación", "Despacho DES-0318", "10.20.4.17"]
+  ];
+  function pintar(filtro) {
+    var lista = filtro ? A.filter(function (a) { return a[1] === "Carmen Pérez"; }) : A;
+    document.getElementById("filas").innerHTML = lista.map(function (a) {
+      var obj = a[4].replace(/([A-Z]{2,3}-\d{3,4})/g, '<span class="mono">$1</span>');
+      return '<tr aria-selected="' + (a[4] === "Proyecto BIO-011") + '" tabindex="0"><td class="num">' + a[0] + '</td><td data-e="">' + a[1] + '</td><td><span class="accion ' + a[2] + '"><i aria-hidden="true"></i>' + a[3] + "</span></td><td>" + obj + '</td><td class="mono" data-e="IP:">' + a[5] + "</td></tr>";
+    }).join("");
+    document.getElementById("conteo").textContent = filtro ? "Usuario: Carmen Pérez · 4 de 612 registros" : "Mostrando los registros más recientes · 2.418 en total";
+  }
+  document.getElementById("btn-f").addEventListener("click", function () { var f = document.getElementById("filtros"); f.hidden = !f.hidden; this.setAttribute("aria-expanded", String(!f.hidden)); });
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-f]"); if (!b) return;
+    var si = b.dataset.f === "si";
+    document.getElementById("filtros").hidden = !si; document.getElementById("btn-f").setAttribute("aria-expanded", String(si));
+    document.getElementById("f-usr").selectedIndex = si ? 1 : 0;
+    pintar(si);
+    document.querySelectorAll("[data-f]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+  pintar(false);
+})();
+</script>

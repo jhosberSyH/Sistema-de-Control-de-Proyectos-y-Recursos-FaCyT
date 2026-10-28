@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Uso de materia prima FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Uso de materia prima (F6.4): captura corta desde el teléfono, con lo despachado y lo ya usado a la vista */
+.dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.form-u { padding: 22px; display: grid; gap: 18px; }
+.balance { padding: 20px; display: grid; gap: 14px; }
+.balance h2 { font-size: 18px; }
+.barra-b { position: relative; height: 22px; border-radius: var(--r-s); background: var(--surface-2); overflow: hidden; }
+.barra-b .usado { position: absolute; left: 0; top: 0; bottom: 0; background: var(--primary); }
+.barra-b .nuevo { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--primary) 0 5px, transparent 5px 8px); border: 2px solid var(--primary); }
+.barra-b .exceso { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--err) 0 5px, transparent 5px 8px); border: 2px solid var(--err); }
+.cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.cifras div { padding: 12px; border: 1px solid var(--line); border-radius: var(--r-m); display: grid; gap: 2px; }
+.cifras span { font-size: 13px; color: var(--muted); }
+.cifras b { font-size: 20px; font-family: var(--f-display); font-variant-numeric: tabular-nums; }
+@container mk (max-width: 760px) { .dos, .cifras { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Mis proyectos</a></li><li class="mono">QUI-024</li><li>Registrar uso</li></ol>
+              <h1>Registrar uso de materia prima</h1>
+              <p class="sub">Lo que el proyecto consumió de lo que se le despachó.</p>
+            </div>
+          </div>
+          <div class="dos">
+            <form class="tarjeta form-u" novalidate aria-label="Uso de materia prima">
+              <div class="campo"><label for="u-proy">Proyecto</label><select class="entrada" id="u-proy"><option>QUI-024 · Síntesis de catalizadores de óxido de cerio</option><option>QUI-031 · Degradación fotocatalítica de colorantes</option></select></div>
+              <div class="campo"><label for="u-ins">Insumo</label><select class="entrada" id="u-ins"><option>Etanol 96 % (L)</option><option>Acetona grado analítico (L)</option><option>Nitrato de cerio hexahidratado (g)</option></select><span class="ayuda">Solo aparecen los insumos despachados a este proyecto.</span></div>
+              <div class="form-rejilla">
+                <div class="campo" id="c-cant"><label for="u-cant">Cantidad usada</label><div style="display:flex;gap:8px;align-items:center"><input class="entrada num" id="u-cant" inputmode="decimal" value="0,8" style="text-align:right;font-size:20px"><span class="sec">L</span></div></div>
+                <div class="campo"><label for="u-fecha">Fecha</label><input class="entrada" id="u-fecha" type="date" value="2026-10-27"></div>
+              </div>
+              <div class="campo"><label for="u-obs">Observaciones <span class="obligatorio">(opcional)</span></label><textarea class="entrada" id="u-obs">Lavado de 6 crisoles después de la calcinación.</textarea></div>
+              <div class="aviso warn" id="msg-exc" hidden role="status"><svg class="ico" aria-hidden="true"><use href="#i-alerta"/></svg><div><p><b>El uso supera lo despachado en 0,6 L.</b></p><p>Revisa la cantidad. Si de verdad se usó más, puedes guardarlo; el aprobador verá la diferencia. Si falta material, crea una solicitud de retiro.</p></div></div>
+              <div class="acc-form"><button class="btn btn-sec" type="button">Cancelar</button><button class="btn btn-pri" type="submit" id="btn-u">Guardar uso</button></div>
+            </form>
+            <aside class="tarjeta balance" aria-label="Despachado y usado" aria-live="polite">
+              <h2>Etanol 96 % en <span class="mono">QUI-024</span>, octubre</h2>
+              <div class="cifras">
+                <div><span>Despachado</span><b>4 L</b></div>
+                <div><span>Usado hasta hoy</span><b>2,2 L</b></div>
+                <div><span id="eti-rest">Queda sin registrar</span><b id="rest">1 L</b></div>
+              </div>
+              <div class="barra-b" role="presentation"><span class="usado" style="width:55%"></span><span class="nuevo" id="b-nuevo" style="left:55%;width:20%"></span><span class="exceso" id="b-exc" style="left:100%;width:0" hidden></span></div>
+              <div class="leyenda" style="display:flex;gap:14px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)"><span>■ Usado</span><span>▨ Este registro</span><span id="ley-exc" hidden style="color:var(--text)">▨ Exceso sobre lo despachado (en rojo)</span></div>
+              <ul class="lista" style="font-size:15px">
+                <li><div class="izq">20/10/2026 · 1,2 L<small>Extracción de precursores</small></div></li>
+                <li><div class="izq">09/10/2026 · 1 L<small>Lavado de material</small></div></li>
+              </ul>
+            </aside>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Uso de materia prima", tanda: 4,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-u="ok" aria-pressed="true">Normal</button><button type="button" data-u="exc" aria-pressed="false">Supera lo despachado</button></div>' };
+window.APP = { rol: "coo", activo: "proyectos", titulo: "Registrar uso", ins: "Almacén" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+document.getElementById("comparador").addEventListener("click", function (e) {
+  var b = e.target.closest("[data-u]"); if (!b) return;
+  var x = b.dataset.u === "exc";
+  document.getElementById("msg-exc").hidden = !x;
+  document.getElementById("u-cant").value = x ? "2,4" : "0,8";
+  document.getElementById("rest").textContent = x ? "−0,6 L" : "1 L";
+  document.getElementById("eti-rest").textContent = x ? "Diferencia" : "Queda sin registrar";
+  document.querySelector(".barra-b .usado").style.width = x ? "47.8%" : "55%";
+  var nv = document.getElementById("b-nuevo"); nv.style.left = x ? "47.8%" : "55%"; nv.style.width = x ? "39.2%" : "20%";
+  var exc = document.getElementById("b-exc"); exc.hidden = !x; exc.style.left = "87%"; exc.style.width = "13%";
+  document.getElementById("ley-exc").hidden = !x;
+  document.getElementById("btn-u").textContent = x ? "Guardar con la diferencia" : "Guardar uso";
+  document.querySelectorAll("[data-u]").forEach(function (y) { y.setAttribute("aria-pressed", String(y === b)); });
+});
+</script>
+
+</body>
+</html>

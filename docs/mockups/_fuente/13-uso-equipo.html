@@ -1,0 +1,91 @@
+<title>Uso de equipo FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Ficha del equipo con registro de uso (F4.6) y hoja de vida exportable (F8.4); pensada para el teléfono al salir del laboratorio */
+.dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 24px; align-items: start; }
+.uso { padding: 22px; display: grid; gap: 16px; }
+.uso .estado-g { display: flex; align-items: center; gap: 14px; }
+.uso .estado-g .ic { width: 56px; height: 56px; border-radius: var(--r-l); display: grid; place-items: center; background: var(--surface-2); flex: none; }
+.uso .estado-g .ic .ico { width: 28px; height: 28px; }
+.uso .estado-g.libre .ic { color: var(--ok); } .uso .estado-g.ocupado .ic { color: var(--info); }
+.uso .estado-g b { font-size: 22px; font-family: var(--f-display); display: block; }
+.uso .reloj { font-family: var(--f-mono); font-size: 34px; font-variant-numeric: tabular-nums; font-weight: 500; }
+.uso .btn { width: 100%; min-height: 52px; font-size: 17px; }
+.vista-libre, .vista-uso { display: none; }
+.mk[data-uso="libre"] .vista-libre, .mk[data-uso="uso"] .vista-uso { display: grid; gap: 16px; }
+@container mk (max-width: 760px) { .dos { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app" data-uso="uso">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Equipos y reservas</a></li><li>Horno mufla 1200 °C</li></ol>
+              <h1>Horno mufla 1200 °C</h1>
+              <p class="sub"><span class="mono">UC-FACYT-0275</span> · Laboratorio de Química Analítica</p>
+            </div>
+            <div class="acc"><button class="btn btn-sec" type="button"><svg class="ico" aria-hidden="true"><use href="#i-calendario"/></svg>Reservar</button><button class="btn btn-sec" type="button"><svg class="ico" aria-hidden="true"><use href="#i-descarga"/></svg>Hoja de vida</button></div>
+          </div>
+
+          <div class="dos">
+            <section class="tarjeta uso" aria-labelledby="t-uso" aria-live="polite">
+              <h2 id="t-uso" class="vh">Registro de uso</h2>
+              <div class="vista-uso">
+                <div class="estado-g ocupado"><span class="ic"><svg class="ico" aria-hidden="true"><use href="#i-reloj"/></svg></span><div><b>En uso por ti</b><span class="sec">Desde las 07:10 para <span class="mono">QUI-024</span></span></div></div>
+                <div><span class="sec" style="font-size:14px">Tiempo transcurrido</span><div class="reloj">02:41</div></div>
+                <div class="campo"><label for="obs">Observaciones <span class="obligatorio">(opcional)</span></label><textarea class="entrada" id="obs">Calcinación de 6 muestras a 500 °C, rampa de 5 °C/min.</textarea></div>
+                <button class="btn btn-pri" type="button">Cerrar registro de uso</button>
+                <p class="sec" style="font-size:14px">Tu reserva termina a las 12:00. Si te vas antes, cierra el registro para que el equipo quede Disponible.</p>
+              </div>
+              <div class="vista-libre">
+                <div class="estado-g libre"><span class="ic"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg></span><div><b>Disponible</b><span class="sec">Tienes una reserva hoy de 07:00 a 12:00</span></div></div>
+                <div class="campo"><label for="u-proy">Proyecto</label><select class="entrada" id="u-proy"><option>QUI-024 · Síntesis de catalizadores de óxido de cerio</option><option>QUI-031 · Degradación fotocatalítica de colorantes</option></select><span class="ayuda">Propuesto desde tu reserva de hoy.</span></div>
+                <button class="btn btn-pri" type="button">Iniciar uso</button>
+              </div>
+            </section>
+
+            <section class="tarjeta bloque" aria-labelledby="t-hist">
+              <div class="bloque-cab"><h2 id="t-hist">Usos de tus proyectos</h2><span class="conteo">Octubre: 14,5 h</span></div>
+              <div class="tabla-env"><table class="datos apilable"><thead><tr><th scope="col">Fecha</th><th scope="col">Proyecto</th><th scope="col" class="n">Horas</th><th scope="col">Observaciones</th></tr></thead><tbody>
+                <tr><td>23/10/2026</td><td class="mono">QUI-024</td><td class="n" data-e="Horas:">4,0</td><td>Calcinación a 450 °C, lote de prueba</td></tr>
+                <tr><td>16/10/2026</td><td class="mono">QUI-031</td><td class="n" data-e="Horas:">3,5</td><td>Secado de TiO₂ dopado</td></tr>
+                <tr><td>09/10/2026</td><td class="mono">QUI-024</td><td class="n" data-e="Horas:">5,0</td><td>Calcinación a 500 °C</td></tr>
+                <tr><td>02/10/2026</td><td class="mono">QUI-024</td><td class="n" data-e="Horas:">2,0</td><td>Rampa de calibración</td></tr>
+              </tbody></table></div>
+              <p class="sec" style="font-size:14px">Ves solo los usos de tus proyectos. La hoja de vida completa la exportan el aprobador y el administrador.</p>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Uso de equipo", tanda: 3,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado del equipo"><button type="button" data-uso="uso" aria-pressed="true">En uso</button><button type="button" data-uso="libre" aria-pressed="false">Disponible</button></div>' };
+window.APP = { rol: "coo", activo: "reservas", titulo: "Horno mufla", ins: "Equipos y reservas", fecha: "Viernes 30 de octubre de 2026 · 09:51" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+document.getElementById("comparador").addEventListener("click", function (e) {
+  var b = e.target.closest("[data-uso]"); if (!b) return;
+  document.querySelector(".mk").setAttribute("data-uso", b.dataset.uso);
+  document.querySelectorAll("[data-uso]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+});
+</script>

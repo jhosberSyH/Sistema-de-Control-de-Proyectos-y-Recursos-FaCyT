@@ -1,0 +1,184 @@
+<title>Plan de hitos FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Plan de hitos (F2.4) con suma de pesos en vivo, y carga de avance (F2.5) con historial y validación */
+.editor { padding: 0; overflow: hidden; }
+.editor .bloque-cab { padding: 18px 20px 10px; }
+.fila-h { display: grid; grid-template-columns: 32px minmax(0, 1fr) 170px 120px 44px; gap: 12px; align-items: end; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+.fila-h .n-h { color: var(--muted); font-variant-numeric: tabular-nums; padding-bottom: 12px; }
+.fila-h .campo label { font-size: 13px; color: var(--muted); font-weight: 600; }
+.fila-h .peso { position: relative; }
+.fila-h .peso .entrada { text-align: right; padding-right: 30px; font-variant-numeric: tabular-nums; }
+.fila-h .peso span { position: absolute; right: 12px; bottom: 11px; color: var(--muted); }
+.fila-h .quitar { width: 44px; height: 44px; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: var(--r-m); cursor: pointer; display: grid; place-items: center; }
+.agregar { padding: 14px 20px; }
+.suma { margin: 0 20px 20px; padding: 16px; border-radius: var(--r-l); background: var(--bg); border: 1px solid var(--line); display: grid; gap: 10px; }
+.suma .t { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+.suma .t b { font-size: 20px; font-variant-numeric: tabular-nums; font-family: var(--f-display); }
+.suma .pista { position: relative; height: 12px; border-radius: 999px; background: var(--surface-2); }
+.suma .pista i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--warn); }
+.suma.lista .pista i { background: var(--ok); }
+.suma .pista .meta { position: absolute; right: 0; top: -6px; bottom: -6px; border-left: 2px dashed var(--muted); }
+.confirmar { display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap; padding: 0 20px 20px; }
+.confirmar p { font-size: 14px; color: var(--muted); }
+.lado { display: grid; gap: 24px; align-content: start; }
+.dos { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.hist-av { list-style: none; margin: 0; padding: 0; display: grid; }
+.hist-av li { display: grid; grid-template-columns: 90px 56px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14.5px; }
+.hist-av li:first-child { border-top: 0; }
+.hist-av time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.hist-av b { font-variant-numeric: tabular-nums; }
+.vista-plan, .vista-avance { display: none; }
+.mk[data-modo="plan"] .vista-plan, .mk[data-modo="avance"] .vista-avance { display: grid; }
+@container mk (max-width: 760px) {
+  .dos { grid-template-columns: minmax(0, 1fr); }
+  .fila-h { grid-template-columns: 24px minmax(0, 1fr) 44px; padding: 12px 14px; }
+  .fila-h .campo.nom { grid-column: 2 / 4; }
+  .fila-h .campo.fecha { grid-column: 2; }
+  .fila-h .peso { grid-column: 2; }
+  .fila-h .quitar { grid-column: 3; grid-row: 1; align-self: start; }
+  .suma { margin: 0 14px 16px; }
+}
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app" data-modo="plan">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+
+          <!-- Modo 1: plan de hitos en preparación -->
+          <div class="vista-plan" style="gap:24px">
+            <div class="cab">
+              <div>
+                <ol class="migas"><li><a href="#contenido">Mis proyectos</a></li><li class="mono">QUI-035</li><li>Plan de hitos</li></ol>
+                <h1>Plan de hitos de <span class="mono">QUI-035</span></h1>
+                <p class="sub">Síntesis verde de nanopartículas de plata. Los pesos tienen que sumar 100 % para confirmar el plan y calcular el avance físico.</p>
+              </div>
+            </div>
+            <div class="dos">
+              <section class="tarjeta editor" aria-labelledby="t-plan">
+                <div class="bloque-cab"><h2 id="t-plan">Hitos</h2><span class="conteo" id="n-hitos">4 hitos</span></div>
+                <div id="filas"></div>
+                <div class="agregar"><button class="btn btn-sec" type="button" id="agregar"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg>Agregar hito</button></div>
+                <div class="suma" id="suma" aria-live="polite">
+                  <div class="t"><span id="suma-txt">Faltan 10 % para llegar a 100 %.</span><b id="suma-n">90 %</b></div>
+                  <div class="pista" role="presentation"><i id="suma-bar" style="width:90%"></i><span class="meta"></span></div>
+                </div>
+                <div class="confirmar"><p id="conf-txt">Ajusta los pesos para que sumen 100 %.</p><button class="btn btn-sec" type="button">Guardar borrador</button><button class="btn btn-pri" type="button" id="btn-conf" disabled>Confirmar plan</button></div>
+              </section>
+              <aside class="lado">
+                <section class="tarjeta bloque" aria-labelledby="t-como">
+                  <div class="bloque-cab"><h2 id="t-como">Cómo se calcula el avance</h2></div>
+                  <p style="font-size:15px">El avance físico suma el avance de cada hito multiplicado por su peso. Por ejemplo, un hito de peso 60 al 50 % y uno de peso 40 al 100 % dan 70 %.</p>
+                  <div class="aviso info"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><p>Mientras el plan no esté confirmado, el proyecto muestra el avance como "No disponible".</p></div>
+                </section>
+              </aside>
+            </div>
+          </div>
+
+          <!-- Modo 2: carga de avance -->
+          <div class="vista-avance" style="gap:24px">
+            <div class="cab">
+              <div>
+                <ol class="migas"><li><a href="#contenido">Mis proyectos</a></li><li class="mono">QUI-024</li><li>Hitos</li></ol>
+                <h1>Hitos de <span class="mono">QUI-024</span></h1>
+                <p class="sub">Síntesis de catalizadores de óxido de cerio · avance físico 62 %.</p>
+              </div>
+            </div>
+            <section class="tarjeta bloque">
+              <div class="tabla-env"><table class="datos apilable"><thead><tr><th scope="col">Hito</th><th scope="col" class="n">Peso</th><th scope="col">Avance</th><th scope="col">Última carga</th><th scope="col"><span class="vh">Acción</span></th></tr></thead><tbody>
+                <tr><td>1. Revisión bibliográfica y diseño experimental</td><td class="n" data-e="Peso:">10 %</td><td><div class="mini-barra"><div class="barra-prog"><i style="width:100%"></i></div><b>100 %</b></div></td><td data-e="Última carga:">28/06/2026</td><td class="acc-fila"><span class="estado ok"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg>Completo</span></td></tr>
+                <tr><td>2. Síntesis de precursores</td><td class="n" data-e="Peso:">25 %</td><td><div class="mini-barra"><div class="barra-prog"><i style="width:100%"></i></div><b>100 %</b></div></td><td data-e="Última carga:">29/08/2026</td><td class="acc-fila"><span class="estado ok"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg>Completo</span></td></tr>
+                <tr><td>3. Calcinación y caracterización por DRX</td><td class="n" data-e="Peso:">30 %</td><td><div class="mini-barra"><div class="barra-prog"><i style="width:70%"></i></div><b>70 %</b></div></td><td data-e="Última carga:">06/10/2026</td><td class="acc-fila"><button class="btn btn-pri btn-chico" type="button">Cargar avance</button></td></tr>
+                <tr><td>4. Pruebas catalíticas</td><td class="n" data-e="Peso:">25 %</td><td><div class="mini-barra"><div class="barra-prog"><i style="width:24%"></i></div><b>24 %</b></div></td><td data-e="Última carga:">20/10/2026</td><td class="acc-fila"><button class="btn btn-sec btn-chico" type="button">Cargar avance</button></td></tr>
+                <tr><td>5. Informe final</td><td class="n" data-e="Peso:">10 %</td><td><div class="mini-barra"><div class="barra-prog"><i style="width:0%"></i></div><b>0 %</b></div></td><td data-e="Última carga:">—</td><td class="acc-fila"><button class="btn btn-sec btn-chico" type="button">Cargar avance</button></td></tr>
+              </tbody></table></div>
+            </section>
+          </div>
+        </main>
+      </div>
+
+      <div class="capa" id="capa-avance" hidden>
+        <form class="dialogo" role="dialog" aria-modal="true" aria-labelledby="t-av" novalidate>
+          <div class="dialogo-cab"><div><h2 id="t-av">Cargar avance</h2><p class="sec">Hito 3 · Calcinación y caracterización por DRX · peso 30 %</p></div><button class="icono-btn" type="button" aria-label="Cerrar"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></button></div>
+          <div class="form-rejilla">
+            <div class="campo" id="c-av"><label for="av">Avance alcanzado</label><div style="position:relative"><input class="entrada num" id="av" inputmode="numeric" value="85" style="padding-right:34px;text-align:right" aria-describedby="av-err av-a"><span style="position:absolute;right:12px;top:11px;color:var(--muted)">%</span></div>
+              <span class="ayuda" id="av-a">Entre 0 y 100. Hoy está en 70 %.</span>
+              <p class="msg-error" id="av-err" hidden><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><span>Escribe un porcentaje entre 0 y 100. Escribiste 120.</span></p></div>
+            <div class="campo"><label for="av-f">Fecha</label><input class="entrada" id="av-f" type="date" value="2026-10-27"></div>
+            <div class="campo ancho"><label for="av-c">Comentario <span class="obligatorio">(opcional)</span></label><textarea class="entrada" id="av-c">DRX de las 6 muestras listo. Falta el análisis de tamaño de cristalito.</textarea></div>
+          </div>
+          <div class="aviso info"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><p>Con 85 % en este hito, el avance físico del proyecto pasa de 62 % a 66,5 %.</p></div>
+          <div><h3 style="font-size:15px;font-family:var(--f-body);margin-bottom:4px">Cargas anteriores</h3>
+            <ul class="hist-av"><li><time>06/10/2026</time><b>70 %</b><span>DRX de 4 de 6 muestras</span></li><li><time>15/09/2026</time><b>40 %</b><span>Primeras muestras calcinadas a 500 °C</span></li><li><time>01/09/2026</time><b>10 %</b><span>Horno calibrado</span></li></ul></div>
+          <div class="acc-form"><button class="btn btn-sec" type="button">Cancelar</button><button class="btn btn-pri" type="submit">Guardar avance</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Plan de hitos y avance", tanda: 2,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-modo="plan" aria-pressed="true">Plan incompleto</button><button type="button" data-modo="avance" data-capa="capa-avance" aria-pressed="false">Cargar avance</button><button type="button" data-modo="avance" data-capa="capa-avance" data-err="1" aria-pressed="false">Avance con error</button></div>' };
+window.APP = { rol: "coo", activo: "proyectos", titulo: "Plan de hitos", ins: "Proyectos y avance" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var H = [["Revisión bibliográfica", "2026-11-30", 15], ["Síntesis con extracto de hojas de mango", "2027-01-31", 30], ["Caracterización por UV-Vis y DRX", "2027-03-31", 30], ["Informe final", "2027-05-31", 15]];
+  var cont = document.getElementById("filas");
+  function fila(h, i) {
+    return '<div class="fila-h"><span class="n-h">' + (i + 1) + '</span>' +
+      '<div class="campo nom"><label for="h' + i + '">Hito</label><input class="entrada" id="h' + i + '" value="' + h[0] + '"></div>' +
+      '<div class="campo fecha"><label for="f' + i + '">Fecha prevista</label><input class="entrada" id="f' + i + '" type="date" value="' + h[1] + '"></div>' +
+      '<div class="campo peso"><label for="p' + i + '">Peso</label><input class="entrada" id="p' + i + '" inputmode="numeric" value="' + h[2] + '" data-peso><span>%</span></div>' +
+      '<button class="quitar" type="button" aria-label="Quitar hito ' + (i + 1) + '"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></button></div>';
+  }
+  function pintar() { cont.innerHTML = H.map(fila).join(""); document.getElementById("n-hitos").textContent = H.length + " hitos"; sumar(); }
+  function sumar() {
+    var s = 0; cont.querySelectorAll("[data-peso]").forEach(function (i) { s += parseFloat(i.value.replace(",", ".")) || 0; });
+    var ok = s === 100, box = document.getElementById("suma");
+    document.getElementById("suma-n").textContent = s + " %";
+    document.getElementById("suma-bar").style.width = Math.min(s, 100) + "%";
+    document.getElementById("suma-txt").textContent = ok ? "Los pesos suman 100 %. Ya puedes confirmar el plan." : s < 100 ? "Faltan " + (100 - s) + " % para llegar a 100 %." : "Sobran " + (s - 100) + " %. Baja algún peso para llegar a 100 %.";
+    box.classList.toggle("lista", ok);
+    document.getElementById("btn-conf").disabled = !ok;
+    document.getElementById("conf-txt").textContent = ok ? "Al confirmar, el avance físico empieza a calcularse." : "Ajusta los pesos para que sumen 100 %.";
+  }
+  cont.addEventListener("input", function (e) { if (e.target.matches("[data-peso]")) sumar(); });
+  cont.addEventListener("click", function (e) { var q = e.target.closest(".quitar"); if (!q) return; var i = Array.prototype.indexOf.call(cont.children, q.parentNode); H.splice(i, 1); pintar(); });
+  document.getElementById("agregar").addEventListener("click", function () {
+    cont.querySelectorAll(".fila-h").forEach(function (f, i) { H[i] = [f.querySelector("[id^=h]").value, f.querySelector("[type=date]").value, parseFloat(f.querySelector("[data-peso]").value) || 0]; });
+    H.push(["", "", 0]); pintar(); document.getElementById("h" + (H.length - 1)).focus();
+  });
+  pintar();
+
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-modo]"); if (!b) return;
+    document.querySelector(".mk").setAttribute("data-modo", b.dataset.modo);
+    document.getElementById("capa-avance").hidden = !b.dataset.capa;
+    var err = !!b.dataset.err;
+    document.getElementById("c-av").classList.toggle("error", err);
+    document.getElementById("av-err").hidden = !err;
+    document.getElementById("av").value = err ? "120" : "85";
+    document.getElementById("av").setAttribute("aria-invalid", String(err));
+    document.querySelector("#capa-avance .aviso.info").hidden = err;
+    window.APP.titulo = b.dataset.modo === "plan" ? "Plan de hitos" : "Hitos"; window.pintarMarco();
+    document.querySelectorAll("[data-modo]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+})();
+</script>
