@@ -1,0 +1,26 @@
+# Normaliza los finales de línea en el repositorio.
+* text=auto
+
+# Archivos que se ejecutan o se leen dentro de contenedores Linux: siempre LF.
+*.sh        text eol=lf
+*.sql       text eol=lf
+*.py        text eol=lf
+*.conf      text eol=lf
+*.template  text eol=lf
+*.toml      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+Dockerfile  text eol=lf
+.env.example text eol=lf
+
+# Scripts de PowerShell: CRLF para Windows.
+*.ps1       text eol=crlf
+
+# Binarios: git no los modifica.
+*.pdf       binary
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.ico       binary
+*.woff      binary
+*.woff2     binary
