@@ -11,6 +11,7 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 3. [Stack tecnológico y README](#3-stack-tecnológico-y-readme)
 4. [Diagrama de arquitectura en draw.io](#4-diagrama-de-arquitectura-en-drawio)
 5. [Estructura de carpetas del repositorio](#5-estructura-de-carpetas-del-repositorio)
+6. [Prompt para identidad visual y mockups](#6-prompt-para-identidad-visual-y-mockups)
 
 ---
 
@@ -85,3 +86,19 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 > Cuando te lo apruebe, crea la estructura completa en el repositorio. Mueve los archivos que ya tenemos (los .md de documentación y los diagramas) a donde les toque sin perder nada. Pon un .gitkeep en las carpetas vacías para que se suban, arma un .gitignore adecuado para el stack y un .env.example con las variables que vamos a necesitar, sin valores reales. Actualiza la sección de estructura del README.md para que refleje cómo quedó.
 >
 > No hagas commit ni push. Cuando termines dime qué creaste y qué moviste, y yo me encargo de subirlo.
+
+## 6. Prompt para identidad visual y mockups
+
+> Ahora quiero que trabajes como un experto en UI/UX y armemos la identidad visual y los mockups de todas las vistas del aplicativo.
+>
+> Empieza por los usuarios. Van a ser estudiantes universitarios y personal de la universidad, así que investiga cómo son, qué esperan de una herramienta así, desde qué dispositivos entran, qué les cuesta y qué necesidades de accesibilidad hay que cubrir. Con eso define la ingeniería de personalidad del aplicativo: qué transmite, qué colores, qué formas, qué tono y qué criterios de accesibilidad vamos a seguir (contraste, tamaños, navegación con teclado, etc.). Guarda todo en investigacion_usuarios.md con sus fuentes.
+>
+> Después investiga la paleta de colores de la Universidad de Carabobo, específicamente de la Facultad FaCyT. Si FaCyT tiene una paleta propia, la adaptamos y la usamos; si no tiene, propón una combinación que vaya con la universidad y con el proyecto. La idea es que se vea muy universitario. Vamos a usar los logos de la universidad y de la facultad: búscalos en fuentes oficiales y, si no los consigues en buena calidad, pídemelos y yo te los paso. No los redibujes ni los inventes.
+>
+> Investiga también tipografías gratuitas, sin copyright ni restricciones de uso (Google Fonts o similares con licencia abierta), y dime la licencia de cada una. Quiero que las letras varíen entre las versiones.
+>
+> Antes de diseñar, revisa los diagramas de flujo de cada módulo. Si ves pasos redundantes o algo que se pueda simplificar, propónme el cambio explicando por qué y para ahí. Cuando te lo apruebe, lo aplicas en el diagrama y en el documento de requisitos.
+>
+> Con eso diseña los mockups de cada una de las vistas que va a tener la página. Por cada vista hazme máximo cuatro versiones donde cambien el estilo, la combinación de colores, la tipografía y la distribución. Genéralos como artifacts de Claude para que los pueda ver y comparar directamente. Si no puedes generar artifacts desde aquí, hazlos en HTML para abrirlos en el navegador y dímelo. En cualquier caso guarda una copia en una carpeta mockups con una subcarpeta por vista.
+>
+> Cuando estén listos para ahí y yo te digo cuál versión queda de cada vista.

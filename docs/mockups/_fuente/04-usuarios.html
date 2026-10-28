@@ -1,0 +1,133 @@
+<title>Usuarios FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Usuarios (F1.1 a F1.3): lista con filtros; edición y desactivación en diálogos que muestran el impacto antes de confirmar */
+.lista-usu { padding: 0; overflow: hidden; }
+.lista-usu .herr { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.lista-usu .tabla-env { padding: 0 8px; }
+.lista-usu .paginacion { padding: 12px 20px 16px; border-top: 1px solid var(--line); }
+.persona { display: flex; align-items: center; gap: 12px; }
+.persona .avatar { width: 36px; height: 36px; font-size: 13px; }
+.persona b { font-weight: 600; display: block; }
+.rol-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+.rol-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+.rol-chip.apr i { background: var(--accent); }
+.rol-chip.coo i { background: var(--info); }
+.impacto { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.impacto li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+.impacto .ico { margin-top: 2px; color: var(--muted); }
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Inicio</a></li><li>Usuarios</li></ol>
+              <h1>Usuarios</h1>
+              <p class="sub">Cuentas de los tres roles. Una cuenta no se borra: se desactiva y conserva su historial.</p>
+            </div>
+            <div class="acc"><button class="btn btn-pri" type="button">Crear cuenta</button></div>
+          </div>
+
+          <section class="tarjeta lista-usu" aria-label="Cuentas">
+            <form class="herr" aria-label="Filtros de cuentas">
+              <div class="campo busq"><label for="q">Buscar</label><svg class="ico" aria-hidden="true"><use href="#i-buscar"/></svg><input class="entrada" id="q" type="search" placeholder="Nombre o correo"></div>
+              <div class="campo"><label for="f-rol">Rol</label><select class="entrada" id="f-rol"><option>Todos</option><option>Administrador del Sistema</option><option>Coordinador de Proyecto</option><option>Aprobador / Gestor de Inventario</option></select></div>
+              <div class="campo"><label for="f-est">Estado</label><select class="entrada" id="f-est"><option>Activas</option><option>Desactivadas</option><option>Todas</option></select></div>
+            </form>
+            <div class="tabla-env">
+              <table class="datos apilable">
+                <thead><tr><th scope="col">Persona</th><th scope="col">Rol</th><th scope="col">Proyectos que coordina</th><th scope="col">Último acceso</th><th scope="col">Estado</th><th scope="col"><span class="vh">Acciones</span></th></tr></thead>
+                <tbody id="filas"></tbody>
+              </table>
+            </div>
+            <div class="paginacion"><span>8 de 14 cuentas activas</span><div class="pags"><button type="button" aria-current="page">1</button><button type="button">2</button></div></div>
+          </section>
+        </main>
+      </div>
+
+      <div class="capa" id="capa-editar" hidden>
+        <form class="dialogo" role="dialog" aria-modal="true" aria-labelledby="t-editar">
+          <div class="dialogo-cab"><div><h2 id="t-editar">Editar cuenta</h2><p class="sec">María Fernanda Ochoa</p></div><button class="icono-btn" type="button" aria-label="Cerrar"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></button></div>
+          <div class="form-rejilla">
+            <div class="campo ancho"><label for="e-nombre">Nombre</label><input class="entrada" id="e-nombre" value="María Fernanda Ochoa"></div>
+            <div class="campo ancho"><label for="e-correo">Correo</label><input class="entrada" id="e-correo" type="email" value="coord.biologia@cpq.local"></div>
+            <fieldset class="campo ancho" style="border:0;padding:0;margin:0"><legend style="font-weight:600;font-size:15px;margin-bottom:6px">Rol</legend>
+              <div class="radios">
+                <label><input type="radio" name="rol"> Administrador</label>
+                <label><input type="radio" name="rol"> Coordinador</label>
+                <label><input type="radio" name="rol" checked> Aprobador / Gestor</label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="aviso warn" role="status"><svg class="ico" aria-hidden="true"><use href="#i-alerta"/></svg><div><p><b>Si cambias el rol, <span class="mono">BIO-011</span> se queda sin coordinador.</b></p><p>Lo verás en tu bandeja para asignarle otro. El cambio aplica desde la siguiente acción de María Fernanda y se cierran sus sesiones abiertas.</p></div></div>
+          <div class="acc-form"><button class="btn btn-sec" type="button">Conservar el rol actual</button><button class="btn btn-pri" type="submit">Cambiar rol y guardar</button></div>
+        </form>
+      </div>
+
+      <div class="capa" id="capa-desactivar" hidden>
+        <form class="dialogo" role="alertdialog" aria-modal="true" aria-labelledby="t-desac" aria-describedby="d-desac">
+          <div class="dialogo-cab"><h2 id="t-desac">¿Desactivar la cuenta de Andrés Salazar?</h2></div>
+          <p id="d-desac">Andrés pierde el acceso de inmediato. Esto es lo que pasa con lo que tiene a su cargo:</p>
+          <ul class="impacto">
+            <li><svg class="ico" aria-hidden="true"><use href="#i-proyectos"/></svg><span>Coordina 2 proyectos activos, <span class="mono">FIS-008</span> y <span class="mono">FIS-010</span>. Quedarán en tu bandeja para asignarles otro coordinador.</span></li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-solicitudes"/></svg><span>Tiene 1 solicitud en Pendiente de Aprobación (<span class="mono">SOL-116</span>). Sigue su curso.</span></li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-auditoria"/></svg><span>Su historial de solicitudes, despachos y auditoría se conserva con su nombre.</span></li>
+          </ul>
+          <p class="sec">Puedes reactivar la cuenta desde su ficha.</p>
+          <div class="acc-form"><button class="btn btn-sec" type="button">Conservar la cuenta activa</button><button class="btn btn-peligro" type="submit">Desactivar cuenta</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Usuarios", tanda: 2,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-capa="" aria-pressed="true">Lista</button><button type="button" data-capa="capa-editar" aria-pressed="false">Cambiar rol</button><button type="button" data-capa="capa-desactivar" aria-pressed="false">Desactivar</button></div>' };
+window.APP = { rol: "adm", activo: "usuarios", titulo: "Usuarios", ins: "Usuarios, catálogos y parámetros" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var ROL = { adm: ["Administrador del Sistema", ""], coo: ["Coordinador de Proyecto", "coo"], apr: ["Aprobador / Gestor de Inventario", "apr"] };
+  var U = [
+    ["JR", "José Rodríguez", "admin@cpq.local", "adm", "—", "Hoy, 08:10", true],
+    ["CP", "Carmen Pérez", "aprobador@cpq.local", "apr", "—", "Hoy, 07:52", true],
+    ["DR", "Daniela Rivas", "coord.quimica@cpq.local", "coo", '<span class="mono">QUI-024</span>, <span class="mono">QUI-031</span>', "Hoy, 08:31", true],
+    ["MO", "María Fernanda Ochoa", "coord.biologia@cpq.local", "coo", '<span class="mono">BIO-011</span>', "Ayer, 17:40", true],
+    ["AS", "Andrés Salazar", "coord.fisica@cpq.local", "coo", '<span class="mono">FIS-008</span>, <span class="mono">FIS-010</span>', "Ayer, 10:05", true],
+    ["RL", "Rosa Linares", "r.linares@cpq.local", "coo", '<span class="mono">QUI-027</span>', "23/10/2026", true],
+    ["LM", "Luis Mendoza", "l.mendoza@cpq.local", "apr", "—", "26/10/2026", true],
+    ["PG", "Pedro Gil", "p.gil@cpq.local", "coo", "—", "02/07/2026", false]
+  ];
+  document.getElementById("filas").innerHTML = U.map(function (u) {
+    return '<tr><td><div class="persona"><span class="avatar">' + u[0] + "</span><div><b>" + u[1] + '</b><small class="mono">' + u[2] + "</small></div></div></td>" +
+      '<td data-e="Rol:"><span class="rol-chip ' + ROL[u[3]][1] + '"><i aria-hidden="true"></i>' + ROL[u[3]][0] + "</span></td>" +
+      '<td data-e="Coordina:">' + u[4] + '</td><td data-e="Último acceso:">' + u[5] + "</td><td>" + (u[6] ? est("ok", "Activa") : est("neutro", "Desactivada")) + "</td>" +
+      '<td class="acc-fila"><button class="btn btn-sec btn-chico" type="button">' + (u[6] ? "Editar" : "Reactivar") + "</button></td></tr>";
+  }).join("");
+
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-capa]");
+    if (!b) return;
+    document.querySelectorAll(".capa").forEach(function (c) { c.hidden = c.id !== b.dataset.capa; });
+    document.querySelectorAll("[data-capa]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+})();
+</script>

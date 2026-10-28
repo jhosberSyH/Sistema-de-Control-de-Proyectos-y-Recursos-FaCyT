@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Inventario FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Inventario (F3.1 a F3.6): catálogo unificado con stock al día, alertas y vencimientos; el alta pide el stock mínimo en el mismo formulario */
+.alertas-r { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.al { font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 16px; display: flex; gap: 14px; align-items: center; background: var(--surface); }
+.al .ic { width: 44px; height: 44px; border-radius: var(--r-m); display: grid; place-items: center; background: var(--surface-2); flex: none; }
+.al.err .ic { color: var(--err); } .al.warn .ic { color: var(--warn); }
+.al b { font-family: var(--f-display); font-size: 26px; display: block; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--primary); }
+.al span { color: var(--muted); font-size: 14.5px; }
+.al[aria-pressed="true"] { outline: 2px solid var(--primary); outline-offset: -1px; }
+
+.lista-i { padding: 0; overflow: hidden; }
+.lista-i .herr { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.lista-i .tabla-env { padding: 0 8px; }
+.stock { display: grid; gap: 4px; min-width: 130px; }
+.stock .t { display: flex; justify-content: space-between; gap: 8px; font-size: 14.5px; }
+.stock .t b { font-variant-numeric: tabular-nums; }
+.stock .barra-prog i.bajo { background: var(--err); }
+.tipo { font-size: 13.5px; color: var(--muted); }
+.ins b { display: block; font-weight: 600; }
+.mk .solo-adm { display: none; }
+.mk[data-rol="adm"] .solo-adm { display: inline-flex; }
+@container mk (max-width: 760px) { .alertas-r { grid-template-columns: minmax(0, 1fr); gap: 10px; } }
+</style>
+</head>
+<body>
+
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app" data-rol="apr">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Inicio</a></li><li>Inventario</li></ol>
+              <h1>Inventario</h1>
+              <p class="sub">Materia prima y consumibles en un solo catálogo. El stock cambia en el momento en que se registra cada recepción o despacho.</p>
+            </div>
+            <div class="acc"><button class="btn btn-sec" type="button"><svg class="ico" aria-hidden="true"><use href="#i-descarga"/></svg>Exportar</button><button class="btn btn-pri solo-adm" type="button" data-abrir="capa-alta"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg>Registrar insumo</button></div>
+          </div>
+
+          <div class="alertas-r" role="group" aria-label="Filtrar por alerta">
+            <button type="button" class="tarjeta al err" aria-pressed="false"><span class="ic"><svg class="ico" aria-hidden="true"><use href="#i-alerta"/></svg></span><div><b>4</b><span>insumos bajo su mínimo</span></div></button>
+            <button type="button" class="tarjeta al warn" aria-pressed="false"><span class="ic"><svg class="ico" aria-hidden="true"><use href="#i-reloj"/></svg></span><div><b>2</b><span>lotes próximos a vencer (30 días)</span></div></button>
+            <button type="button" class="tarjeta al err" aria-pressed="false"><span class="ic"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></span><div><b>1</b><span>lote vencido, bloqueado para despacho</span></div></button>
+          </div>
+
+          <section class="tarjeta lista-i" aria-label="Catálogo de insumos">
+            <form class="herr" aria-label="Filtros">
+              <div class="campo busq"><label for="q">Buscar</label><svg class="ico" aria-hidden="true"><use href="#i-buscar"/></svg><input class="entrada" id="q" type="search" placeholder="Nombre del insumo o número de lote"></div>
+              <div class="campo"><label for="f-tipo">Tipo</label><select class="entrada" id="f-tipo"><option>Todos</option><option>Materia prima</option><option>Consumible de proyecto</option><option>Consumible de uso general</option></select></div>
+              <div class="campo"><label for="f-ub">Ubicación</label><select class="entrada" id="f-ub"><option>Todas</option><option>Depósito de reactivos A</option><option>Cuarto frío de Biología</option><option>Gabinete de solventes inflamables</option></select></div>
+            </form>
+            <div class="tabla-env">
+              <table class="datos apilable">
+                <thead><tr><th scope="col">Insumo</th><th scope="col">Stock y mínimo</th><th scope="col" class="n">Lotes</th><th scope="col">Próximo vencimiento</th><th scope="col">Estado</th></tr></thead>
+                <tbody id="filas"></tbody>
+              </table>
+            </div>
+            <div class="paginacion" style="padding:12px 20px 16px;border-top:1px solid var(--line)"><span>9 de 64 insumos</span><div class="pags"><button type="button" aria-current="page">1</button><button type="button">2</button><button type="button">3</button></div></div>
+          </section>
+        </main>
+      </div>
+
+      <div class="capa" id="capa-alta" hidden>
+        <form class="dialogo" role="dialog" aria-modal="true" aria-labelledby="t-alta" novalidate style="max-width:620px">
+          <div class="dialogo-cab"><div><h2 id="t-alta">Registrar insumo</h2><p class="sec">Nace con stock cero. Solo cambia con recepciones y despachos.</p></div><button class="icono-btn" type="button" aria-label="Cerrar" data-cerrar><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></button></div>
+          <div class="form-rejilla">
+            <div class="campo ancho error"><label for="a-nom">Nombre</label><input class="entrada" id="a-nom" value="Acetona grado analítico" aria-invalid="true" aria-describedby="a-nom-err">
+              <p class="msg-error" id="a-nom-err"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><span>Ya existe <a href="#contenido">Acetona grado analítico en litros</a>. Abre ese insumo o cambia el nombre o la unidad.</span></p></div>
+            <div class="campo"><label for="a-uni">Unidad de medida</label><select class="entrada" id="a-uni"><option>Litro (L)</option><option>Mililitro (mL)</option><option>Gramo (g)</option><option>Kilogramo (kg)</option><option>Unidad</option><option>Caja</option></select></div>
+            <div class="campo"><label for="a-min">Stock mínimo</label><div style="display:flex;gap:8px;align-items:center"><input class="entrada num" id="a-min" inputmode="decimal" value="5" style="text-align:right"><span class="sec">L</span></div><span class="ayuda">Si el stock baja de aquí, aparece la alerta y se crea una reposición en Borrador.</span></div>
+            <fieldset class="campo ancho" style="border:0;padding:0;margin:0"><legend style="font-weight:600;font-size:15px;margin-bottom:6px">Tipo</legend>
+              <div class="radios"><label><input type="radio" name="t" checked> Materia prima</label><label><input type="radio" name="t"> Consumible de proyecto</label><label><input type="radio" name="t"> Consumible de uso general</label></div>
+              <span class="ayuda">Los de uso general no se cargan a un proyecto al comprarlos: su costo se reparte al cerrar el período.</span>
+            </fieldset>
+          </div>
+          <div class="acc-form"><button class="btn btn-sec" type="button" data-cerrar>Cancelar</button><button class="btn btn-pri" type="submit">Registrar insumo</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Inventario", tanda: 3,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Rol"><button type="button" data-rol="apr" aria-pressed="true">Aprobador</button><button type="button" data-rol="adm" aria-pressed="false">Administrador</button></div><div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-capa="" aria-pressed="true">Lista</button><button type="button" data-capa="capa-alta" aria-pressed="false">Registrar (nombre repetido)</button></div>' };
+window.APP = { rol: "apr", activo: "inventario", titulo: "Inventario", ins: "Inventario de materia prima y consumibles" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var I = [
+    ["Acetona grado analítico", "Materia prima", 2.5, 5, "L", 2, "18/03/2027", "bajo"],
+    ["Metanol grado HPLC", "Materia prima", 1, 4, "L", 1, "02/02/2027", "bajo"],
+    ["Guantes de nitrilo talla M", "Consumible de uso general", 3, 10, "cajas", 1, "—", "bajo"],
+    ["Puntas de micropipeta 200 µL", "Consumible de proyecto", 2, 8, "bolsas", 1, "—", "bajo"],
+    ["Medio LB agar", "Materia prima", 1.2, 0.5, "kg", 2, "05/11/2026", "vence"],
+    ["Etanol 96 %", "Materia prima", 28, 10, "L", 3, "16/11/2026", "vence"],
+    ["Tripsina 0,25 %", "Materia prima", 0.4, 0.2, "L", 2, "20/10/2026", "vencido"],
+    ["Nitrato de cerio hexahidratado", "Materia prima", 480, 100, "g", 1, "11/09/2028", "ok"],
+    ["Papel absorbente", "Consumible de uso general", 24, 10, "rollos", 2, "—", "ok"]
+  ];
+  function num(n) { return n.toLocaleString("es-VE"); }
+  var E = { bajo: ["err", "Bajo el mínimo"], vence: ["warn", "Lote próximo a vencer"], vencido: ["err", "1 lote vencido"], ok: ["ok", "Al día"] };
+  document.getElementById("filas").innerHTML = I.map(function (r) {
+    var p = Math.min(r[2] / (r[3] * 2) * 100, 100), bajo = r[2] < r[3];
+    return '<tr><td><div class="ins"><b>' + r[0] + '</b><span class="tipo">' + r[1] + "</span></div></td>" +
+      '<td><div class="stock"><div class="t"><b>' + num(r[2]) + " " + r[4] + '</b><span class="sec">mín. ' + num(r[3]) + " " + r[4] + '</span></div><div class="barra-prog"><i class="' + (bajo ? "bajo" : "") + '" style="width:' + p + '%"></i></div></div></td>' +
+      '<td class="n" data-e="Lotes:">' + r[5] + '</td><td data-e="Vence:">' + r[6] + "</td><td>" + est(E[r[7]][0], E[r[7]][1]) + "</td></tr>";
+  }).join("");
+  function capa(id) {
+    document.querySelectorAll(".capa").forEach(function (c) { c.hidden = c.id !== id; });
+    document.querySelectorAll("[data-capa]").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.capa === id)); });
+  }
+  function rol(r) {
+    document.querySelector(".mk").setAttribute("data-rol", r);
+    window.APP.rol = r; window.APP.activo = r === "adm" ? "insumos" : "inventario"; window.pintarMarco();
+    document.querySelectorAll("[data-rol]").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.rol === r)); });
+  }
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-capa]"); if (b) { if (b.dataset.capa) rol("adm"); capa(b.dataset.capa); }
+    var r = e.target.closest("[data-rol]"); if (r) { rol(r.dataset.rol); if (r.dataset.rol === "apr") capa(""); }
+  });
+  document.querySelector(".mk").addEventListener("click", function (e) {
+    var a = e.target.closest("[data-abrir]"); if (a) capa(a.dataset.abrir);
+    if (e.target.closest("[data-cerrar]")) capa("");
+  });
+})();
+</script>
+
+</body>
+</html>

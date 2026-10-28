@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Dashboard ejecutivo FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Dashboard (F8.1): resumen arriba, detalle abajo. Una sola escala por gráfico, una serie, en el color primario. */
+.cab-dash { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.cab-dash h1 { font-size: 34px; font-weight: 600; }
+.cab-dash p { color: var(--muted); margin-top: 4px; }
+.filtros { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+.filtros .campo { min-width: 170px; }
+.filtros select.entrada { padding-right: 32px; appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%; background-size: 5px 5px; background-repeat: no-repeat; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.kpi { font: inherit; color: inherit; text-align: left; padding: 18px; display: grid; gap: 6px; cursor: pointer; background: var(--surface); }
+.kpi[aria-expanded="true"] { outline: 2px solid var(--primary); outline-offset: -1px; }
+.kpi .eti { font-size: 14.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.kpi .val { font-family: var(--f-display); font-size: 36px; font-weight: 600; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--primary); }
+.kpi .sub { font-size: 14px; color: var(--muted); }
+.kpi .ver { font-size: 14px; color: var(--link); display: inline-flex; align-items: center; gap: 4px; }
+.kpi .ver .ico { width: 16px; height: 16px; }
+.kpi.alerta .eti .ico { color: var(--err); }
+.kpi.espera .eti .ico { color: var(--warn); }
+
+.detalle { padding: 20px; display: grid; gap: 12px; }
+
+.graficos { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.graf { padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.graf-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.graf-cab h2 { font-size: 13px; font-family: var(--f-mono); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--primary); }
+.graf-cab p { font-size: 14px; color: var(--muted); margin-top: 2px; }
+.btn-chico { min-height: 36px; padding: 0 12px; font-size: 14px; }
+
+/* Barras horizontales: ejecución presupuestaria por proyecto, escala 0 a 120 % */
+.barras { display: grid; gap: 4px; position: relative; }
+.fila-b { display: grid; grid-template-columns: minmax(150px, 38%) minmax(0, 1fr) 64px; gap: 12px; align-items: center; min-height: 40px; border-radius: var(--r-s); padding: 0 4px; }
+.fila-b:hover, .fila-b:focus-visible { background: var(--surface-2); }
+.fila-b .nom { font-size: 14.5px; line-height: 1.25; min-width: 0; }
+.fila-b .nom small { display: block; color: var(--muted); font-size: 13px; }
+.pista { position: relative; height: 14px; }
+.pista .marca-b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--primary); border-radius: 0 4px 4px 0; }
+.pista .ref { position: absolute; top: -8px; bottom: -8px; width: 0; border-left: 2px dashed var(--muted); }
+.fila-b .v { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14.5px; }
+.fila-b .v.sobre { display: inline-flex; align-items: center; gap: 4px; justify-content: flex-end; }
+.fila-b .v.sobre .ico { width: 16px; height: 16px; color: var(--err); }
+.eje-b { display: grid; grid-template-columns: minmax(150px, 38%) minmax(0, 1fr) 64px; gap: 12px; padding: 0 4px; font-size: 12.5px; color: var(--muted); }
+.eje-b .esc { position: relative; height: 16px; }
+.eje-b .esc span { position: absolute; transform: translateX(-50%); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.eje-b .esc span:first-child { transform: none; }
+.eje-b .esc span:last-child { transform: translateX(-100%); }
+
+.leyenda { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); }
+.leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+.leyenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; background: var(--primary); }
+.leyenda i.ref { width: 0; height: 14px; border-left: 2px dashed var(--muted); background: none; border-radius: 0; }
+
+/* Columnas: gasto ejecutado por mes */
+.columnas { position: relative; height: 220px; margin-left: 52px; border-bottom: 1px solid var(--border); }
+.columnas .linea { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
+.columnas .linea span { position: absolute; right: calc(100% + 8px); top: -9px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.columnas .cols { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; align-items: end; padding: 0 6px; }
+.columnas .col-m { position: relative; height: 100%; display: flex; align-items: flex-end; justify-content: center; border-radius: var(--r-s); }
+.columnas .col-m:hover, .columnas .col-m:focus-visible { background: var(--surface-2); }
+.columnas .col-m i { display: block; width: min(44px, 60%); background: var(--primary); border-radius: 4px 4px 0 0; }
+.columnas .col-m.parcial i { background: repeating-linear-gradient(135deg, var(--primary) 0 6px, transparent 6px 9px); border: 2px solid var(--primary); border-bottom: 0; }
+.columnas .col-m b { position: absolute; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; transform: translateY(-4px); }
+.meses { margin-left: 52px; display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 6px 0; font-size: 13px; color: var(--muted); text-align: center; }
+
+.tip { position: absolute; z-index: 10; pointer-events: none; background: var(--text); color: var(--bg); font-size: 13.5px; line-height: 1.4; padding: 8px 10px; border-radius: var(--r-s); box-shadow: 0 6px 20px rgba(0,0,0,.18); max-width: 260px; }
+.tip b { display: block; }
+
+.tablas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+table.datos { width: 100%; border-collapse: collapse; font-size: 15px; }
+table.datos caption { text-align: left; font-size: 14px; color: var(--muted); padding-bottom: 6px; }
+table.datos th { padding: 8px 10px; }
+table.datos td { padding: 11px 10px; border-bottom: 1px solid var(--line); }
+table.datos tr:last-child td { border-bottom: 0; }
+table.datos td.n, table.datos th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.tabla-env { overflow-x: auto; }
+
+@container mk (max-width: 760px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .kpi { padding: 14px; }
+  .kpi .val { font-size: 28px; }
+  .graficos, .tablas { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .graf { padding: 16px; }
+  .fila-b, .eje-b { grid-template-columns: minmax(0, 1fr) 76px; }
+  .fila-b .nom { grid-column: 1 / -1; }
+  .eje-b > span:first-child { display: none; }
+  .filtros .campo { min-width: 0; flex: 1 1 140px; }
+  .cab-dash h1 { font-size: 26px !important; }
+}
+</style>
+</head>
+<body>
+
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+      <aside class="nav-lat" aria-label="Navegación principal">
+        <a class="marca" href="#contenido">
+          <img src="logos/facyt-isotipo.png" alt="" width="38" height="38">
+          <div><strong>Control de Proyectos</strong><span>FaCyT · UC</span></div>
+        </a>
+        <nav><ul id="nav"></ul></nav>
+        <div class="nav-pie">
+          <span class="avatar">JR</span>
+          <div class="quien"><strong>José Rodríguez</strong><span>Administrador del Sistema</span></div>
+          <button class="salir" type="button" aria-label="Cerrar sesión"><svg class="ico" aria-hidden="true"><use href="#i-salir"/></svg></button>
+        </div>
+      </aside>
+
+      <div class="principal">
+        <div class="editorial">
+          <span class="placa-escudo"><img src="logos/escudo-uc.jpg" alt="Escudo de la Universidad de Carabobo" width="40" height="53"></span>
+          <div class="txt">
+            <span class="ins">Universidad de Carabobo · FaCyT · Dashboard ejecutivo</span>
+            <span class="fecha">Datos al martes 27 de octubre de 2026, 09:15</span>
+          </div>
+        </div>
+        <header class="barra">
+          <button class="icono-btn menu" type="button" aria-label="Abrir menú"><svg class="ico" aria-hidden="true"><use href="#i-menu"/></svg></button>
+          <span class="marca-tel"><img src="logos/facyt-isotipo.png" alt="" width="28" height="28">Dashboard</span>
+          <div class="buscar">
+            <label for="buscar" class="vh">Buscar</label>
+            <svg class="ico" aria-hidden="true"><use href="#i-buscar"/></svg>
+            <input class="entrada" id="buscar" type="search" placeholder="Buscar proyecto, insumo, equipo o solicitud">
+          </div>
+          <div class="der">
+            <button class="icono-btn" type="button" aria-label="Avisos, 2 sin leer"><svg class="ico" aria-hidden="true"><use href="#i-campana"/></svg><span class="punto">2</span></button>
+          </div>
+        </header>
+
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab-dash">
+            <div>
+              <h1>Dashboard ejecutivo</h1>
+              <p>Proyectos activos, presupuesto y alertas críticas. Haz clic en un indicador para ver su detalle.</p>
+            </div>
+            <form class="filtros" aria-label="Filtros">
+              <div class="campo">
+                <label for="f-periodo">Período</label>
+                <select class="entrada" id="f-periodo">
+                  <option>Junio a octubre de 2026</option>
+                  <option>Octubre de 2026</option>
+                  <option>Tercer trimestre de 2026</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="f-prio">Prioridad</label>
+                <select class="entrada" id="f-prio">
+                  <option value="">Todas</option>
+                  <option>Crítica</option>
+                  <option>Alta</option>
+                  <option>Media</option>
+                  <option>Baja</option>
+                </select>
+              </div>
+            </form>
+          </div>
+
+          <section class="kpis" aria-label="Indicadores" id="kpis"></section>
+          <section class="tarjeta detalle" id="detalle" hidden aria-live="polite"></section>
+
+          <div class="graficos">
+            <section class="tarjeta graf" aria-labelledby="t-ejec">
+              <div class="graf-cab">
+                <div><h2 id="t-ejec">Ejecución presupuestaria por proyecto</h2><p>Gasto ejecutado sobre presupuesto asignado. La línea marca el 100 %.</p></div>
+                <button class="btn btn-sec btn-chico" type="button" data-tabla="tb-ejec" aria-expanded="false">Ver como tabla</button>
+              </div>
+              <div class="barras" id="barras"></div>
+              <div class="eje-b" aria-hidden="true"><span></span><div class="esc" id="esc"></div><span></span></div>
+              <div class="leyenda"><span><i aria-hidden="true"></i>Ejecución</span><span><i class="ref" aria-hidden="true"></i>Presupuesto asignado (100 %)</span></div>
+              <div class="tabla-env" id="tb-ejec" hidden></div>
+            </section>
+
+            <section class="tarjeta graf" aria-labelledby="t-mes">
+              <div class="graf-cab">
+                <div><h2 id="t-mes">Gasto ejecutado por mes</h2><p>Todos los proyectos activos, en US$. Octubre va hasta el 27/10.</p></div>
+                <button class="btn btn-sec btn-chico" type="button" data-tabla="tb-mes" aria-expanded="false">Ver como tabla</button>
+              </div>
+              <div>
+                <div class="columnas" id="columnas"></div>
+                <div class="meses" aria-hidden="true"><span>Jun</span><span>Jul</span><span>Ago</span><span>Sep</span><span>Oct</span></div>
+              </div>
+              <div class="leyenda"><span><i aria-hidden="true"></i>Mes cerrado</span><span><i aria-hidden="true" style="background:repeating-linear-gradient(135deg,var(--primary) 0 4px,transparent 4px 6px);outline:1px solid var(--primary)"></i>Mes en curso</span></div>
+              <div class="tabla-env" id="tb-mes" hidden></div>
+            </section>
+          </div>
+
+          <div class="tablas">
+            <section class="tarjeta graf" aria-labelledby="t-stock">
+              <div class="graf-cab"><div><h2 id="t-stock">Alertas críticas de stock</h2><p>Insumos por debajo de su stock mínimo.</p></div><a href="#contenido">Ver inventario</a></div>
+              <div class="tabla-env"><table class="datos"><thead><tr><th scope="col">Insumo</th><th scope="col" class="n">Stock</th><th scope="col" class="n">Mínimo</th><th scope="col">Estado</th></tr></thead><tbody id="tb-stock"></tbody></table></div>
+            </section>
+            <section class="tarjeta graf" aria-labelledby="t-venc">
+              <div class="graf-cab"><div><h2 id="t-venc">Vencimiento de lotes</h2><p>Lotes con stock dentro de los 30 días de anticipación.</p></div><a href="#contenido">Ver lotes</a></div>
+              <div class="tabla-env"><table class="datos"><thead><tr><th scope="col">Lote</th><th scope="col">Insumo</th><th scope="col">Vence</th><th scope="col">Estado</th></tr></thead><tbody id="tb-venc"></tbody></table></div>
+            </section>
+          </div>
+        </main>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>window.MK = { vista: "Dashboard ejecutivo" };</script>
+<script src="compartido/comun.js"></script>
+<script>
+(function () {
+  function ico(n) { return '<svg class="ico" aria-hidden="true"><use href="#i-' + n + '"/></svg>'; }
+  function est(tipo, texto) { var i = { ok: "ok", warn: "reloj", err: "error", info: "info" }[tipo]; return '<span class="estado ' + tipo + '">' + ico(i) + texto + "</span>"; }
+  function usd(n) { return "US$ " + n.toLocaleString("es-VE", { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+  function pct(n) { return n.toLocaleString("es-VE", { maximumFractionDigits: 0 }) + " %"; }
+
+  // Navegación del Administrador (Dashboard activo)
+  var NAV = [["inicio", "Inicio"], ["reportes", "Dashboard"], ["proyectos", "Proyectos", 1], ["usuarios", "Usuarios"], ["inventario", "Catálogo de insumos"], ["equipos", "Catálogo de equipos"], ["almacen", "Ubicaciones y parámetros"], ["auditoria", "Auditoría"]];
+  document.getElementById("nav").innerHTML = NAV.map(function (n, i) {
+    return '<li><a class="item" href="#contenido"' + (i === 1 ? ' aria-current="page"' : "") + ">" + ico(n[0]) + "<span>" + n[1] + "</span>" + (n[2] ? '<span class="cuenta">' + n[2] + "</span>" : "") + "</a></li>";
+  }).join("");
+
+  // Datos de ejemplo (coinciden con el inicio del Administrador)
+  var PROY = [
+    { cod: "BIO-015", nom: "Biopelículas en sistemas de riego", prio: "Alta", pres: 12000, gasto: 13080 },
+    { cod: "BIO-011", nom: "Resistencia antimicrobiana en aislados clínicos", prio: "Crítica", pres: 15000, gasto: 13950 },
+    { cod: "QUI-031", nom: "Degradación fotocatalítica de colorantes", prio: "Media", pres: 8000, gasto: 6640 },
+    { cod: "QUI-027", nom: "Extracción de aceites esenciales", prio: "Baja", pres: 7000, gasto: 4750 },
+    { cod: "QUI-024", nom: "Síntesis de catalizadores de óxido de cerio", prio: "Alta", pres: 10000, gasto: 4812 },
+    { cod: "FIS-008", nom: "Caracterización de películas delgadas", prio: "Media", pres: 9000, gasto: 3420 },
+    { cod: "FIS-010", nom: "Espectroscopía Raman de minerales", prio: "Baja", pres: 6000, gasto: 1560 }
+  ];
+  var MESES = [["Junio", 7820], ["Julio", 9410], ["Agosto", 10250], ["Septiembre", 11980], ["Octubre", 8752]];
+  var STOCK = [["Acetona grado analítico", "2,5 L", "5 L"], ["Metanol grado HPLC", "1 L", "4 L"], ["Guantes de nitrilo talla M", "3 cajas", "10 cajas"], ["Puntas de micropipeta 200 µL", "2 bolsas", "8 bolsas"]];
+  var VENC = [["L-0311", "Tripsina 0,25 %", "20/10/2026", "err", "Vencido"], ["L-0425", "Medio LB agar", "05/11/2026 · 9 días", "warn", "Próximo a vencer"], ["L-0398", "Etanol 96 %", "16/11/2026 · 20 días", "warn", "Próximo a vencer"]];
+
+  var ESC_MAX = 120;
+  var tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; document.querySelector(".mk").appendChild(tip);
+  function mostrarTip(el, html) {
+    var mk = document.querySelector(".mk").getBoundingClientRect(), r = el.getBoundingClientRect();
+    tip.innerHTML = html; tip.hidden = false;
+    var x = Math.min(r.left - mk.left + r.width / 2 - tip.offsetWidth / 2, mk.width - tip.offsetWidth - 8);
+    tip.style.left = Math.max(8, x) + "px";
+    tip.style.top = (r.top - mk.top - tip.offsetHeight - 8) + "px";
+  }
+  function ocultarTip() { tip.hidden = true; }
+
+  function pintar() {
+    var f = document.getElementById("f-prio").value;
+    var lista = PROY.filter(function (p) { return !f || p.prio === f; });
+    var pres = lista.reduce(function (a, p) { return a + p.pres; }, 0);
+    var gasto = lista.reduce(function (a, p) { return a + p.gasto; }, 0);
+    var kpis = [
+      { id: "activos", cls: "", ic: "proyectos", eti: "Proyectos activos", val: lista.length, sub: f ? "Con prioridad " + f : "En ejecución, según RN-05" },
+      { id: "presupuesto", cls: "", ic: "prorrateo", eti: "Presupuesto global ejecutado", val: pres ? pct(gasto / pres * 100) : "—", sub: usd(gasto) + " de " + usd(pres) },
+      { id: "stock", cls: "alerta", ic: "alerta", eti: "Alertas críticas de stock", val: STOCK.length, sub: "Insumos bajo su mínimo" },
+      { id: "venc", cls: "espera", ic: "reloj", eti: "Lotes próximos a vencer", val: 2, sub: "Y 1 lote vencido" }
+    ];
+    var abierto = document.getElementById("kpis").dataset.abierto || "";
+    document.getElementById("kpis").innerHTML = kpis.map(function (k) {
+      return '<button type="button" class="tarjeta kpi ' + k.cls + '" data-kpi="' + k.id + '" aria-expanded="' + (abierto === k.id) + '" aria-controls="detalle"><span class="eti">' + ico(k.ic) + k.eti + '</span><span class="val">' + k.val + '</span><span class="sub">' + k.sub + '</span><span class="ver">Ver detalle' + ico("abajo") + "</span></button>";
+    }).join("");
+
+    // Barras
+    var esc = document.getElementById("esc");
+    esc.innerHTML = [0, 25, 50, 75, 100, 120].map(function (t) { return '<span style="left:' + (t / ESC_MAX * 100) + '%">' + t + " %</span>"; }).join("");
+    document.getElementById("barras").innerHTML = lista.length ? lista.map(function (p) {
+      var v = p.gasto / p.pres * 100, sobre = v > 100;
+      return '<div class="fila-b" tabindex="0" data-tip="' + encodeURIComponent("<b>" + p.cod + " · " + p.nom + "</b>" + usd(p.gasto) + " de " + usd(p.pres) + " · " + pct(v) + (sobre ? "<br>Supera el presupuesto en " + usd(p.gasto - p.pres) : "")) + '">' +
+        '<div class="nom"><span class="mono">' + p.cod + "</span><small>" + p.nom + "</small></div>" +
+        '<div class="pista"><span class="marca-b" style="width:' + (Math.min(v, ESC_MAX) / ESC_MAX * 100) + '%"></span><span class="ref" style="left:' + (100 / ESC_MAX * 100) + '%"></span></div>' +
+        '<div class="v' + (sobre ? " sobre" : "") + '">' + (sobre ? ico("alerta") : "") + pct(v) + "</div></div>";
+    }).join("") : '<p class="sec">No hay proyectos activos con esa prioridad.</p>';
+    document.getElementById("tb-ejec").innerHTML = '<table class="datos"><caption>Ejecución presupuestaria por proyecto</caption><thead><tr><th scope="col">Proyecto</th><th scope="col">Prioridad</th><th scope="col" class="n">Presupuesto</th><th scope="col" class="n">Gasto</th><th scope="col" class="n">Ejecución</th></tr></thead><tbody>' +
+      lista.map(function (p) { return '<tr><td><span class="mono">' + p.cod + "</span> " + p.nom + "</td><td>" + p.prio + '</td><td class="n">' + usd(p.pres) + '</td><td class="n">' + usd(p.gasto) + '</td><td class="n">' + pct(p.gasto / p.pres * 100) + "</td></tr>"; }).join("") + "</tbody></table>";
+
+    // Columnas
+    var MAXC = 12000;
+    var col = '<div class="linea" style="bottom:0"><span>0</span></div>' + [4000, 8000, 12000].map(function (t) { return '<div class="linea" style="bottom:' + (t / MAXC * 100) + '%"><span>' + t.toLocaleString("es-VE") + "</span></div>"; }).join("");
+    col += '<div class="cols">' + MESES.map(function (m, i) {
+      var parcial = i === MESES.length - 1;
+      return '<div class="col-m' + (parcial ? " parcial" : "") + '" tabindex="0" data-tip="' + encodeURIComponent("<b>" + m[0] + " de 2026</b>" + usd(m[1]) + (parcial ? " hasta el 27/10" : "")) + '"><b style="bottom:' + (m[1] / MAXC * 100) + '%;position:absolute">' + (m[1] / 1000).toLocaleString("es-VE", { maximumFractionDigits: 1 }) + ' mil</b><i style="height:' + (m[1] / MAXC * 100) + '%"></i></div>';
+    }).join("") + "</div>";
+    document.getElementById("columnas").innerHTML = col;
+    document.getElementById("tb-mes").innerHTML = '<table class="datos"><caption>Gasto ejecutado por mes</caption><thead><tr><th scope="col">Mes</th><th scope="col" class="n">Gasto</th></tr></thead><tbody>' +
+      MESES.map(function (m) { return "<tr><td>" + m[0] + ' de 2026</td><td class="n">' + usd(m[1]) + "</td></tr>"; }).join("") + "</tbody></table>";
+
+    document.getElementById("tb-stock").innerHTML = STOCK.map(function (s) { return "<tr><td>" + s[0] + '</td><td class="n">' + s[1] + '</td><td class="n">' + s[2] + "</td><td>" + est("err", "Bajo el mínimo") + "</td></tr>"; }).join("");
+    document.getElementById("tb-venc").innerHTML = VENC.map(function (v) { return '<tr><td class="mono">' + v[0] + "</td><td>" + v[1] + "</td><td>" + v[2] + "</td><td>" + est(v[3], v[4]) + "</td></tr>"; }).join("");
+    pintarDetalle(abierto, lista);
+  }
+
+  function pintarDetalle(id, lista) {
+    var d = document.getElementById("detalle");
+    if (!id) { d.hidden = true; return; }
+    var t = { activos: "Proyectos activos", presupuesto: "Presupuesto por proyecto", stock: "Insumos bajo su mínimo", venc: "Lotes por vencer y vencidos" }[id];
+    var cuerpo = "";
+    if (id === "activos" || id === "presupuesto") {
+      cuerpo = '<table class="datos"><thead><tr><th scope="col">Proyecto</th><th scope="col">Prioridad</th><th scope="col">Estatus</th><th scope="col" class="n">Ejecución</th></tr></thead><tbody>' +
+        lista.map(function (p) { return '<tr><td><span class="mono">' + p.cod + "</span> " + p.nom + "</td><td>" + p.prio + "</td><td>" + est("ok", "En ejecución") + '</td><td class="n">' + pct(p.gasto / p.pres * 100) + "</td></tr>"; }).join("") + "</tbody></table>";
+    } else if (id === "stock") {
+      cuerpo = '<table class="datos"><thead><tr><th scope="col">Insumo</th><th scope="col" class="n">Stock</th><th scope="col" class="n">Mínimo</th><th scope="col">Reposición</th></tr></thead><tbody>' +
+        STOCK.map(function (s, i) { return "<tr><td>" + s[0] + '</td><td class="n">' + s[1] + '</td><td class="n">' + s[2] + "</td><td>" + (i === 0 ? est("info", "Borrador creado (REP-014)") : est("warn", "Pendiente de Aprobación")) + "</td></tr>"; }).join("") + "</tbody></table>";
+    } else {
+      cuerpo = '<table class="datos"><thead><tr><th scope="col">Lote</th><th scope="col">Insumo</th><th scope="col">Vence</th><th scope="col">Estado</th></tr></thead><tbody>' +
+        VENC.map(function (v) { return '<tr><td class="mono">' + v[0] + "</td><td>" + v[1] + "</td><td>" + v[2] + "</td><td>" + est(v[3], v[4]) + "</td></tr>"; }).join("") + "</tbody></table>";
+    }
+    d.innerHTML = '<div class="graf-cab"><h2 style="font-size:19px">' + t + '</h2><button class="btn btn-sec btn-chico" type="button" data-cerrar>Cerrar detalle</button></div><div class="tabla-env">' + cuerpo + "</div>";
+    d.hidden = false;
+  }
+
+  document.querySelector(".mk").addEventListener("click", function (e) {
+    var k = e.target.closest("[data-kpi]");
+    if (k) {
+      var box = document.getElementById("kpis");
+      box.dataset.abierto = box.dataset.abierto === k.dataset.kpi ? "" : k.dataset.kpi;
+      pintar(); return;
+    }
+    if (e.target.closest("[data-cerrar]")) { document.getElementById("kpis").dataset.abierto = ""; pintar(); return; }
+    var b = e.target.closest("[data-tabla]");
+    if (b) {
+      var t = document.getElementById(b.dataset.tabla), abrir = t.hidden;
+      t.hidden = !abrir; b.setAttribute("aria-expanded", String(abrir)); b.textContent = abrir ? "Ocultar tabla" : "Ver como tabla";
+    }
+  });
+  ["mouseover", "focusin"].forEach(function (ev) {
+    document.querySelector(".mk").addEventListener(ev, function (e) {
+      var el = e.target.closest("[data-tip]"); if (el) mostrarTip(el, decodeURIComponent(el.dataset.tip));
+    });
+  });
+  ["mouseout", "focusout"].forEach(function (ev) {
+    document.querySelector(".mk").addEventListener(ev, function (e) { if (e.target.closest("[data-tip]")) ocultarTip(); });
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") ocultarTip(); });
+  document.getElementById("f-prio").addEventListener("change", pintar);
+  pintar();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,98 @@
+<title>Recepción de lote FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Recepción de lote (F6.1): datos del lote con vencimiento, asociación opcional a la solicitud de gasto y resumen del efecto en el stock */
+.dos { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.form-l { padding: 22px; display: grid; gap: 20px; }
+.form-l h2 { font-size: 13px; font-family: var(--f-mono); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--primary); }
+
+.prefijo { display: flex; }
+.prefijo .entrada { border-radius: 0 var(--r-s) var(--r-s) 0; }
+.prefijo span { display: grid; place-items: center; padding: 0 12px; border: 1px solid var(--border); border-right: 0; border-radius: var(--r-s) 0 0 var(--r-s); background: var(--bg); color: var(--muted); font-weight: 600; }
+.efecto-s { padding: 20px; display: grid; gap: 14px; position: sticky; top: 16px; }
+.paso-s { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; text-align: center; }
+.paso-s div { padding: 12px; border: 1px solid var(--line); border-radius: var(--r-m); }
+.paso-s span { display: block; font-size: 13px; color: var(--muted); }
+.paso-s b { font-size: 24px; font-family: var(--f-display); font-variant-numeric: tabular-nums; }
+.paso-s .despues { border-color: var(--primary); background: var(--surface-2); }
+@container mk (max-width: 760px) { .dos { grid-template-columns: minmax(0, 1fr); } .efecto-s { position: static; } }
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Almacén</a></li><li>Registrar recepción</li></ol>
+              <h1>Registrar recepción de lote</h1>
+              <p class="sub">El stock aumenta en el mismo momento en que guardas.</p>
+            </div>
+          </div>
+          <div class="dos">
+            <form class="tarjeta form-l" novalidate aria-label="Datos del lote">
+              <div class="aviso err" id="msg-venc" hidden role="alert"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><div><p><b>La fecha de vencimiento ya pasó (15/10/2026).</b></p><p>Si fue un error al escribirla, corrígela. Un lote vencido no se registra: devuélvelo al proveedor.</p></div></div>
+              <h2>Origen</h2>
+              <div class="form-rejilla">
+                <div class="campo ancho"><label for="l-sol">Solicitud de gasto <span class="obligatorio">(opcional)</span></label><select class="entrada" id="l-sol"><option>REP-014 · Reposición de acetona grado analítico · 10 L · Aprobado</option><option>Sin solicitud</option></select><span class="ayuda">Al asociarla, el insumo y la cantidad se completan solos.</span></div>
+              </div>
+              <h2>Lote</h2>
+              <div class="form-rejilla">
+                <div class="campo"><label for="l-ins">Insumo</label><select class="entrada" id="l-ins"><option>Acetona grado analítico (L)</option></select></div>
+                <div class="campo"><label for="l-cod">Número de lote del proveedor</label><input class="entrada mono" id="l-cod" value="AC-26-1187"></div>
+                <div class="campo"><label for="l-cant">Cantidad recibida</label><div style="display:flex;gap:8px;align-items:center"><input class="entrada num" id="l-cant" value="10" style="text-align:right"><span class="sec">L</span></div></div>
+                <div class="campo"><label for="l-costo">Costo unitario</label><div class="prefijo"><span>US$</span><input class="entrada num" id="l-costo" value="13,25"></div></div>
+                <div class="campo"><label for="l-prov">Proveedor</label><input class="entrada" id="l-prov" value="Química Valencia, C.A."></div>
+                <div class="campo"><label for="l-ing">Fecha de ingreso</label><input class="entrada" id="l-ing" type="date" value="2026-10-27"></div>
+                <div class="campo" id="c-venc"><label for="l-venc">Fecha de vencimiento</label><input class="entrada" id="l-venc" type="date" value="2027-09-30" aria-describedby="venc-a"><span class="ayuda" id="venc-a">Déjala vacía solo si el insumo no vence.</span></div>
+                <div class="campo"><label for="l-ub">Ubicación</label><select class="entrada" id="l-ub"><option>Gabinete de solventes inflamables</option><option>Depósito de reactivos A</option></select></div>
+              </div>
+              <div class="acc-form"><button class="btn btn-sec" type="button">Cancelar</button><button class="btn btn-pri" type="submit" id="btn-g">Registrar lote</button></div>
+            </form>
+            <aside class="tarjeta efecto-s" aria-label="Efecto en el stock">
+              <h2 style="font-size:18px">Lo que pasa al guardar</h2>
+              <div class="paso-s"><div><span>Stock hoy</span><b>2,5 L</b></div><svg class="ico" aria-hidden="true"><use href="#i-flecha"/></svg><div class="despues"><span>Después</span><b id="despues">12,5 L</b></div></div>
+              <ul class="lista" style="font-size:15px">
+                <li><div class="izq">Alerta de stock mínimo</div><span class="estado ok"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg>Se retira</span></li>
+                <li><div class="izq">Reposición <span class="mono">REP-014</span></div><span class="estado info"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg>Queda asociada al lote</span></li>
+                <li><div class="izq">Costo del lote<small>10 L × US$ 13,25</small></div><b class="num">US$ 132,50</b></li>
+              </ul>
+            </aside>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Recepción de lote", tanda: 4,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-v2="ok" aria-pressed="true">Normal</button><button type="button" data-v2="venc" aria-pressed="false">Lote vencido</button></div>' };
+window.APP = { rol: "apr", activo: "almacen", titulo: "Recepción", ins: "Almacén" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+document.getElementById("comparador").addEventListener("click", function (e) {
+  var b = e.target.closest("[data-v2]"); if (!b) return;
+  var v = b.dataset.v2 === "venc";
+  document.getElementById("msg-venc").hidden = !v;
+  document.getElementById("c-venc").classList.toggle("error", v);
+  document.getElementById("l-venc").value = v ? "2026-10-15" : "2027-09-30";
+  document.getElementById("l-venc").setAttribute("aria-invalid", String(v));
+  document.getElementById("btn-g").disabled = v;
+  document.querySelectorAll("[data-v2]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+});
+</script>

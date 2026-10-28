@@ -1,0 +1,169 @@
+/* Barra de revisión de los mockups, tokens del diseño aprobado y componentes comunes.
+   Valores tomados de docs/identidad-visual/identidad_visual.md §4 y §5.1. */
+
+:root {
+  /* Comparador (marco neutro, fuera del mockup) */
+  --cmp-bg: #E9EBEF;
+  --cmp-bar: #F7F8FA;
+  --cmp-fg: #15181D;
+  --cmp-muted: #5A6170;
+  --cmp-line: #CDD2DA;
+  --cmp-sel: #15181D;
+  --cmp-sel-fg: #FFFFFF;
+  --cmp-focus: #0B62A4;
+  --f-cmp: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --cmp-bg: #0E1013; --cmp-bar: #16181C; --cmp-fg: #EDEFF3; --cmp-muted: #A7ADB8;
+    --cmp-line: #2C3038; --cmp-sel: #EDEFF3; --cmp-sel-fg: #0E1013; --cmp-focus: #7CC4FF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --cmp-bg: #0E1013; --cmp-bar: #16181C; --cmp-fg: #EDEFF3; --cmp-muted: #A7ADB8;
+  --cmp-line: #2C3038; --cmp-sel: #EDEFF3; --cmp-sel-fg: #0E1013; --cmp-focus: #7CC4FF;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--cmp-bg); color: var(--cmp-fg); font-family: var(--f-cmp); font-size: 15px; }
+
+/* ---------- Barra del comparador ---------- */
+.cmp {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--cmp-bar); border-bottom: 1px solid var(--cmp-line);
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--cmp-bar); }
+.cmp-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; max-width: 1440px; margin: 0 auto; }
+.cmp-titulo { display: flex; flex-direction: column; min-width: 0; margin-right: auto; }
+.cmp-titulo small { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--cmp-muted); }
+.cmp-titulo strong { font-size: 17px; font-weight: 700; }
+.cmp-grupo { display: inline-flex; border: 1px solid var(--cmp-line); border-radius: 10px; padding: 3px; gap: 2px; background: var(--cmp-bg); flex-wrap: wrap; }
+.cmp-grupo button {
+  font: inherit; font-size: 14px; color: var(--cmp-fg); background: transparent; border: 0;
+  min-height: 36px; padding: 0 12px; border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+}
+.cmp-grupo button b { font-weight: 700; }
+.cmp-grupo button[aria-pressed="true"] { background: var(--cmp-sel); color: var(--cmp-sel-fg); }
+.cmp-grupo button:focus-visible, .cmp a:focus-visible { outline: 2px solid var(--cmp-focus); outline-offset: 2px; }
+.cmp-nota { max-width: 1440px; margin: 8px auto 0; font-size: 13.5px; color: var(--cmp-muted); }
+.cmp-nota strong { color: var(--cmp-fg); font-weight: 600; }
+
+.escenario {
+  padding-block: 24px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.marco {
+  container-type: inline-size; container-name: mk;
+  max-width: 1440px; margin: 0 auto; border-radius: 14px; overflow: hidden; overflow: clip; /* clip no rompe position: sticky */
+  border: 1px solid var(--cmp-line); box-shadow: 0 10px 40px rgba(10, 20, 40, .12);
+}
+.marco[data-ancho="telefono"] { max-width: 390px; border-radius: 28px; border-width: 8px; border-color: var(--cmp-fg); }
+
+/* ---------- Tokens del diseño aprobado (modo claro) ---------- */
+.mk {
+  /* Paleta FaCyT */
+  --bg: #F4F6F9; --surface: #FFFFFF; --surface-2: #E8F1F8; --line: #DCE2EA;
+  --text: #0F1B2D; --muted: #4A5568; --border: #7D8A9C;
+  --primary: #003A6A; --on-primary: #FFFFFF; --accent: #0092D0; --link: #00609A;
+  --side-bg: #FFFFFF; --side-fg: #0F1B2D; --side-muted: #4A5568; --side-active: #E8F1F8; --side-mark: #003A6A;
+  /* Estados */
+  --ok: #1E7B34; --warn: #8A5A00; --err: #B42318; --info: #0B62A4; --on-err: #FFFFFF;
+  /* Forma y tipografía */
+  --r-s: 4px; --r-m: 8px; --r-l: 10px; --r-xl: 14px;
+  --f-display: "IBM Plex Sans", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  background: var(--bg); color: var(--text); font-family: var(--f-body);
+  font-size: 16px; line-height: 1.5; min-height: 640px;
+}
+
+/* ---------- Tokens del diseño aprobado (modo oscuro) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .mk {
+    --bg: #0B1420; --surface: #13202F; --surface-2: #183049; --line: #22324A;
+    --text: #E8EEF5; --muted: #A3B1C2; --border: #5D6E84;
+    --primary: #5CC0F0; --on-primary: #04121F; --accent: #0092D0; --link: #7CCBF2;
+    --side-bg: #13202F; --side-fg: #E8EEF5; --side-muted: #A3B1C2; --side-active: #183049; --side-mark: #5CC0F0;
+    --ok: #5FD47F; --warn: #F5B841; --err: #FF8A80; --info: #7CC4FF; --on-err: #2A0A07;
+  }
+}
+:root[data-theme="dark"] .mk {
+  --bg: #0B1420; --surface: #13202F; --surface-2: #183049; --line: #22324A;
+  --text: #E8EEF5; --muted: #A3B1C2; --border: #5D6E84;
+  --primary: #5CC0F0; --on-primary: #04121F; --accent: #0092D0; --link: #7CCBF2;
+  --side-bg: #13202F; --side-fg: #E8EEF5; --side-muted: #A3B1C2; --side-active: #183049; --side-mark: #5CC0F0;
+  --ok: #5FD47F; --warn: #F5B841; --err: #FF8A80; --info: #7CC4FF; --on-err: #2A0A07;
+}
+
+/* ---------- Componentes comunes ---------- */
+.mk h1, .mk h2, .mk h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.2; }
+.mk p { margin: 0; }
+.mk a { color: var(--link); text-underline-offset: 2px; }
+.mk .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.mk .num { font-variant-numeric: tabular-nums; }
+.mk .sec { color: var(--muted); }
+.mk :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.ico { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.saltar { position: absolute; left: 8px; top: -60px; background: var(--primary); color: var(--on-primary); padding: 10px 14px; border-radius: var(--r-s); z-index: 5; }
+.saltar:focus { top: 8px; }
+
+.btn {
+  font: inherit; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 18px; border-radius: var(--r-m); border: 1px solid transparent; cursor: pointer; text-decoration: none;
+}
+.mk .btn-pri { background: var(--primary); color: var(--on-primary); }
+.mk .btn-sec { background: var(--surface); color: var(--text); border-color: var(--border); }
+.mk .btn-txt { background: transparent; color: var(--link); padding: 0 8px; }
+.mk a.btn { text-decoration: none; }
+.mk .btn-peligro { background: var(--err); color: var(--on-err); }
+.mk .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.campo { display: grid; gap: 6px; }
+.campo label { font-weight: 600; font-size: 15px; }
+.campo .ayuda { font-size: 14px; color: var(--muted); }
+.entrada {
+  font: inherit; width: 100%; min-height: 44px; padding: 0 12px; color: var(--text); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-s);
+}
+
+.entrada:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.campo.error .entrada { border-color: var(--err); border-width: 2px; }
+.msg-error { display: flex; gap: 6px; align-items: flex-start; color: var(--text); font-size: 14.5px; }
+.msg-error .ico { color: var(--err); margin-top: 2px; }
+
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  padding: 2px 10px 2px 6px;
+  border-radius: var(--r-s);
+  background: var(--surface-2);
+}
+
+.estado .ico { width: 16px; height: 16px; }
+.estado.ok .ico { color: var(--ok); }
+.estado.warn .ico { color: var(--warn); }
+.estado.err .ico { color: var(--err); }
+.estado.info .ico { color: var(--info); }
+.estado.neutro .ico { color: var(--muted); }
+
+.tarjeta { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-l); }
+
+.placa-escudo { background: #FFFFFF; border-radius: var(--r-s); padding: 4px; display: inline-flex; line-height: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

@@ -1,0 +1,114 @@
+<title>Gastos compartidos FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Reparto de gastos compartidos, el prorrateo de RF-25 (F7.3, F7.4): los dos criterios calculados a la vez y lado a lado; se elige uno y se confirma en un solo paso */
+.base { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.base div { padding: 16px; display: grid; gap: 2px; }
+.base span { font-size: 14px; color: var(--muted); }
+.base b { font-size: 26px; font-family: var(--f-display); font-variant-numeric: tabular-nums; color: var(--primary); font-weight: 600; }
+
+.comparacion { padding: 0; overflow: hidden; }
+.comparacion .tabla-env { padding: 0 8px; }
+.comparacion th.grupo { text-align: center; border-bottom: 0; padding-top: 14px; }
+.opcion { font: inherit; color: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; border: 1px solid var(--border); border-radius: var(--r-m); background: var(--surface); font-weight: 600; }
+.opcion[aria-checked="true"] { border-color: var(--primary); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--primary); }
+.opcion .punto { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); display: grid; place-items: center; }
+.opcion[aria-checked="true"] .punto { border-color: var(--primary); }
+.opcion[aria-checked="true"] .punto::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+td.sel, th.sel { background: var(--surface-2); }
+.barra-mini { display: inline-block; height: 8px; border-radius: 0 4px 4px 0; background: var(--primary); vertical-align: middle; margin-right: 8px; }
+tfoot td { font-weight: 700; border-top: 2px solid var(--line); }
+.aplicar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 18px; border-top: 1px solid var(--line); }
+.hecho { padding: 22px; display: grid; gap: 10px; border-left: 4px solid var(--ok); }
+@container mk (max-width: 760px) { .base { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Gastos compartidos</a></li><li>Octubre de 2026</li></ol>
+              <h1>Reparto de los gastos compartidos de octubre</h1>
+              <p class="sub">Período cerrado el 31/10/2026. Los consumibles de uso general se compran para toda la facultad y su costo se reparte entre los 7 proyectos activos. <span class="mono">FIS-006</span> estuvo Suspendido y no participa.</p>
+            </div>
+          </div>
+          <div class="base">
+            <div class="tarjeta"><span>Gastos compartidos del período</span><b>US$ 1.000,00</b><span>Guantes, papel absorbente y solventes multipropósito (4 lotes)</span></div>
+            <div class="tarjeta"><span>Consumo total de los proyectos activos</span><b>US$ 1.260,00</b><span>Materia prima e insumos despachados</span></div>
+            <div class="tarjeta"><span>Proyectos activos</span><b>7</b><span>En ejecución durante el período</span></div>
+          </div>
+
+          <section class="tarjeta hecho" id="hecho" hidden role="status"><h2 style="font-size:20px">Reparto según el consumo aplicado</h2><p>Cada monto entró al gasto ejecutado de su proyecto y avisamos a los coordinadores. Los gastos compartidos de octubre ya no se pueden repartir otra vez.</p><div class="acc-form" style="justify-content:flex-start"><button class="btn btn-sec" type="button"><svg class="ico" aria-hidden="true"><use href="#i-descarga"/></svg>Descargar resumen en PDF</button></div></section>
+
+          <section class="tarjeta comparacion" aria-labelledby="t-comp" id="comp">
+            <div class="bloque-cab" style="padding:18px 18px 0"><h2 id="t-comp">Los dos repartos, lado a lado</h2><span class="conteo">Elige uno</span></div>
+            <div class="tabla-env"><table class="datos" id="tabla"></table></div>
+            <div class="aplicar"><p class="sec" style="font-size:14.5px" id="nota-res"></p><button class="btn btn-pri" type="button" id="btn-ap">Aplicar reparto según el consumo</button></div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Gastos compartidos", tanda: 5,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-z="comp" aria-pressed="true">Comparar</button><button type="button" data-z="hecho" aria-pressed="false">Aplicado</button></div>' };
+window.APP = { rol: "apr", activo: "cierre", titulo: "Gastos compartidos", ins: "Cierre de período y gastos compartidos", fecha: "Sábado 31 de octubre de 2026 · Octubre cerrado" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var OH = 1000;
+  var P = [["BIO-011", 410.2], ["BIO-015", 365.8], ["FIS-008", 64.1], ["FIS-010", 22.4], ["QUI-024", 172.6], ["QUI-027", 96.5], ["QUI-031", 128.4]];
+  var total = P.reduce(function (a, p) { return a + p[1]; }, 0);
+  function reparto(pesos) {
+    var cent = pesos.map(function (w) { return Math.floor(OH * w * 100) / 100; });
+    var resto = Math.round((OH - cent.reduce(function (a, b) { return a + b; }, 0)) * 100) / 100;
+    cent[0] = Math.round((cent[0] + resto) * 100) / 100; // el residuo va al proyecto de código menor
+    return { montos: cent, resto: resto };
+  }
+  var prop = reparto(P.map(function (p) { return p[1] / total; }));
+  var eq = reparto(P.map(function () { return 1 / P.length; }));
+  function usd(n) { return "US$ " + n.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function pct(n) { return n.toLocaleString("es-VE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %"; }
+  var elegido = "prop";
+  function pintar() {
+    var sp = elegido === "prop" ? " sel" : "", se = elegido === "eq" ? " sel" : "";
+    var maxP = Math.max.apply(null, prop.montos);
+    var h = '<thead><tr><th scope="col" rowspan="2">Proyecto</th><th scope="col" rowspan="2" class="n">Consumo</th><th scope="colgroup" colspan="2" class="grupo' + sp + '"><button type="button" class="opcion" role="radio" aria-checked="' + (elegido === "prop") + '" data-op="prop"><span class="punto"></span>Según el consumo de cada proyecto</button></th><th scope="colgroup" class="grupo' + se + '"><button type="button" class="opcion" role="radio" aria-checked="' + (elegido === "eq") + '" data-op="eq"><span class="punto"></span>En partes iguales</button></th></tr>' +
+      '<tr><th scope="col" class="n' + sp + '">Porcentaje</th><th scope="col" class="n' + sp + '">Monto</th><th scope="col" class="n' + se + '">Monto</th></tr></thead><tbody>';
+    h += P.map(function (p, i) {
+      return '<tr><td class="mono">' + p[0] + '</td><td class="n">' + usd(p[1]) + '</td><td class="n' + sp + '">' + pct(p[1] / total * 100) + '</td><td class="n' + sp + '"><span class="barra-mini" style="width:' + (prop.montos[i] / maxP * 60) + 'px" aria-hidden="true"></span>' + usd(prop.montos[i]) + '</td><td class="n' + se + '">' + usd(eq.montos[i]) + "</td></tr>";
+    }).join("");
+    h += '</tbody><tfoot><tr><td>Total</td><td class="n">' + usd(total) + '</td><td class="n' + sp + '">100,0 %</td><td class="n' + sp + '">' + usd(OH) + '</td><td class="n' + se + '">' + usd(OH) + "</td></tr></tfoot>";
+    document.getElementById("tabla").innerHTML = h;
+    var r = elegido === "prop" ? prop.resto : eq.resto;
+    document.getElementById("nota-res").textContent = r ? "El redondeo deja " + usd(r) + " que se suman a BIO-011, el proyecto de código menor." : "El reparto no deja residuo de redondeo.";
+    document.getElementById("btn-ap").textContent = elegido === "prop" ? "Aplicar reparto según el consumo" : "Aplicar reparto en partes iguales";
+  }
+  document.querySelector(".mk").addEventListener("click", function (e) { var o = e.target.closest("[data-op]"); if (o) { elegido = o.dataset.op; pintar(); } });
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-z]"); if (!b) return;
+    var h = b.dataset.z === "hecho";
+    document.getElementById("hecho").hidden = !h; document.getElementById("comp").hidden = h;
+    document.querySelectorAll("[data-z]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+  pintar();
+})();
+</script>

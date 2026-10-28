@@ -1,0 +1,128 @@
+<title>Proyectos FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Lista de proyectos (F2.1, F2.2) con filtros en una fila; el registro se abre en un diálogo con validación junto al campo */
+.lista-p { padding: 0; overflow: hidden; }
+.lista-p .herr { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.lista-p .tabla-env { padding: 0 8px; }
+.lista-p .paginacion { padding: 12px 20px 16px; border-top: 1px solid var(--line); }
+.resumen-est { display: flex; gap: 8px; flex-wrap: wrap; }
+.resumen-est button { font: inherit; font-size: 14px; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; padding: 0 12px; border-radius: var(--r-s); border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+.resumen-est button[aria-pressed="true"] { border-color: var(--primary); background: var(--surface-2); font-weight: 600; }
+.resumen-est b { font-variant-numeric: tabular-nums; }
+
+.nom-p b { display: block; font-weight: 600; }
+.sin-coord { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; font-size: 14px; }
+.sin-coord .ico { width: 16px; height: 16px; color: var(--warn); }
+.prefijo { display: flex; }
+.prefijo .entrada { border-radius: 0 var(--r-s) var(--r-s) 0; }
+.prefijo span { display: grid; place-items: center; padding: 0 12px; border: 1px solid var(--border); border-right: 0; border-radius: var(--r-s) 0 0 var(--r-s); background: var(--bg); color: var(--muted); font-weight: 600; }
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Inicio</a></li><li>Proyectos</li></ol>
+              <h1>Proyectos</h1>
+              <p class="sub">Todos los proyectos de Física, Química y Biología, con su coordinador, estatus y métricas al día.</p>
+            </div>
+            <div class="acc"><button class="btn btn-sec" type="button"><svg class="ico" aria-hidden="true"><use href="#i-descarga"/></svg>Exportar</button><button class="btn btn-pri" type="button"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg>Registrar proyecto</button></div>
+          </div>
+
+          <div class="resumen-est" role="group" aria-label="Filtrar por estatus">
+            <button type="button" aria-pressed="true">Todos <b>11</b></button>
+            <button type="button" aria-pressed="false">En ejecución <b>7</b></button>
+            <button type="button" aria-pressed="false">Propuesta <b>2</b></button>
+            <button type="button" aria-pressed="false">Suspendido <b>1</b></button>
+            <button type="button" aria-pressed="false">Finalizado <b>1</b></button>
+          </div>
+
+          <section class="tarjeta lista-p" aria-label="Lista de proyectos">
+            <form class="herr" aria-label="Filtros">
+              <div class="campo busq"><label for="q">Buscar</label><svg class="ico" aria-hidden="true"><use href="#i-buscar"/></svg><input class="entrada" id="q" type="search" placeholder="Código, nombre o coordinador"></div>
+              <div class="campo"><label for="f-area">Área</label><select class="entrada" id="f-area"><option>Todas</option><option>Física</option><option>Química</option><option>Biología</option></select></div>
+              <div class="campo"><label for="f-prio">Prioridad</label><select class="entrada" id="f-prio"><option>Todas</option><option>Crítica</option><option>Alta</option><option>Media</option><option>Baja</option></select></div>
+            </form>
+            <div class="tabla-env">
+              <table class="datos apilable">
+                <thead><tr><th scope="col">Proyecto</th><th scope="col">Coordinador</th><th scope="col">Estatus</th><th scope="col">Prioridad</th><th scope="col">Avance físico</th><th scope="col">Ejecución</th></tr></thead>
+                <tbody id="filas"></tbody>
+              </table>
+            </div>
+            <div class="paginacion"><span>11 proyectos, ordenados por prioridad</span><div class="pags"><button type="button" aria-current="page">1</button></div></div>
+          </section>
+        </main>
+      </div>
+
+      <div class="capa" id="capa-registro" hidden>
+        <form class="dialogo" role="dialog" aria-modal="true" aria-labelledby="t-reg" novalidate style="max-width:640px">
+          <div class="dialogo-cab"><div><h2 id="t-reg">Registrar proyecto</h2><p class="sec">Nace en estatus Propuesta. Los campos sin marca son obligatorios.</p></div><button class="icono-btn" type="button" aria-label="Cerrar"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></button></div>
+          <div class="form-rejilla">
+            <div class="campo error"><label for="r-cod">Código institucional</label><input class="entrada mono" id="r-cod" value="QUI-024" aria-invalid="true" aria-describedby="r-cod-err">
+              <p class="msg-error" id="r-cod-err"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><span>Ya existe el proyecto <a href="#contenido">QUI-024, Síntesis de catalizadores de óxido de cerio</a>. Usa otro código o abre ese proyecto.</span></p></div>
+            <div class="campo"><label for="r-area">Área</label><select class="entrada" id="r-area"><option>Química</option><option>Física</option><option>Biología</option></select></div>
+            <div class="campo ancho"><label for="r-nom">Nombre</label><input class="entrada" id="r-nom" value="Síntesis verde de nanopartículas de plata"></div>
+            <div class="campo"><label for="r-pres">Presupuesto asignado</label><div class="prefijo"><span>US$</span><input class="entrada num" id="r-pres" inputmode="decimal" value="9.500,00"></div><span class="ayuda">Mayor que cero. Se usa para la ejecución presupuestaria.</span></div>
+            <div class="campo"><label for="r-coord">Coordinador <span class="obligatorio">(puedes asignarlo después)</span></label><select class="entrada" id="r-coord"><option>Daniela Rivas</option><option>María Fernanda Ochoa</option><option>Andrés Salazar</option><option>Rosa Linares</option><option>Sin asignar</option></select></div>
+            <fieldset class="campo ancho" style="border:0;padding:0;margin:0"><legend style="font-weight:600;font-size:15px;margin-bottom:6px">Prioridad</legend>
+              <div class="radios"><label><input type="radio" name="p"> Crítica</label><label><input type="radio" name="p"> Alta</label><label><input type="radio" name="p" checked> Media</label><label><input type="radio" name="p"> Baja</label></div>
+            </fieldset>
+          </div>
+          <div class="acc-form"><button class="btn btn-sec" type="button">Cancelar</button><button class="btn btn-pri" type="submit">Registrar proyecto</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Proyectos", tanda: 2,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-capa="" aria-pressed="true">Lista</button><button type="button" data-capa="capa-registro" aria-pressed="false">Registrar (código repetido)</button></div>' };
+window.APP = { rol: "adm", activo: "proyectos", titulo: "Proyectos", ins: "Proyectos y avance" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  function mini(p, alto) { return p === null ? '<span class="sec">—</span>' : '<div class="mini-barra"><div class="barra-prog' + (alto ? " alto" : "") + '"><i style="width:' + Math.min(p, 100) + '%"></i></div><b>' + p + " %</b></div>"; }
+  var EST = { ej: ["ok", "En ejecución"], pr: ["neutro", "Propuesta"], su: ["warn", "Suspendido"], fi: ["info", "Finalizado"] };
+  var P = [
+    ["BIO-011", "Resistencia antimicrobiana en aislados clínicos", "María Fernanda Ochoa", "ej", "Crítica", 71, 93],
+    ["BIO-015", "Biopelículas en sistemas de riego", null, "ej", "Alta", 55, 109],
+    ["QUI-024", "Síntesis de catalizadores de óxido de cerio", "Daniela Rivas", "ej", "Alta", 62, 48],
+    ["FIS-008", "Caracterización de películas delgadas", "Andrés Salazar", "ej", "Media", 40, 38],
+    ["QUI-031", "Degradación fotocatalítica de colorantes textiles", "Daniela Rivas", "ej", "Media", 35, 83],
+    ["FIS-012", "Celdas solares sensibilizadas con colorantes naturales", "Andrés Salazar", "pr", "Media", null, null],
+    ["FIS-010", "Espectroscopía Raman de minerales", "Andrés Salazar", "ej", "Baja", 18, 26],
+    ["QUI-027", "Extracción de aceites esenciales", "Rosa Linares", "ej", "Baja", 47, 68],
+    ["BIO-017", "Microalgas para tratamiento de aguas", "María Fernanda Ochoa", "pr", "Baja", null, null],
+    ["FIS-006", "Sensores ópticos de humedad", "Andrés Salazar", "su", "Baja", 30, 22],
+    ["QUI-019", "Determinación de metales pesados en sedimentos", "Rosa Linares", "fi", "Baja", 100, 97]
+  ];
+  document.getElementById("filas").innerHTML = P.map(function (p) {
+    return '<tr><td><div class="nom-p"><b class="mono">' + p[0] + "</b><small>" + p[1] + "</small></div></td>" +
+      '<td data-e="Coordinador:">' + (p[2] || '<span class="sin-coord"><svg class="ico" aria-hidden="true"><use href="#i-alerta"/></svg>Sin coordinador · <a href="#contenido">Asignar</a></span>') + "</td>" +
+      "<td>" + est(EST[p[3]][0], EST[p[3]][1]) + "</td><td>" + prio(p[4]) + '</td><td data-e="Avance físico:">' + (p[5] === null && p[3] === "pr" ? '<span class="sec">' + (p[0] === "FIS-012" ? "Plan de hitos confirmado" : "Plan de hitos sin confirmar") + '</span>' : mini(p[5])) + '</td><td data-e="Ejecución:">' + mini(p[6], p[6] >= 80) + "</td></tr>";
+  }).join("");
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-capa]"); if (!b) return;
+    document.querySelectorAll(".capa").forEach(function (c) { c.hidden = c.id !== b.dataset.capa; });
+    document.querySelectorAll("[data-capa]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+})();
+</script>

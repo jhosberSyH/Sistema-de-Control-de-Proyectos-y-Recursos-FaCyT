@@ -1,0 +1,154 @@
+<title>Inicio de sesión FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<style>
+/* Inicio de sesión: banda con el escudo y la FaCyT arriba, el nombre del sistema a la izquierda y el formulario a la derecha */
+.login { display: flex; flex-direction: column; min-height: 720px; position: relative; }
+.banda { display: flex; align-items: center; gap: 14px; padding: 14px 32px; background: var(--surface); border-bottom: 3px solid var(--primary); box-shadow: inset 0 -6px 0 -3px var(--accent); }
+.banda-logos { display: flex; align-items: center; gap: 14px; }
+.banda-logos img { display: block; height: auto; }
+.banda .escudo { width: 54px; }
+.banda .logo-iso { width: 48px; }
+.banda p { font-family: var(--f-mono); font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.banda strong { color: var(--text); font-weight: 500; }
+.lg { flex: 1; display: grid; grid-template-columns: 7fr 5fr; }
+.lg-marca { display: flex; flex-direction: column; gap: 18px; padding: 64px 48px; justify-content: center; }
+.mk .lg-sistema { font-size: 54px; font-weight: 600; letter-spacing: -.02em; line-height: 1.05; max-width: 12ch; }
+.lg-bajada { font-size: 17px; max-width: 40ch; color: var(--muted); }
+.lg-datos { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; border-top: 1px solid var(--line); max-width: 420px; }
+.lg-datos li { display: inline-flex; gap: 14px; align-items: baseline; border-bottom: 1px solid var(--line); padding: 10px 0; }
+.lg-datos .mono { color: var(--primary); font-weight: 500; min-width: 3.5ch; }
+.lg-form { display: flex; align-items: stretch; justify-content: center; padding: 64px 40px; border-left: 1px solid var(--line); background: var(--surface); }
+.lg-tarjeta { width: 100%; max-width: 420px; padding: 0; display: grid; gap: 18px; border: 0; align-content: center; background: transparent; }
+.lg-tarjeta h2 { font-size: 26px; font-weight: 600; }
+.lg-tarjeta .btn-pri { width: 100%; }
+.clave { position: relative; }
+.clave .entrada { padding-right: 52px; }
+.ver-clave { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 40px; border: 0; background: transparent; color: var(--muted); border-radius: var(--r-s); cursor: pointer; display: grid; place-items: center; }
+.lg-ayuda { font-size: 15px; color: var(--muted); }
+.lg-sesion { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+.lg-sesion .ico { width: 18px; height: 18px; margin-top: 2px; }
+.alerta-form { display: flex; gap: 10px; padding: 12px 14px; border-radius: var(--r-m); background: var(--surface-2); border-left: 4px solid var(--err); font-size: 15px; }
+.alerta-form .ico { color: var(--err); margin-top: 2px; }
+.lg-pie { font-size: 13px; color: var(--muted); padding: 14px 24px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+/* Teléfono: una sola columna, sin la lista de áreas */
+@container mk (max-width: 720px) {
+  .banda { padding: 12px 16px; align-items: flex-start; }
+  .banda-logos { gap: 8px; }
+  .banda .escudo { width: 40px; }
+  .banda .logo-iso { width: 36px; }
+  .banda p { font-size: 11.5px; }
+  .lg { grid-template-columns: 1fr; }
+  .lg-marca { padding: 28px 16px 8px; gap: 12px; }
+  .mk .lg-sistema { font-size: 34px; }
+  .lg-datos { display: none; }
+  .lg-form { border-left: 0; padding: 20px 16px 32px; background: transparent; }
+}
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk login">
+      <a class="saltar" href="#correo">Saltar al formulario</a>
+
+      <div class="banda">
+        <div class="banda-logos">
+          <span class="placa-escudo"><img class="escudo" src="logos/escudo-uc.jpg" alt="Escudo de la Universidad de Carabobo" width="54" height="71"></span>
+          <img class="logo-iso" src="logos/facyt-isotipo.png" alt="Logo de la FaCyT" width="48" height="48">
+        </div>
+        <p><strong>Universidad de Carabobo</strong> · Facultad Experimental de Ciencias y Tecnología</p>
+      </div>
+
+      <div class="lg">
+        <section class="lg-marca" aria-label="Universidad y sistema">
+          <div style="display:grid;gap:14px">
+            <h1 class="lg-sistema">Control de Proyectos y Recursos</h1>
+            <p class="lg-bajada">Proyectos, inventario, equipos y aprobaciones de los laboratorios de Física, Química y Biología en un solo lugar.</p>
+          </div>
+          <ul class="lg-datos" aria-label="Áreas">
+            <li><span class="mono">FIS</span> Física</li>
+            <li><span class="mono">QUI</span> Química</li>
+            <li><span class="mono">BIO</span> Biología</li>
+          </ul>
+        </section>
+
+        <main class="lg-form">
+          <form class="tarjeta lg-tarjeta" novalidate aria-labelledby="t-login">
+            <div style="display:grid;gap:6px">
+              <h2 id="t-login">Inicia sesión</h2>
+              <p class="sec">Usa el correo y la contraseña de tu cuenta.</p>
+            </div>
+
+            <div class="alerta-form" id="alerta" role="alert" hidden>
+              <svg class="ico" aria-hidden="true"><use href="#i-error"/></svg>
+              <p>El correo o la contraseña no coinciden. Revisa que el correo esté bien escrito e inténtalo de nuevo.</p>
+            </div>
+
+            <div class="campo" id="c-correo">
+              <label for="correo">Correo</label>
+              <input class="entrada" id="correo" name="correo" type="email" autocomplete="username" inputmode="email" value="coord.quimica@cpq.local" aria-describedby="ayuda-correo">
+              <span class="ayuda" id="ayuda-correo">El que te dio el administrador del sistema.</span>
+            </div>
+
+            <div class="campo" id="c-clave">
+              <label for="clave">Contraseña</label>
+              <div class="clave">
+                <input class="entrada" id="clave" name="clave" type="password" autocomplete="current-password" value="Demo2026*">
+                <button class="ver-clave" type="button" id="ver-clave" aria-label="Mostrar contraseña" aria-pressed="false">
+                  <svg class="ico" aria-hidden="true"><use href="#i-ojo"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <button class="btn btn-pri" type="submit">Iniciar sesión</button>
+
+            <p class="lg-ayuda">¿Olvidaste tu contraseña o todavía no tienes cuenta? Pídela al administrador del sistema de la facultad.</p>
+            <p class="lg-sesion"><svg class="ico" aria-hidden="true"><use href="#i-candado"/></svg><span>La sesión se cierra tras 30 minutos sin actividad. Te avisamos 2 minutos antes y tu borrador queda guardado.</span></p>
+          </form>
+        </main>
+      </div>
+
+      <footer class="lg-pie">
+        <span>Facultad Experimental de Ciencias y Tecnología · Universidad de Carabobo</span>
+        <span>Valencia, Venezuela</span>
+      </footer>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = {
+  vista: "Inicio de sesión",
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado del formulario"><button type="button" data-estado="normal" aria-pressed="true">Normal</button><button type="button" data-estado="error" aria-pressed="false">Con error</button></div>'
+};
+</script>
+<script src="compartido/comun.js"></script>
+<script>
+(function () {
+  var alerta = document.getElementById("alerta");
+  var cc = document.getElementById("c-clave");
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-estado]");
+    if (!b) return;
+    var err = b.dataset.estado === "error";
+    alerta.hidden = !err;
+    cc.classList.toggle("error", err);
+    document.getElementById("clave").setAttribute("aria-invalid", String(err));
+    document.querySelectorAll("[data-estado]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+  var ver = document.getElementById("ver-clave");
+  ver.addEventListener("click", function () {
+    var i = document.getElementById("clave");
+    var mostrar = i.type === "password";
+    i.type = mostrar ? "text" : "password";
+    ver.setAttribute("aria-pressed", String(mostrar));
+    ver.setAttribute("aria-label", mostrar ? "Ocultar contraseña" : "Mostrar contraseña");
+  });
+})();
+</script>

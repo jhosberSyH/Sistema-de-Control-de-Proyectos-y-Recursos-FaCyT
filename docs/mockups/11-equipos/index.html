@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Catálogo de equipos FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Catálogo de equipos (F4.1, F4.2): estado operacional visible; el paso a mantenimiento muestra a quién afecta antes de confirmar */
+.lista-e { padding: 0; overflow: hidden; }
+.lista-e .herr { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.lista-e .tabla-env { padding: 0 8px; }
+.eq b { display: block; font-weight: 600; }
+.afect { list-style: none; margin: 0; padding: 0; display: grid; border: 1px solid var(--line); border-radius: var(--r-m); }
+.afect li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 15px; flex-wrap: wrap; }
+.afect li:first-child { border-top: 0; }
+.afect small { color: var(--muted); display: block; font-size: 14px; }
+</style>
+</head>
+<body>
+
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Inicio</a></li><li>Catálogo de equipos</li></ol>
+              <h1>Catálogo de equipos</h1>
+              <p class="sub">Equipos y maquinaria de los laboratorios, con su estado operacional y su próxima reserva.</p>
+            </div>
+            <div class="acc"><button class="btn btn-pri" type="button" data-abrir="capa-alta"><svg class="ico" aria-hidden="true"><use href="#i-mas"/></svg>Registrar equipo</button></div>
+          </div>
+          <section class="tarjeta lista-e" aria-label="Equipos">
+            <form class="herr" aria-label="Filtros">
+              <div class="campo busq"><label for="q">Buscar</label><svg class="ico" aria-hidden="true"><use href="#i-buscar"/></svg><input class="entrada" id="q" type="search" placeholder="Nombre o código de activo"></div>
+              <div class="campo"><label for="f-est">Estado</label><select class="entrada" id="f-est"><option>Todos</option><option>Disponible</option><option>En uso</option><option>En mantenimiento</option></select></div>
+              <div class="campo"><label for="f-ub">Ubicación</label><select class="entrada" id="f-ub"><option>Todas</option><option>Laboratorio de Química Analítica</option><option>Laboratorio de Microbiología</option><option>Laboratorio de Física del Estado Sólido</option></select></div>
+            </form>
+            <div class="tabla-env"><table class="datos apilable"><thead><tr><th scope="col">Equipo</th><th scope="col">Ubicación</th><th scope="col">Estado</th><th scope="col">Próxima reserva</th><th scope="col"><span class="vh">Acciones</span></th></tr></thead><tbody id="filas"></tbody></table></div>
+          </section>
+        </main>
+      </div>
+
+      <div class="capa" id="capa-alta" hidden>
+        <form class="dialogo" role="dialog" aria-modal="true" aria-labelledby="t-alta" novalidate>
+          <div class="dialogo-cab"><div><h2 id="t-alta">Registrar equipo</h2><p class="sec">Nace en estado Disponible.</p></div><button class="icono-btn" type="button" aria-label="Cerrar" data-cerrar><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></button></div>
+          <div class="form-rejilla">
+            <div class="campo ancho"><label for="e-nom">Nombre</label><input class="entrada" id="e-nom" value="Centrífuga refrigerada de mesa"></div>
+            <div class="campo error"><label for="e-cod">Código de activo</label><input class="entrada mono" id="e-cod" value="UC-FACYT-0457" aria-invalid="true" aria-describedby="e-cod-err">
+              <p class="msg-error" id="e-cod-err"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><span>Ese código ya es del <a href="#contenido">espectrofotómetro UV-Vis</a>. Revisa la placa del equipo.</span></p></div>
+            <div class="campo"><label for="e-ub">Ubicación</label><select class="entrada" id="e-ub"><option>Laboratorio de Microbiología</option><option>Laboratorio de Química Analítica</option></select></div>
+          </div>
+          <div class="acc-form"><button class="btn btn-sec" type="button" data-cerrar>Cancelar</button><button class="btn btn-pri" type="submit">Registrar equipo</button></div>
+        </form>
+      </div>
+
+      <div class="capa" id="capa-mant" hidden>
+        <form class="dialogo" role="alertdialog" aria-modal="true" aria-labelledby="t-mant">
+          <div class="dialogo-cab"><div><h2 id="t-mant">Pasar a mantenimiento</h2><p class="sec">Difractómetro de rayos X · <span class="mono">UC-FACYT-0312</span></p></div></div>
+          <p>Mientras esté en mantenimiento nadie podrá reservarlo. Estas reservas aprobadas quedan afectadas y avisaremos a sus coordinadores:</p>
+          <ul class="afect">
+            <li><div>Lun 09/11 · 08:00 a 12:00<small>Daniela Rivas</small></div><span class="mono">QUI-024</span></li>
+            <li><div>Mié 11/11 · 13:00 a 17:00<small>Andrés Salazar</small></div><span class="mono">FIS-008</span></li>
+          </ul>
+          <div class="campo"><label for="m-mot">Motivo <span class="obligatorio">(se incluye en el aviso)</span></label><textarea class="entrada" id="m-mot">Cambio del tubo de rayos X. El técnico estima dos semanas.</textarea></div>
+          <div class="acc-form"><button class="btn btn-sec" type="button">Cancelar</button><button class="btn btn-pri" type="submit">Pasar a mantenimiento y avisar</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Catálogo de equipos", tanda: 3,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-capa="" aria-pressed="true">Lista</button><button type="button" data-capa="capa-alta" aria-pressed="false">Registrar (código repetido)</button><button type="button" data-capa="capa-mant" aria-pressed="false">Pasar a mantenimiento</button></div>' };
+window.APP = { rol: "adm", activo: "equipos", titulo: "Equipos", ins: "Equipos y reservas" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var E = [
+    ["Espectrofotómetro UV-Vis", "UC-FACYT-0457", "Laboratorio de Química Analítica", "dis", "Jue 29/10 · 10:00 · QUI-024"],
+    ["Difractómetro de rayos X", "UC-FACYT-0312", "Laboratorio de Física del Estado Sólido", "dis", "Lun 09/11 · 08:00 · QUI-024"],
+    ["Rotavapor R-300", "UC-FACYT-0521", "Laboratorio de Química Orgánica", "uso", "Mié 04/11 · 08:00 · QUI-031"],
+    ["Centrífuga refrigerada", "UC-FACYT-0498", "Laboratorio de Microbiología", "dis", "Jue 05/11 · 14:00 · FIS-008"],
+    ["Cabina de flujo laminar", "UC-FACYT-0388", "Laboratorio de Microbiología", "man", "—"],
+    ["Potenciostato", "UC-FACYT-0544", "Laboratorio de Electroquímica", "dis", "Sin reservas"],
+    ["Horno mufla 1200 °C", "UC-FACYT-0275", "Laboratorio de Química Analítica", "uso", "Vie 30/10 · 07:00 · QUI-024"]
+  ];
+  var S = { dis: ["ok", "Disponible"], uso: ["info", "En uso"], man: ["warn", "En mantenimiento"] };
+  document.getElementById("filas").innerHTML = E.map(function (e) {
+    var acc = e[3] === "man" ? '<button class="btn btn-pri btn-chico" type="button">Registrar fin del mantenimiento</button>' : '<button class="btn btn-sec btn-chico" type="button"' + (e[1] === "UC-FACYT-0312" ? ' data-abrir="capa-mant"' : "") + ">Pasar a mantenimiento</button>";
+    return '<tr><td><div class="eq"><b>' + e[0] + '</b><small class="mono">' + e[1] + '</small></div></td><td data-e="">' + e[2] + "</td><td>" + est(S[e[3]][0], S[e[3]][1]) + '</td><td data-e="Próxima:">' + e[4] + '</td><td class="acc-fila">' + acc + "</td></tr>";
+  }).join("");
+  function capa(id) {
+    document.querySelectorAll(".capa").forEach(function (c) { c.hidden = c.id !== id; });
+    document.querySelectorAll("[data-capa]").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.capa === id)); });
+  }
+  document.getElementById("comparador").addEventListener("click", function (e) { var b = e.target.closest("[data-capa]"); if (b) capa(b.dataset.capa); });
+  document.querySelector(".mk").addEventListener("click", function (e) {
+    var a = e.target.closest("[data-abrir]"); if (a) capa(a.dataset.abrir);
+    if (e.target.closest("[data-cerrar]")) capa("");
+  });
+})();
+</script>
+
+</body>
+</html>

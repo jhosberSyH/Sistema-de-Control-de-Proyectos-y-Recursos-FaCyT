@@ -1,0 +1,113 @@
+<title>Despacho de insumos FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Despacho (F6.2, F6.3): lotes sugeridos por vencimiento ya marcados, vencidos visibles pero bloqueados, y una sola confirmación */
+.insumo-d { padding: 0; overflow: hidden; }
+.insumo-d .cab-i { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.insumo-d .cab-i h2 { font-size: 18px; }
+.lotes { list-style: none; margin: 0; padding: 0; }
+.lote { display: grid; grid-template-columns: 28px 110px minmax(0, 1fr) 120px 120px; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.lote:last-child { border-bottom: 0; }
+.lote input { width: 20px; height: 20px; accent-color: var(--primary); margin: 0; }
+.lote.sel { background: var(--surface-2); box-shadow: inset 4px 0 0 var(--primary); }
+.lote.bloq { cursor: not-allowed; color: var(--muted); }
+.lote .n { text-align: right; font-variant-numeric: tabular-nums; }
+.lote .sug { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; font-weight: 600; color: var(--text); }
+.lote .sug .ico { width: 16px; height: 16px; color: var(--ok); }
+.confirmar { padding: 20px; display: grid; gap: 16px; }
+.exito { padding: 24px; display: grid; gap: 12px; justify-items: start; border-left: 4px solid var(--ok); }
+.exito .ico { width: 32px; height: 32px; color: var(--ok); }
+.vista-form, .vista-ok { display: none; }
+.mk[data-paso="form"] .vista-form, .mk[data-paso="ok"] .vista-ok { display: grid; gap: 20px; }
+@container mk (max-width: 760px) {
+  .lote { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 4px 10px; }
+  .lote > :nth-child(3) { grid-column: 2 / -1; }
+  .lote > :nth-child(4) { grid-column: 2; text-align: left; }
+}
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app" data-paso="form">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Almacén</a></li><li>Despachos por entregar</li><li class="mono">SOL-121</li></ol>
+              <h1>Despachar <span class="mono">SOL-121</span></h1>
+              <p class="sub">Retiro aprobado para <span class="mono">QUI-024</span>, Daniela Rivas · aprobado hoy a las 08:15</p>
+            </div>
+          </div>
+
+          <div class="vista-form">
+            <div class="aviso info"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><p>Marcamos el lote que vence primero de cada insumo. Puedes cambiarlo; los lotes vencidos se ven, pero no se pueden elegir.</p></div>
+
+            <section class="tarjeta insumo-d" aria-labelledby="t-hex">
+              <div class="cab-i"><h2 id="t-hex">Hexano grado reactivo · 2 L</h2><span class="sec">Stock total 6,5 L</span></div>
+              <ul class="lotes" role="radiogroup" aria-labelledby="t-hex">
+                <li><label class="lote sel"><input type="radio" name="hex" checked><span class="mono">L-0389</span><span>Vence el 12/01/2027 <span class="sug"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg>Vence primero</span></span><span class="n">3 L disponibles</span><span class="n">Depósito A</span></label></li>
+                <li><label class="lote"><input type="radio" name="hex"><span class="mono">L-0420</span><span>Vence el 04/10/2027</span><span class="n">3,5 L disponibles</span><span class="n">Depósito A</span></label></li>
+                <li><label class="lote bloq"><input type="radio" name="hex" disabled><span class="mono">L-0301</span><span><span class="estado err"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg>Vencido el 02/10/2026</span></span><span class="n">0,8 L</span><span class="n">Depósito A</span></label></li>
+              </ul>
+            </section>
+
+            <section class="tarjeta insumo-d" aria-labelledby="t-pap">
+              <div class="cab-i"><h2 id="t-pap">Papel de filtro cualitativo · 1 caja</h2><span class="sec">Stock total 7 cajas · no vence</span></div>
+              <ul class="lotes" role="radiogroup" aria-labelledby="t-pap">
+                <li><label class="lote sel"><input type="radio" name="pap" checked><span class="mono">L-0377</span><span>Ingresó el 15/07/2026 <span class="sug"><svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg>Ingresó primero</span></span><span class="n">4 cajas disponibles</span><span class="n">Consumibles</span></label></li>
+                <li><label class="lote"><input type="radio" name="pap"><span class="mono">L-0412</span><span>Ingresó el 20/09/2026</span><span class="n">3 cajas disponibles</span><span class="n">Consumibles</span></label></li>
+              </ul>
+            </section>
+
+            <form class="tarjeta confirmar" novalidate aria-label="Confirmar despacho">
+              <div class="form-rejilla">
+                <div class="campo"><label for="quien">Quién retira</label><input class="entrada" id="quien" value="Daniela Rivas" list="personas"><datalist id="personas"><option value="Daniela Rivas"><option value="Ana Paredes (tesista de QUI-024)"></datalist><span class="ayuda">El personal de laboratorio no tiene cuenta, pero su nombre queda en la bitácora.</span></div>
+                <div class="campo"><label for="obs">Observación <span class="obligatorio">(opcional)</span></label><input class="entrada" id="obs" value=""></div>
+              </div>
+              <p style="font-size:15px">Al confirmar se registra el despacho en la bitácora, se descuentan 2 L de <span class="mono">L-0389</span> y 1 caja de <span class="mono">L-0377</span>, y <span class="mono">SOL-121</span> pasa a Ejecutado. Todo en una sola operación.</p>
+              <div class="acc-form"><button class="btn btn-sec" type="button">Volver</button><button class="btn btn-pri" type="submit">Confirmar despacho</button></div>
+            </form>
+          </div>
+
+          <div class="vista-ok">
+            <section class="tarjeta exito" role="status">
+              <svg class="ico" aria-hidden="true"><use href="#i-ok"/></svg>
+              <h2 style="font-size:22px">Despacho <span class="mono">DES-0321</span> registrado</h2>
+              <p>Hexano 2 L del lote <span class="mono">L-0389</span> y papel de filtro 1 caja del lote <span class="mono">L-0377</span>, retirados por Daniela Rivas hoy a las 10:17. <span class="mono">SOL-121</span> quedó en Ejecutado y el gasto de <span class="mono">QUI-024</span> subió US$ 31,60.</p>
+              <div class="acc-form" style="justify-content:flex-start"><button class="btn btn-pri" type="button">Ver en la bitácora</button><button class="btn btn-sec" type="button">Siguiente despacho: SOL-116</button></div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Despacho de insumos", tanda: 4,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Paso"><button type="button" data-paso="form" aria-pressed="true">Elegir lotes</button><button type="button" data-paso="ok" aria-pressed="false">Despacho registrado</button></div>' };
+window.APP = { rol: "apr", activo: "almacen", titulo: "Despacho", ins: "Almacén" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+document.getElementById("comparador").addEventListener("click", function (e) {
+  var b = e.target.closest("[data-paso]"); if (!b) return;
+  document.querySelector(".mk").setAttribute("data-paso", b.dataset.paso);
+  document.querySelectorAll("[data-paso]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+});
+document.querySelectorAll(".lotes").forEach(function (g) {
+  g.addEventListener("change", function () { g.querySelectorAll(".lote").forEach(function (l) { l.classList.toggle("sel", l.querySelector("input").checked); }); });
+});
+</script>

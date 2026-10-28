@@ -1,0 +1,100 @@
+<title>Priorización de proyectos FaCyT</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="compartido/comun.css">
+<link rel="stylesheet" href="compartido/app.css">
+<style>
+/* Priorización (F5.6, F5.7): proyectos agrupados de Crítica a Baja; el cambio de nivel y su justificación van en un mismo diálogo */
+.grupos { display: grid; gap: 18px; }
+.grupo { padding: 0; overflow: hidden; }
+.grupo-cab { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.grupo-cab h2 { font-size: 13px; font-family: var(--f-mono); font-weight: 500; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: .06em; }
+.grupo-cab .prio i { width: 12px; height: 12px; }
+.grupo-cab .conteo { margin-left: auto; }
+.fila-p { display: grid; grid-template-columns: 90px minmax(0, 1fr) 180px 150px auto; gap: 14px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+.fila-p:last-child { border-bottom: 0; }
+.fila-p .nom small { display: block; color: var(--muted); font-size: 13.5px; }
+.ultimo { font-size: 13.5px; color: var(--muted); }
+
+@container mk (max-width: 760px) {
+  .fila-p { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; }
+  .fila-p .nom { grid-column: 1 / -1; }
+  .fila-p > .mono { grid-column: 1; }
+}
+</style>
+
+<header class="cmp" id="comparador"></header>
+
+<div class="escenario">
+  <div class="marco">
+    <div class="mk app">
+      <a class="saltar" href="#contenido">Saltar al contenido</a>
+      <aside class="nav-lat" id="nav-lat" aria-label="Navegación principal"></aside>
+      <div class="principal">
+        <div class="editorial" id="editorial"></div>
+        <header class="barra" id="barra"></header>
+        <main class="contenido" id="contenido" tabindex="-1">
+          <div class="cab">
+            <div>
+              <ol class="migas"><li><a href="#contenido">Inicio</a></li><li>Priorización</li></ol>
+              <h1>Priorización de proyectos</h1>
+              <p class="sub">El orden define qué proyecto se atiende primero en la bandeja de aprobación. Todo cambio de prioridad lleva una justificación que queda en la auditoría.</p>
+            </div>
+            <div class="acc"><div class="campo" style="min-width:200px"><label for="f-est">Estatus</label><select class="entrada" id="f-est"><option>En ejecución</option><option>Todos</option></select></div></div>
+          </div>
+          <div class="grupos" id="grupos"></div>
+        </main>
+      </div>
+
+      <div class="capa" id="capa-prio" hidden>
+        <form class="dialogo" role="dialog" aria-modal="true" aria-labelledby="t-prio" novalidate>
+          <div class="dialogo-cab"><div><h2 id="t-prio">Cambiar prioridad de <span class="mono">QUI-031</span></h2><p class="sec">Degradación fotocatalítica de colorantes textiles · hoy es Media</p></div><button class="icono-btn" type="button" aria-label="Cerrar"><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg></button></div>
+          <fieldset style="border:0;padding:0;margin:0"><legend style="font-weight:600;font-size:15px;margin-bottom:6px">Nueva prioridad</legend>
+            <div class="radios"><label><input type="radio" name="np"> Crítica</label><label><input type="radio" name="np" checked> Alta</label><label><input type="radio" name="np"> Media</label><label><input type="radio" name="np"> Baja</label></div>
+          </fieldset>
+          <div class="campo" id="c-just"><label for="just">Justificación</label><textarea class="entrada" id="just" aria-describedby="just-a just-e">La industria textil aliada adelantó la entrega de muestras al 20/11 y el proyecto necesita los reactivos antes.</textarea>
+            <span class="ayuda" id="just-a">Queda en la auditoría con tu nombre, la fecha, el nivel anterior y el nuevo.</span>
+            <p class="msg-error" id="just-e" hidden><svg class="ico" aria-hidden="true"><use href="#i-error"/></svg><span>Escribe por qué cambias la prioridad. Sin justificación el cambio no se guarda.</span></p></div>
+          <div class="aviso info"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><p>Con Alta, QUI-031 pasa delante de FIS-008 en la bandeja de aprobación.</p></div>
+          <div class="acc-form"><button class="btn btn-sec" type="button">Cancelar</button><button class="btn btn-pri" type="submit">Cambiar a Alta</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.MK = { vista: "Priorización", tanda: 4,
+  extras: '<div class="cmp-grupo" role="group" aria-label="Estado"><button type="button" data-p="lista" aria-pressed="true">Lista</button><button type="button" data-p="dialogo" aria-pressed="false">Cambiar prioridad</button><button type="button" data-p="error" aria-pressed="false">Sin justificación</button></div>' };
+window.APP = { rol: "apr", activo: "priorizacion", titulo: "Priorización", ins: "Solicitudes y priorización" };
+</script>
+<script src="compartido/comun.js"></script>
+<script src="compartido/comun-app.js"></script>
+<script>
+(function () {
+  var G = [
+    ["Crítica", [["BIO-011", "Resistencia antimicrobiana en aislados clínicos", "María Fernanda Ochoa", "Hoy 08:42, desde Alta"]]],
+    ["Alta", [["BIO-015", "Biopelículas en sistemas de riego", "Sin coordinador", "14/07/2026, al registrarlo"], ["QUI-024", "Síntesis de catalizadores de óxido de cerio", "Daniela Rivas", "03/06/2026, al registrarlo"]]],
+    ["Media", [["FIS-008", "Caracterización de películas delgadas", "Andrés Salazar", "02/09/2026, desde Baja"], ["QUI-031", "Degradación fotocatalítica de colorantes textiles", "Daniela Rivas", "20/06/2026, al registrarlo"]]],
+    ["Baja", [["FIS-010", "Espectroscopía Raman de minerales", "Andrés Salazar", "05/07/2026, al registrarlo"], ["QUI-027", "Extracción de aceites esenciales", "Rosa Linares", "18/06/2026, al registrarlo"]]]
+  ];
+  document.getElementById("grupos").innerHTML = G.map(function (g) {
+    return '<section class="tarjeta grupo" aria-label="Prioridad ' + g[0] + '"><div class="grupo-cab"><h2>' + prio(g[0]) + '</h2><span class="conteo">' + g[1].length + (g[1].length === 1 ? " proyecto" : " proyectos") + "</span></div>" +
+      g[1].map(function (p) {
+        return '<div class="fila-p"><span class="mono">' + p[0] + '</span><div class="nom">' + p[1] + "<small>" + p[2] + '</small></div><span class="ultimo">Último cambio: ' + p[3] + '</span><span>' + est("ok", "En ejecución") + '</span><button class="btn btn-sec btn-chico" type="button">Cambiar prioridad</button></div>';
+      }).join("") + "</section>";
+  }).join("");
+  document.getElementById("comparador").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-p]"); if (!b) return;
+    var d = b.dataset.p, err = d === "error";
+    document.getElementById("capa-prio").hidden = d === "lista";
+    document.getElementById("c-just").classList.toggle("error", err);
+    document.getElementById("just-e").hidden = !err;
+    document.getElementById("just").value = err ? "" : "La industria textil aliada adelantó la entrega de muestras al 20/11 y el proyecto necesita los reactivos antes.";
+    document.getElementById("just").setAttribute("aria-invalid", String(err));
+    document.querySelectorAll("[data-p]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+  });
+})();
+</script>
