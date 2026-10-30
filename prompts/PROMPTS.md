@@ -12,6 +12,7 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 4. [Diagrama de arquitectura en draw.io](#4-diagrama-de-arquitectura-en-drawio)
 5. [Estructura de carpetas del repositorio](#5-estructura-de-carpetas-del-repositorio)
 6. [Prompt para identidad visual y mockups](#6-prompt-para-identidad-visual-y-mockups)
+7. [Implementación del Módulo 1: Usuarios, catálogos y parámetros](#7-implementación-del-módulo-1-usuarios-catálogos-y-parámetros)
 
 ---
 
@@ -102,3 +103,58 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 > Con eso diseña los mockups de cada una de las vistas que va a tener la página. Por cada vista hazme máximo cuatro versiones donde cambien el estilo, la combinación de colores, la tipografía y la distribución. Genéralos como artifacts de Claude para que los pueda ver y comparar directamente. Si no puedes generar artifacts desde aquí, hazlos en HTML para abrirlos en el navegador y dímelo. En cualquier caso guarda una copia en una carpeta mockups con una subcarpeta por vista.
 >
 > Cuando estén listos para ahí y yo te digo cuál versión queda de cada vista.
+
+## 7. Implementación del Módulo 1: Usuarios, catálogos y parámetros
+
+> Actúa como un Ingeniero de Software Fullstack Senior. Vamos a implementar el **Módulo 1: Usuarios, catálogos y parámetros** del "Sistema de Control de Proyectos y Recursos".
+>
+> ### FASE 1: INSPECCIÓN OBLIGATORIA DEL PROYECTO ACTUAL (NO ESCRIBAS CÓDIGO AÚN)
+> Antes de generar o modificar cualquier archivo, inspecciona la estructura actual del workspace y verifica lo siguiente:
+> 1. **Stack y Estructura (`RNF-01`, `RNF-05`):** Revisa los archivos de configuración (`package.json`, variables de entorno, configuración de Supabase/ORM/Base de Datos, estructura de carpetas Frontend y Backend) para identificar qué tecnologías, librerías de UI, manejadores de estado y enrutadores están implementados.
+> 2. **Esquema de Base de Datos y Auth:** Verifica si ya existen migraciones, tablas o modelos para `users` (cuentas), `locations` (ubicaciones), `system_parameters` (parámetros), `projects` (proyectos) y `audit_log` (auditoría), así como el middleware de autenticación y roles.
+> 3. **Estilo Visual (`RNF-03`):** Revisa los estilos globales o componentes existentes para respetar el diseño estilo Apple (espacio en blanco, bordes redondeados, colores neutros y soporte nativo para modo claro/oscuro).
+>
+> **Acción requerida al finalizar la Fase 1:** Muéstrame un resumen breve de lo que encontraste en el repositorio y el plan de archivos que vas a crear o modificar para que coincida 100% con la arquitectura existente. Luego procede con la implementación de la Fase 2 siguiendo ese patrón.
+>
+> ---
+>
+> ### FASE 2: ESPECIFICACIONES DE IMPLEMENTACIÓN DEL MÓDULO 1
+>
+> **Convenciones de Código:**
+> - Escribe nombres de variables, funciones, tablas/columnas y comentarios de código en **inglés**, aplicando buenas prácticas de Clean Code.
+> - Todos los textos visibles en la interfaz de usuario (etiquetas, mensajes de error, alertas, botones) deben estar en **español**.
+> - **Alcance de Rol:** Todo este módulo es de acceso exclusivo para el rol `Administrador del Sistema`. Protege tanto las rutas del frontend como los endpoints/políticas del backend.
+>
+> #### 1. Auditoría Transaccional Inmutable (`F8.5`, `RN-06`, `RNF-12`)
+> Cada creación, edición o cambio de estado en este módulo DEBE registrarse en la tabla/colección `audit_log` dentro de la **misma operación/transacción** (si falla el registro en `audit_log`, la operación principal debe hacer rollback).
+> - Campos requeridos en `audit_log`: `timestamp`, `user_id` (actor), `ip_address`, `target_object` (entidad/ID afectado), `action_type`, `old_value` (JSON/texto) y `new_value` (JSON/texto).
+> - Ningún usuario (incluido el Administrador) puede editar ni eliminar registros del `audit_log`.
+>
+> #### 2. Funcionalidades de Cuentas de Usuario (`F1.1`, `F1.2`, `F1.3` | `HU-01`)
+> - **F1.1 Crear cuenta de usuario:**
+>   - Campos obligatorios: Nombre, Correo electrónico (único) y Rol.
+>   - Roles permitidos únicamente (`RN-01`): `Administrador del Sistema`, `Coordinador de Proyecto`, `Aprobador / Gestor de Inventario` (no existen cuentas para beneficiarios ni personal general).
+>   - Validación: Si el correo ya pertenece a otra cuenta, impedir el duplicado y mostrar en la UI la cuenta existente a la que pertenece ese correo. La cuenta nueva nace activa (`is_active = true`).
+> - **F1.2 Editar datos o rol de una cuenta:**
+>   - Permite editar nombre, correo (validando unicidad) y rol.
+>   - **Regla de impacto en proyectos:** Si el usuario tenía el rol `Coordinador de Proyecto` y se cambia a otro rol, el sistema debe verificar si tiene proyectos asignados; de ser así, debe mostrar un aviso listando qué proyectos quedarán sin coordinador para que sean reasignados.
+>   - Registrar en `audit_log` el valor anterior y el nuevo.
+> - **F1.3 Desactivar / Reactivar cuenta (Borrado lógico estricto):**
+>   - Las cuentas NUNCA se eliminan físicamente (`DELETE` prohibido) para conservar la trazabilidad histórica en bitácoras y auditoría.
+>   - Al pedir desactivar, mostrar confirmación advirtiendo que el usuario perderá el acceso de inmediato.
+>   - Si la cuenta a desactivar es `Coordinador de Proyecto` con proyectos activos (`En ejecución`), mostrar una advertencia con el impacto (proyectos afectados por reasignar) antes de confirmar.
+>   - Bloquear el inicio de sesión y el uso de sesión activa a cuentas desactivadas. Permitir reactivar la cuenta desde su misma ficha.
+>
+> #### 3. Catálogo de Ubicaciones de Almacenamiento (`F1.4` | `HU-02`)
+> - **F1.4 Registrar y gestionar ubicaciones:**
+>   - Campos: Nombre (único entre ubicaciones activas), Descripción y Estado (`is_active`).
+>   - Validación: Si se intenta registrar o activar una ubicación con un nombre que ya tiene otra ubicación activa, rechazar y señalar la ubicación repetida junto al campo.
+>   - Regla de integridad: Una ubicación que tenga lotes asociados no se puede eliminar físicamente; solo se puede desactivar. Las ubicaciones activas serán las que alimenten los selectores de recepción de lotes y equipos.
+>
+> #### 4. Parámetros Generales del Sistema (`F1.5` | `HU-02`)
+> - **F1.5 Configurar parámetros generales:**
+>   - Crear la gestión de parámetros configurables del sistema. Incluir como mínimo (y dejar pre-cargados en seeders si no existen):
+>     1. Días de anticipación para la alerta de vencimiento de lotes (ej. valor inicial `30`).
+>     2. Meses mínimos de historial de despachos para mostrar pronóstico de consumo (ej. valor inicial `3`).
+>   - Validación estricta: Cada valor debe ser un **número entero positivo** (`> 0`). Si se ingresa un valor negativo, cero o no entero, rechazar y mostrar el error junto al campo correspondiente.
+>   - Al guardar, el nuevo valor aplica de inmediato y se registra en `audit_log` tanto el valor anterior (`old_value`) como el valor nuevo (`new_value`).
