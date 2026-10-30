@@ -65,3 +65,17 @@ desktop.ini
 # ---------------------------------------------------------------
 docs/requisitos/generacion/*
 !docs/requisitos/generacion/.gitkeep
+
+# Bases de datos locales SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# ---------------------------------------------------------------
+# Configuración local de Agentes y MCP (contiene secretos/tokens)
+# ---------------------------------------------------------------
+.agents/
+.agent/
+_agents/
+_agent/
+*mcp_config*.json
