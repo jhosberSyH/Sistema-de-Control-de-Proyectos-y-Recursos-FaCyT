@@ -13,6 +13,7 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 5. [Estructura de carpetas del repositorio](#5-estructura-de-carpetas-del-repositorio)
 6. [Prompt para identidad visual y mockups](#6-prompt-para-identidad-visual-y-mockups)
 7. [Implementación del Módulo 1: Usuarios, catálogos y parámetros](#7-implementación-del-módulo-1-usuarios-catálogos-y-parámetros)
+8. [Consolidación del Modelo de Datos Relacional Completo (Módulos 1 al 8) y Seeders](#8-consolidación-del-modelo-de-datos-relacional-completo-módulos-1-al-8-y-seeders)
 
 ---
 
@@ -158,3 +159,49 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 >     2. Meses mínimos de historial de despachos para mostrar pronóstico de consumo (ej. valor inicial `3`).
 >   - Validación estricta: Cada valor debe ser un **número entero positivo** (`> 0`). Si se ingresa un valor negativo, cero o no entero, rechazar y mostrar el error junto al campo correspondiente.
 >   - Al guardar, el nuevo valor aplica de inmediato y se registra en `audit_log` tanto el valor anterior (`old_value`) como el valor nuevo (`new_value`).
+
+## 8. Consolidación del Modelo de Datos Relacional Completo (Módulos 1 al 8) y Seeders
+
+> Actúa como un Arquitecto de Base de Datos e Ingeniero Backend Senior. Vamos a consolidar el **Modelo de Datos Relacional Completo (Módulos 1 al 8)** del "Sistema de Control de Proyectos y Recursos" para que mi compañero de equipo y yo podamos trabajar en paralelo sobre el mismo esquema.
+>
+> ### FASE 1: INSPECCIÓN DE LO IMPLEMENTADO EN EL MÓDULO 1
+> 1. Revisa los archivos de base de datos, migraciones, modelos/esquemas o tipos TypeScript que ya creaste durante la implementación del Módulo 1 (`users`, `locations`, `system_parameters`, `audit_logs`).
+> 2. Verifica cómo están nombradas las tablas y columnas actualmente en el código del Módulo 1 para **NO romper ninguna consulta, servicio ni componente** que ya esté funcionando.
+>
+> ### FASE 2: CREACIÓN DEL MODELO DE DATOS COMPLETO Y SEEDERS (`RNF-06`)
+> Genera y aplica las migraciones / scripts SQL (`database/schema.sql` y `database/seeders.sql`, además de actualizar los modelos/tipos del proyecto) abarcando las 16 tablas de los 8 módulos, manteniendo nombres de tablas, columnas y comentarios en **inglés**:
+>
+> 1. **Módulo 1 (Conservar compatibilidad con lo ya creado):**
+>    - `users` (con los 3 roles estrictos de `RN-01` y borrado lógico `is_active`).
+>    - `locations` (catálogo de ubicaciones con `is_active`).
+>    - `system_parameters` (valores enteros positivos `> 0`, incluyendo días de alerta de vencimiento y meses mínimos de historial para pronóstico).
+> 2. **Módulo 2 (Proyectos y Avance):**
+>    - `projects` (`code` único, `operational_status` ['Propuesta', 'En ejecución', 'Suspendido', 'Finalizado'], `priority_level` ['Crítica', 'Alta', 'Media', 'Baja'], `allocated_budget`, `executed_budget`, `physical_progress_pct`, `coordinator_id`).
+>    - `project_milestones` (hitos con `weight` y `current_progress_pct`).
+>    - `milestone_progress_logs` (historial de cargas de avance por hito).
+> 3. **Módulo 3 (Inventario de Materia Prima y Consumibles):**
+>    - `items` (catálogo unificado con `name`, `unit_of_measure`, `item_type` ['Materia prima', 'Consumible de proyecto', 'Consumible de uso general'], `current_stock`, `min_stock`, `forecasted_consumption`, restricción única por nombre+unidad).
+> 4. **Módulo 4 (Equipos y Reservas):**
+>    - `equipments` (`asset_code` único, `name`, `location_id`, `operational_status` ['Disponible', 'En uso', 'En mantenimiento']).
+>    - `equipment_reservations` (rango `start_time` y `end_time`, `project_id`, `status` siguiendo `RN-03`).
+>    - `equipment_usages` (registro de horas reales de uso por proyecto).
+> 5. **Módulo 5 (Solicitudes y Priorización):**
+>    - `requests` (`request_type` ['Gasto', 'Retiro', 'Reposición automática'], `project_id`, `status` ['Borrador', 'Pendiente de Aprobación', 'Aprobado', 'Rechazado', 'Ejecutado'], `estimated_amount`, `actual_amount`).
+>    - `request_items` (detalle de insumos y cantidades por solicitud).
+> 6. **Módulo 6 (Almacén y Bitácora Inalterable):**
+>    - `batches` (lotes de compra con `item_id`, `location_id`, `initial_quantity`, `available_quantity`, `unit_cost`, `supplier`, `received_date`, `expiration_date`, `expiration_status`).
+>    - `dispatches` (bitácora inalterable con `batch_id`, `project_id`, `dispatched_quantity`, `unit_cost_snapshot`, `dispatched_by`, `received_by_name`, `is_compensatory`, `original_dispatch_id`).
+>    - `raw_material_usages` (consumo real reportado por el coordinador frente a lo despachado).
+>    - `dispatch_corrections` (solicitudes de corrección de despacho con `status` ['Pendiente', 'Aprobado', 'Denegado']).
+> 7. **Módulo 7 (Cierre de Período y Prorrateo):**
+>    - `accounting_periods` (`period_type` ['Mensual', 'Trimestral'], `start_date`, `end_date`, `status` ['Abierto', 'En revisión', 'Cerrado', 'Prorrateado'], `proration_criterion` ['Proporcional', 'Equitativo'], `total_overhead_cost`).
+>    - `period_project_confirmations` (confirmación de cargos pre-cierre por cada coordinador).
+>    - `overhead_allocations` (resultado del prorrateo por proyecto activo).
+> 8. **Módulo 8 (Auditoría Inmutable):**
+>    - `audit_logs` (`user_id`, `ip_address`, `action_type`, `target_table`, `target_id`, `old_value`, `new_value`, `justification`).
+>    - Incluye triggers o reglas de base de datos que impidan `UPDATE` y `DELETE` tanto en `dispatches` (`RNF-11`) como en `audit_logs` (`RNF-12`).
+>
+> 9. **Script de Seeders (`database/seeders.sql`):**
+>    - Crea datos semilla realistas de laboratorios de física, química y biología: al menos 1 usuario por cada uno de los 3 roles, 3 ubicaciones, los 2 parámetros generales del sistema, 3 proyectos ficticios, catálogo inicial de insumos (materia prima, consumibles y overhead con sus lotes) y 3 equipos de laboratorio.
+>
+> Al finalizar, confirma que el Módulo 1 sigue funcionando sin errores sobre este esquema unificado.

@@ -1,31 +1,55 @@
 -- ============================================================================
 -- Sistema de Control de Proyectos y Recursos FaCyT
--- Script 02: Constraints, Triggers and Immutability
+-- Constraints, Triggers and Immutability (Modules 1 to 8)
 -- Target: PostgreSQL 17
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
--- 1. Immutability Trigger for audit_log (RNF-12, RN-06)
--- Nobody, not even the Administrator, can UPDATE or DELETE audit_log records.
+-- 1. Immutability Trigger for audit_logs (RNF-12, RN-06)
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION app.fn_prevent_audit_log_mutation()
+CREATE OR REPLACE FUNCTION app.fn_prevent_audit_logs_mutation()
 RETURNS TRIGGER AS $$
 BEGIN
-    RAISE EXCEPTION 'Operación no permitida: El registro de auditoría (audit_log) es estrictamente inmutable y no puede modificarse ni eliminarse (RNF-12).'
+    RAISE EXCEPTION 'Operación no permitida: El registro de auditoría (audit_logs) es estrictamente inmutable y no puede modificarse ni eliminarse (RNF-12).'
         USING ERRCODE = 'integrity_constraint_violation';
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_audit_log_prevent_mutation ON app.audit_log;
-CREATE TRIGGER trg_audit_log_prevent_mutation
-    BEFORE UPDATE OR DELETE ON app.audit_log
-    FOR EACH ROW
-    EXECUTE FUNCTION app.fn_prevent_audit_log_mutation();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_audit_logs_prevent_mutation') THEN
+        CREATE TRIGGER trg_audit_logs_prevent_mutation
+            BEFORE UPDATE OR DELETE ON app.audit_logs
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_prevent_audit_logs_mutation();
+    END IF;
+END $$;
 
 -- ----------------------------------------------------------------------------
--- 2. Strict Logical Deletion Trigger for users (F1.3)
--- Prevents hard DELETE operations on user accounts to preserve audit trails.
+-- 2. Immutability Trigger for dispatches (RNF-11, RF-23)
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION app.fn_prevent_dispatches_mutation()
+RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION 'Operación no permitida: La bitácora de despachos (dispatches) es estrictamente inmutable y no puede modificarse ni eliminarse (RNF-11). Use una solicitud de corrección (RF-35).'
+        USING ERRCODE = 'integrity_constraint_violation';
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_dispatches_prevent_mutation') THEN
+        CREATE TRIGGER trg_dispatches_prevent_mutation
+            BEFORE UPDATE OR DELETE ON app.dispatches
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_prevent_dispatches_mutation();
+    END IF;
+END $$;
+
+-- ----------------------------------------------------------------------------
+-- 3. Strict Logical Deletion Trigger for users (F1.3)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION app.fn_prevent_user_hard_delete()
 RETURNS TRIGGER AS $$
@@ -36,14 +60,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_users_prevent_hard_delete ON app.users;
-CREATE TRIGGER trg_users_prevent_hard_delete
-    BEFORE DELETE ON app.users
-    FOR EACH ROW
-    EXECUTE FUNCTION app.fn_prevent_user_hard_delete();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_users_prevent_hard_delete') THEN
+        CREATE TRIGGER trg_users_prevent_hard_delete
+            BEFORE DELETE ON app.users
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_prevent_user_hard_delete();
+    END IF;
+END $$;
 
 -- ----------------------------------------------------------------------------
--- 3. Automatic updated_at timestamp maintenance
+-- 4. Automatic updated_at timestamp maintenance
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION app.fn_update_timestamp()
 RETURNS TRIGGER AS $$
@@ -53,27 +81,84 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_users_updated_at ON app.users;
-CREATE TRIGGER trg_users_updated_at
-    BEFORE UPDATE ON app.users
-    FOR EACH ROW
-    EXECUTE FUNCTION app.fn_update_timestamp();
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_users_updated_at') THEN
+        CREATE TRIGGER trg_users_updated_at
+            BEFORE UPDATE ON app.users
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_update_timestamp();
+    END IF;
 
-DROP TRIGGER IF EXISTS trg_locations_updated_at ON app.locations;
-CREATE TRIGGER trg_locations_updated_at
-    BEFORE UPDATE ON app.locations
-    FOR EACH ROW
-    EXECUTE FUNCTION app.fn_update_timestamp();
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_locations_updated_at') THEN
+        CREATE TRIGGER trg_locations_updated_at
+            BEFORE UPDATE ON app.locations
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_update_timestamp();
+    END IF;
 
-DROP TRIGGER IF EXISTS trg_system_parameters_updated_at ON app.system_parameters;
-CREATE TRIGGER trg_system_parameters_updated_at
-    BEFORE UPDATE ON app.system_parameters
-    FOR EACH ROW
-    EXECUTE FUNCTION app.fn_update_timestamp();
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_system_parameters_updated_at') THEN
+        CREATE TRIGGER trg_system_parameters_updated_at
+            BEFORE UPDATE ON app.system_parameters
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_update_timestamp();
+    END IF;
 
-DROP TRIGGER IF EXISTS trg_projects_updated_at ON app.projects;
-CREATE TRIGGER trg_projects_updated_at
-    BEFORE UPDATE ON app.projects
-    FOR EACH ROW
-    EXECUTE FUNCTION app.fn_update_timestamp();
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_projects_updated_at') THEN
+        CREATE TRIGGER trg_projects_updated_at
+            BEFORE UPDATE ON app.projects
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_update_timestamp();
+    END IF;
 
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_items_updated_at') THEN
+        CREATE TRIGGER trg_items_updated_at
+            BEFORE UPDATE ON app.items
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_update_timestamp();
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_equipments_updated_at') THEN
+        CREATE TRIGGER trg_equipments_updated_at
+            BEFORE UPDATE ON app.equipments
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_update_timestamp();
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_requests_updated_at') THEN
+        CREATE TRIGGER trg_requests_updated_at
+            BEFORE UPDATE ON app.requests
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_update_timestamp();
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_accounting_periods_updated_at') THEN
+        CREATE TRIGGER trg_accounting_periods_updated_at
+            BEFORE UPDATE ON app.accounting_periods
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_update_timestamp();
+    END IF;
+END $$;
+
+-- ----------------------------------------------------------------------------
+-- 5. Extension btree_gist and Conflict Prevention for Equipment Reservations (RF-22)
+-- ----------------------------------------------------------------------------
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'uq_no_overlapping_equipment_reservations'
+    ) THEN
+        ALTER TABLE app.equipment_reservations
+            ADD CONSTRAINT uq_no_overlapping_equipment_reservations
+            EXCLUDE USING GIST (
+                equipment_id WITH =,
+                tstzrange(start_time, end_time) WITH &&
+            )
+            WHERE (status IN ('Borrador', 'Pendiente de Aprobación', 'Aprobado', 'Ejecutado'));
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'Could not create EXCLUDE constraint: %', SQLERRM;
+END $$;
