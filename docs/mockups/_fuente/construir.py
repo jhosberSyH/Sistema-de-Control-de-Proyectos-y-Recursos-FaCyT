@@ -16,7 +16,7 @@ LOGOS = MOCKUPS.parent / "identidad-visual" / "logos"
 LOGOS_USADOS = {
     "facyt-isotipo.png": LOGOS / "facyt" / "facyt-isotipo_512x512_transparente.png",
     "facyt-logo.png": LOGOS / "facyt" / "facyt-logo-completo_472x512_transparente.png",
-    "escudo-uc.jpg": LOGOS / "uc" / "escudo-uc-color_980x1287_odontologia.jpg",
+    "escudo-uc.png": LOGOS / "uc" / "escudo-uc-color_980x1287_odontologia_SIN-FONDO.png",
 }
 
 ESQUELETO = """<!doctype html>
@@ -42,6 +42,8 @@ def construir(pagina: Path) -> None:
 
     shutil.copytree(FUENTE / "compartido", destino / "compartido", dirs_exist_ok=True)
     (destino / "logos").mkdir(exist_ok=True)
+    # El escudo con fondo blanco se reemplazó por el PNG sin fondo (28/10/2026)
+    (destino / "logos" / "escudo-uc.jpg").unlink(missing_ok=True)
     for nombre, origen in LOGOS_USADOS.items():
         shutil.copyfile(origen, destino / "logos" / nombre)
     print("listo:", destino.relative_to(MOCKUPS.parent.parent))

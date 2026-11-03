@@ -8,7 +8,7 @@
 /* Inicio de sesión: banda con el escudo y la FaCyT arriba, el nombre del sistema a la izquierda y el formulario a la derecha */
 .login { display: flex; flex-direction: column; min-height: 720px; position: relative; }
 .banda { display: flex; align-items: center; gap: 14px; padding: 14px 32px; background: var(--surface); border-bottom: 3px solid var(--primary); box-shadow: inset 0 -6px 0 -3px var(--accent); }
-.banda-logos { display: flex; align-items: center; gap: 14px; }
+.banda-logos { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 .banda-logos img { display: block; height: auto; }
 .banda .escudo { width: 54px; }
 .banda .logo-iso { width: 48px; }
@@ -59,7 +59,7 @@
 
       <div class="banda">
         <div class="banda-logos">
-          <span class="placa-escudo"><img class="escudo" src="logos/escudo-uc.jpg" alt="Escudo de la Universidad de Carabobo" width="54" height="71"></span>
+          <img class="escudo" src="logos/escudo-uc.png" alt="Escudo de la Universidad de Carabobo" width="54" height="71">
           <img class="logo-iso" src="logos/facyt-isotipo.png" alt="Logo de la FaCyT" width="48" height="48">
         </div>
         <p><strong>Universidad de Carabobo</strong> · Facultad Experimental de Ciencias y Tecnología</p>

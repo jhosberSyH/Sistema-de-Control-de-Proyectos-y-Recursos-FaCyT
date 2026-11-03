@@ -4,6 +4,8 @@
 .env
 .env.*
 !.env.example
+# El modo mock del frontend no tiene secretos: solo enciende los datos ficticios
+!frontend/.env.mock
 
 # ---------------------------------------------------------------
 # Python (backend)

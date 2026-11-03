@@ -27,6 +27,15 @@ El portal principal www.uc.edu.ve no respondió desde esta red (falló el TLS y 
 | `logo-uc-escudo-y-nombre_143x157_fcs.webp` | https://www.fcs.uc.edu.ve/wp-content/uploads/2026/04/Logo-UC.webp | WebP con alfa | 143 x 157 | Composición vertical: escudo monocromo (negro y grises) con "UNIVERSIDAD DE CARABOBO" debajo. Fondo transparente. **Resolución muy baja**: sirve como referencia de la composición, no para producción. SHA-1 a576fc2b05eee37486dfc280eb489cc919d3d37e |
 | `logo-uc-horizontal-mono_295x67_facyt.png` | https://www.facyt.uc.edu.ve/web/wp-content/uploads/2022/04/universidad-de-carabobo.png | PNG RGBA | 295 x 67 | Composición horizontal: escudo y "UNIVERSIDAD DE CARABOBO" a la derecha, todo en negro sólido. Fondo transparente. **Resolución muy baja**: solo referencia. Hay otro archivo de las mismas dimensiones en `.../uploads/2021/08/universidad-de-carabobo.png` (11794 bytes); no se guardó. SHA-1 168db43395a37813a464c73308abce7b43dca396 |
 
+## Derivados
+
+Archivos generados a partir de un original de esta carpeta. El original se conserva sin cambios.
+
+| Archivo | Original | Cómo se generó | SHA-1 |
+|---|---|---|---|
+| `uc/escudo-uc-color_980x1287_odontologia_SIN-FONDO.png` | `uc/escudo-uc-color_980x1287_odontologia.jpg` | El 28/10/2026, a pedido del equipo, se quitó el fondo blanco exterior con `scripts/quitar_fondo_escudo.py`. El relleno parte de los bordes y solo toca píxeles claros conectados con el exterior, así el blanco interior del escudo no cambia. El contorno antialiasado se convirtió en negro con transparencia. No se redibujó ni se cambiaron colores. Se usa en la interfaz sin la placa blanca, en su versión web (ver la fila siguiente). | 267c4e73112b0e7bf1285bb6bdf50a56c6c3fc81 |
+| `frontend/src/assets/logos/escudo-uc.png` (162 x 213) y `frontend/src/assets/logos/facyt-isotipo.png` (144 x 144) | `uc/escudo-uc-color_980x1287_odontologia_SIN-FONDO.png` y `facyt/facyt-isotipo_512x512_transparente.png` | El 31/10/2026 se reescalaron con `scripts/logos_web.py` a 3 veces su mayor tamaño en pantalla (54 y 48 px), con el alfa premultiplicado para que el contorno no tome halo. Solo cambia el tamaño: pesan 47 kB y 15 kB en lugar de 545 kB y 51 kB. | — |
+
 ## Pendiente o no conseguido
 
 - **Manual de identidad de la UC**: "Lineamientos de imagen y uso del escudo de la Universidad de Carabobo", en http://uc.edu.ve/archivos/pdf/MANUALIMAGENUC.pdf (también se cita como http://www.uc.edu.ve/archivos/MANUALIMAGENUC.pdf). Según el fragmento indexado, trae la carta Pantone en la "hoja 2". No se pudo descargar porque uc.edu.ve no responde desde esta red y la Wayback Machine devolvió 429. Hay una copia no oficial en Scribd (https://www.scribd.com/document/371963671/Manual-Imagen-UC) que no se consultó.

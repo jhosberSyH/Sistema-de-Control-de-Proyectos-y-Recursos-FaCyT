@@ -12,6 +12,8 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 4. [Diagrama de arquitectura en draw.io](#4-diagrama-de-arquitectura-en-drawio)
 5. [Estructura de carpetas del repositorio](#5-estructura-de-carpetas-del-repositorio)
 6. [Prompt para identidad visual y mockups](#6-prompt-para-identidad-visual-y-mockups)
+7. [Prompt para el frontend con datos mock](#7-prompt-para-el-frontend-con-datos-mock)
+8. [Prompt para revisar a fondo las vistas](#8-prompt-para-revisar-a-fondo-las-vistas)
 
 ---
 
@@ -102,3 +104,21 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 > Con eso diseña los mockups de cada una de las vistas que va a tener la página. Por cada vista hazme máximo cuatro versiones donde cambien el estilo, la combinación de colores, la tipografía y la distribución. Genéralos como artifacts de Claude para que los pueda ver y comparar directamente. Si no puedes generar artifacts desde aquí, hazlos en HTML para abrirlos en el navegador y dímelo. En cualquier caso guarda una copia en una carpeta mockups con una subcarpeta por vista.
 >
 > Cuando estén listos para ahí y yo te digo cuál versión queda de cada vista.
+
+## 7. Prompt para el frontend con datos mock
+
+> Ahora vamos a construir el frontend de todo el aplicativo. Guíate al cien por ciento por los mockups aprobados de cada vista que están en la carpeta mockups: colores, tipografía, distribución y componentes tienen que quedar igual. Usa las tecnologías que ya definimos en el README.md y respeta la estructura de carpetas que armamos.
+>
+> Por ahora es solo frontend, sin backend. Para ver cómo se comporta todo vamos a usar datos ficticios (mock), pero no pueden estar metidos dentro de los componentes ni en el código de las vistas. Tienen que vivir aparte y poder activarse o desactivarse cuando queramos, por ejemplo con una variable de entorno, sin tener que tocar ni romper nada del código. La idea es que el día que conectemos el backend real solo apaguemos los mocks y todo siga funcionando igual.
+>
+> Antes de escribir código, investiga en internet las mejores prácticas para manejar datos mock en el stack que elegimos y cómo lo hacen los proyectos serios. Quiero fuentes reales. Con eso dime qué enfoque recomiendas, por qué, y una alternativa.
+>
+> Después arma el plan de desarrollo completo: en qué orden vamos a construir las vistas, qué componentes compartidos hay que hacer primero, cómo se organizan los datos mock, cómo se activan y desactivan, y qué requisitos (RF-XX) cubre cada vista. Guárdalo en plan_frontend.md.
+>
+> Cuando tengas el plan para ahí. No empieces a desarrollar hasta que yo lo revise y te lo apruebe.
+>
+> Ya con el plan aprobado, vamos vista por vista. Cuando termines cada una dime cómo la pruebo y espera a que te la valide antes de pasar a la siguiente. No hagas commit ni push.
+
+## 8. Prompt para revisar a fondo las vistas
+
+> Hagamos el plan para validar todos las vistas que se generarron para saber si estan generado de buena manera y si estan todo acorde a las vista una revision a profundidad para validar que todo esta acorde

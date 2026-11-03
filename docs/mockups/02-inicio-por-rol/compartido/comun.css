@@ -162,8 +162,6 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 
 .tarjeta { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-l); }
 
-.placa-escudo { background: #FFFFFF; border-radius: var(--r-s); padding: 4px; display: inline-flex; line-height: 0; }
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
