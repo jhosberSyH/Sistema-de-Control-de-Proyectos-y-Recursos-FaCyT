@@ -1,0 +1,36 @@
+/* Vista 09, inventario. Copia de los estilos de docs/mockups/_fuente/09-inventario.html, dentro de
+   .vista-inventario porque .stock, .tipo y .ins son nombres que se repiten en otros mockups. La regla
+   .solo-adm del mockup no hace falta: cada rol recibe solo sus botones. */
+.vista-inventario {
+  display: contents;
+
+  .alertas-r { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .al { font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 16px; display: flex; gap: 14px; align-items: center; background: var(--surface); }
+  .al .ic { width: 44px; height: 44px; border-radius: var(--r-m); display: grid; place-items: center; background: var(--surface-2); flex: none; }
+  .al.err .ic { color: var(--err); } .al.warn .ic { color: var(--warn); }
+  .al b { font-family: var(--f-display); font-size: 26px; display: block; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--primary); }
+  .al span { color: var(--muted); font-size: 14.5px; }
+  .al[aria-pressed="true"] { outline: 2px solid var(--primary); outline-offset: -1px; }
+
+  .lista-i { padding: 0; overflow: hidden; }
+  .lista-i .herr { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+  .lista-i .tabla-env { padding: 0 8px; }
+  .stock { display: grid; gap: 4px; min-width: 130px; }
+  .stock .t { display: flex; justify-content: space-between; gap: 8px; font-size: 14.5px; }
+  .stock .t b { font-variant-numeric: tabular-nums; }
+  .stock .barra-prog i.bajo { background: var(--err); }
+  .tipo { font-size: 13.5px; color: var(--muted); }
+  .ins b { display: block; font-weight: 600; }
+  @media (max-width: 760px) { .alertas-r { grid-template-columns: minmax(0, 1fr); gap: 10px; } }
+
+  /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+  .lista-i .paginacion { padding: 12px 20px 16px; border-top: 1px solid var(--line); }
+  .lista-i .resultado { padding: 16px 20px 0; }
+  .lista-i .resultado:focus { outline: none; }
+  .lista-i .vacio { margin: 20px; }
+  /* El nombre lleva a la ficha del insumo (vista 10): se ve como en el mockup y se subraya al pasar o enfocar */
+  .ins a { color: var(--text); text-decoration: none; }
+  .ins a:hover, .ins a:focus-visible { text-decoration: underline; }
+  .venc small { display: block; color: var(--muted); font-size: 13.5px; }
+  .venc small.err { color: var(--err); font-weight: 600; }
+}

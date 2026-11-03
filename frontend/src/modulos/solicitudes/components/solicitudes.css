@@ -1,0 +1,43 @@
+/* Vista 14, mis solicitudes. Copia de los estilos de docs/mockups/_fuente/14-solicitudes.html, dentro de
+   .vista-solicitudes porque .item e .items se repiten con otras medidas en otros mockups. La regla
+   .vista-lista / .vista-retiro / .vista-gasto del mockup no hace falta: cada pantalla se pinta por separado. */
+.vista-solicitudes {
+  display: contents;
+
+  .flujo { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 14px; color: var(--muted); }
+  .flujo span.paso { padding: 4px 10px; border: 1px solid var(--line); border-radius: var(--r-s); background: var(--surface); color: var(--text); font-family: var(--f-mono); font-size: 12.5px; }
+
+  .lista-s { padding: 0; overflow: hidden; }
+  .lista-s .pestanas { padding: 0 12px; }
+  .lista-s .tabla-env { padding: 0 8px; }
+  .form-s { padding: 22px; display: grid; gap: 18px; }
+  .guardado { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); }
+  .guardado .ico { width: 16px; height: 16px; color: var(--ok); }
+  .items { display: grid; gap: 0; border: 1px solid var(--line); border-radius: var(--r-l); overflow: hidden; }
+  .item { display: grid; grid-template-columns: minmax(0, 1fr) 150px 200px 44px; gap: 12px; align-items: end; padding: 14px; border-top: 1px solid var(--line); }
+  .item:first-child { border-top: 0; }
+  .item .disp { font-size: 14px; color: var(--muted); padding-bottom: 12px; }
+  .item .disp b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .item.excede .disp { color: var(--text); }
+  .item .quitar { width: 44px; height: 44px; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: var(--r-m); cursor: pointer; display: grid; place-items: center; }
+  @media (max-width: 760px) {
+    .item { grid-template-columns: minmax(0, 1fr) 44px; }
+    .item .campo:first-child { grid-column: 1 / -1; }
+    .item .disp { grid-column: 1 / -1; padding: 0; }
+  }
+
+  /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+  .lista-s td small { display: block; color: var(--muted); font-size: 13.5px; }
+  .lista-s .resultado { padding: 16px 20px 0; }
+  .lista-s .vacio { margin: 20px; }
+  .resultado:focus, .aviso-envio:focus { outline: none; }
+  /* Con un error bajo un campo, la línea se alinea arriba para que las entradas no se desplacen */
+  .item:has(.msg-error) { align-items: start; }
+  .item:has(.msg-error) .disp { padding: 34px 0 0; }
+  .item:has(.msg-error) .quitar { margin-top: 26px; }
+  .item .quitar .ico { width: 18px; height: 18px; }
+  .guardado.error .ico { color: var(--err); }
+  .guardado button { font: inherit; color: var(--link); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+  .adjunto { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 15px; }
+  .acc-form .izq { margin-right: auto; }
+}

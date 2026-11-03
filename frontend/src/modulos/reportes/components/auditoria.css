@@ -1,0 +1,31 @@
+/* Vista 25: auditoría. Copia de los estilos de docs/mockups/25-auditoria, dentro de .vista-auditoria.
+   La fila elegida se marca con aria-current (en una tabla, aria-selected solo vale dentro de un grid). */
+.vista-auditoria {
+  display: contents;
+
+  .dos { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+  .aud { padding: 0; overflow: hidden; }
+  .aud .cab-a { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  .aud .herr { padding: 16px 18px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .aud .tabla-env { padding: 0 8px; }
+  .aud tbody tr { cursor: pointer; }
+  .aud tbody td:first-child { white-space: nowrap; }
+  .aud tbody tr[aria-current="true"] td { background: var(--surface-2); }
+  .aud tbody tr[aria-current="true"] td:first-child { box-shadow: inset 4px 0 0 var(--primary); }
+  .accion { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; font-weight: 600; }
+  .accion i { width: 8px; height: 8px; border-radius: 2px; background: var(--muted); display: inline-block; }
+  .accion.estado-c i { background: var(--info); } .accion.crea i { background: var(--ok); } .accion.edita i { background: var(--warn); } .accion.sesion i { background: var(--border); }
+  .det { padding: 20px; display: grid; gap: 14px; position: sticky; top: 16px; }
+  .det h2 { font-size: 19px; }
+  .cambio { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; }
+  .cambio div { padding: 12px; border: 1px solid var(--line); border-radius: var(--r-m); display: grid; gap: 2px; }
+  .cambio span { font-size: 13px; color: var(--muted); }
+  .cambio .nuevo { border-color: var(--primary); background: var(--surface-2); }
+  .inmutable { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: var(--muted); }
+  .inmutable .ico { width: 16px; height: 16px; margin-top: 2px; }
+  @media (max-width: 760px) { .dos { grid-template-columns: minmax(0, 1fr); } .det { position: static; } }
+
+  /* Piezas sin dibujar (plan §7.1) */
+  .aud tbody tr:focus-visible td { background: var(--surface-2); }
+  .aud .paginacion { padding: 0; border: 0; }
+}

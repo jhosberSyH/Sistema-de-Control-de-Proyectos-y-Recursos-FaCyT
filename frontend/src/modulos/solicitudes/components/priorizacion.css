@@ -1,0 +1,35 @@
+/* Vista 16, priorización. Copia de los estilos de docs/mockups/16-priorizacion/index.html, dentro de
+   .vista-priorizacion (.grupo-cab también existe en la bandeja con otras medidas). El @container mk del
+   mockup pasa a @media. */
+.vista-priorizacion {
+  display: contents;
+
+  .grupos { display: grid; gap: 18px; }
+  .grupo { padding: 0; overflow: hidden; }
+  .grupo-cab { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+  .grupo-cab h2 { font-size: 13px; font-family: var(--f-mono); font-weight: 500; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: .06em; }
+  .grupo-cab .prio i { width: 12px; height: 12px; }
+  .grupo-cab .conteo { margin-left: auto; }
+  .fila-p { display: grid; grid-template-columns: 90px minmax(0, 1fr) 180px 150px auto; gap: 14px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+  .fila-p:last-child { border-bottom: 0; }
+  .fila-p .nom small { display: block; color: var(--muted); font-size: 13.5px; }
+  .ultimo { font-size: 13.5px; color: var(--muted); }
+
+  /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+  .filtro-estatus { min-width: 200px; }
+  .fila-p > a.mono { color: var(--text); text-decoration: none; }
+  .fila-p > a.mono:hover { text-decoration: underline; }
+  .fila-p.vacia { display: block; margin: 0; color: var(--muted); }
+  .hecho:focus { outline: none; }
+
+  @media (max-width: 760px) {
+    .fila-p { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; }
+    .fila-p .nom { grid-column: 1 / -1; }
+    .fila-p > .mono { grid-column: 1; }
+  }
+}
+
+/* El diálogo se pinta en un portal, fuera de .vista-priorizacion */
+.dialogo .justificacion { min-height: 96px; padding: 10px 12px; resize: vertical; }
+/* Los códigos del aviso no se parten en el guion ("FIS-" / "008"), con la letra del texto como el mockup */
+.dialogo .efecto-prio .codigo { font-family: inherit; white-space: nowrap; }

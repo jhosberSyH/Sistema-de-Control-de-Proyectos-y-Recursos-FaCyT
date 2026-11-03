@@ -1,0 +1,18 @@
+/* Vista 11, catálogo de equipos. Copia de los estilos de docs/mockups/_fuente/11-equipos.html. La lista de
+   reservas afectadas (.afect) va en un diálogo, que se pinta en un portal: no puede ir dentro de la vista. */
+.lista-e { padding: 0; overflow: hidden; }
+.lista-e .herr { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.lista-e .tabla-env { padding: 0 8px; }
+.eq b { display: block; font-weight: 600; }
+.afect { list-style: none; margin: 0; padding: 0; display: grid; border: 1px solid var(--line); border-radius: var(--r-m); }
+.afect li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 15px; flex-wrap: wrap; }
+.afect li:first-child { border-top: 0; }
+.afect small { color: var(--muted); display: block; font-size: 14px; }
+
+/* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+.eq small { color: var(--muted); font-size: 13.5px; }
+.lista-e .resultado { padding: 16px 20px 0; }
+.lista-e .resultado:focus { outline: none; }
+.lista-e .vacio { margin: 20px; }
+.prox-res small, .estado-eq small { display: block; color: var(--muted); font-size: 13.5px; }
+.estado-eq small { margin-top: 4px; }

@@ -1,0 +1,68 @@
+/* Copia de docs/mockups/_fuente/compartido/comun.css, componentes (diseño aprobado, versión E).
+   Se conserva tal cual para que la app quede idéntica al mockup. Solo cambia lo que era
+   del comparador: el ancho de teléfono pasa de container query (@container mk) a media query. */
+
+/* ---------- Componentes comunes ---------- */
+.mk h1, .mk h2, .mk h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.2; }
+.mk p { margin: 0; }
+.mk a { color: var(--link); text-underline-offset: 2px; }
+.mk .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.mk .num { font-variant-numeric: tabular-nums; }
+.mk .sec { color: var(--muted); }
+.mk :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.ico { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.saltar { position: absolute; left: 8px; top: -60px; background: var(--primary); color: var(--on-primary); padding: 10px 14px; border-radius: var(--r-s); z-index: 5; }
+.saltar:focus { top: 8px; }
+
+.btn {
+  font: inherit; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 18px; border-radius: var(--r-m); border: 1px solid transparent; cursor: pointer; text-decoration: none;
+}
+.mk .btn-pri { background: var(--primary); color: var(--on-primary); }
+.mk .btn-sec { background: var(--surface); color: var(--text); border-color: var(--border); }
+.mk .btn-txt { background: transparent; color: var(--link); padding: 0 8px; }
+.mk a.btn { text-decoration: none; }
+.mk .btn-peligro { background: var(--err); color: var(--on-err); }
+.mk .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.campo { display: grid; gap: 6px; }
+.campo label { font-weight: 600; font-size: 15px; }
+.campo .ayuda { font-size: 14px; color: var(--muted); }
+.entrada {
+  font: inherit; width: 100%; min-height: 44px; padding: 0 12px; color: var(--text); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-s);
+}
+
+.entrada:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.campo.error .entrada { border-color: var(--err); border-width: 2px; }
+.msg-error { display: flex; gap: 6px; align-items: flex-start; color: var(--text); font-size: 14.5px; }
+.msg-error .ico { color: var(--err); margin-top: 2px; }
+
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  padding: 2px 10px 2px 6px;
+  border-radius: var(--r-s);
+  background: var(--surface-2);
+}
+
+.estado .ico { width: 16px; height: 16px; }
+.estado.ok .ico { color: var(--ok); }
+.estado.warn .ico { color: var(--warn); }
+.estado.err .ico { color: var(--err); }
+.estado.info .ico { color: var(--info); }
+.estado.neutro .ico { color: var(--muted); }
+
+.tarjeta { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-l); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
