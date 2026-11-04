@@ -14,6 +14,7 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 6. [Prompt para identidad visual y mockups](#6-prompt-para-identidad-visual-y-mockups)
 7. [Implementación del Módulo 1: Usuarios, catálogos y parámetros](#7-implementación-del-módulo-1-usuarios-catálogos-y-parámetros)
 8. [Consolidación del Modelo de Datos Relacional Completo (Módulos 1 al 8) y Seeders](#8-consolidación-del-modelo-de-datos-relacional-completo-módulos-1-al-8-y-seeders)
+9. [Implementación del Módulo 3: Inventario de materia prima y consumibles](#9-implementación-del-módulo-3-inventario-de-materia-prima-y-consumibles)
 
 ---
 
@@ -205,3 +206,122 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 >    - Crea datos semilla realistas de laboratorios de física, química y biología: al menos 1 usuario por cada uno de los 3 roles, 3 ubicaciones, los 2 parámetros generales del sistema, 3 proyectos ficticios, catálogo inicial de insumos (materia prima, consumibles y overhead con sus lotes) y 3 equipos de laboratorio.
 >
 > Al finalizar, confirma que el Módulo 1 sigue funcionando sin errores sobre este esquema unificado.
+
+## 9. Implementación del Módulo 3: Inventario de materia prima y consumibles
+
+> Actúa como un Ingeniero de Software Fullstack Senior y Arquitecto de Sistemas. Vamos a implementar el **Módulo 3: Inventario de materia prima y consumibles** (`F3.1` a `F3.7` | `HU-07` a `HU-11`) del "Sistema de Control de Proyectos y Recursos".
+>
+> Dado que no tienes acceso a los documentos de especificación originales, este prompt contiene **todas las reglas de negocio, flujos BPMN y criterios de aceptación oficiales**. Síguelos al pie de la letra.
+>
+> ---
+>
+> ### FASE 1: AUDITORÍA DE COMPATIBILIDAD (NO ESCRIBAS CÓDIGO AÚN)
+> Antes de crear o modificar archivos, inspecciona exhaustivamente el workspace actual para garantizar un acoplamiento 100% limpio con lo ya desarrollado:
+> 1. **Inspección del Módulo 1 (Ya implementado):**
+>    - Verifica cómo están implementados el middleware de autenticación/autorización por roles (`Administrador del Sistema`, `Coordinador de Proyecto`, `Aprobador / Gestor de Inventario`).
+>    - Revisa cómo se consultan los **Parámetros Generales del Sistema (`F1.5`)** en la base de datos (específicamente: *días de anticipación para alerta de vencimiento de lotes* y *meses mínimos de historial para el pronóstico de consumo*).
+>    - Revisa la función, servicio o trigger que registra eventos en el **`audit_log` (`F8.5` / `RN-06`)** para reutilizar exactamente el mismo mecanismo transaccional.
+> 2. **Inspección del Módulo 2 (Proyectos y Avance - Ya implementado):**
+>    - Revisa la estructura de controladores/servicios, rutas del backend, manejo de errores, modelos/esquemas de base de datos (`items`, `batches`, `dispatches`, `requests`, `request_items`, `projects`) y cómo se conectan con el Frontend.
+> 3. **Inspección del Frontend y UI (`RNF-03`):**
+>    - Verifica el sistema de navegación (Sidebar/Navbar), el manejo de estado, los componentes reutilizables (tablas, modales, badges de alerta, formularios, notificaciones/toasts) y el cumplimiento del diseño estilo Apple (espacio en blanco, bordes redondeados, colores neutros y soporte nativo para modo claro/oscuro).
+>
+> **Acción al finalizar la Fase 1:** Muéstrame un resumen breve de cómo están estructurados los Módulos 1 y 2 y qué archivos crearás o editarás para el Módulo 3. Inmediatamente después, ejecuta la implementación de la Fase 2.
+>
+> ---
+>
+> ### FASE 2: ESPECIFICACIONES DETALLADAS DEL MÓDULO 3
+>
+> #### Convenciones Estrictas de Código e Interfaz
+> - **Código (Backend, Frontend, DB):** Nombres de variables, funciones, métodos, rutas de API, modelos y comentarios de código estrictamente en **inglés**, aplicando Clean Code y separación de responsabilidades (`RNF-01`).
+> - **Interfaz de Usuario (UI) y Mensajes:** Todo texto visible para el usuario (etiquetas, tablas, estados, alertas, errores de validación) estrictamente en **español**.
+> - **Auditoría Transaccional (`F8.5`, `RN-06`, `RNF-12`):** Toda creación, edición o cambio de estado en este módulo debe guardarse en `audit_log` dentro de la **misma transacción** (incluyendo `timestamp`, `user_id`, `ip_address`, entidad afectada, `old_value` y `new_value`). Si el registro en `audit_log` falla, toda la operación debe hacer rollback.
+>
+> ---
+>
+> #### 1. Catálogo Unificado de Insumos (`F3.1` | `HU-07`)
+> - **Actor permitido:** Exclusivamente `Administrador del Sistema` para crear/editar; `Aprobador / Gestor de Inventario` y `Coordinador de Proyecto` pueden consultar el catálogo.
+> - **Qué hace:** Permite dar de alta materia prima y consumibles en un único catálogo unificado.
+> - **Campos obligatorios:**
+>   - `name` (Nombre del insumo).
+>   - `unit_of_measure` (Unidad de medida: ej. mL, L, g, kg, unidades, cajas).
+>   - `item_type` (Tipo de insumo), que debe ser estrictamente uno de estos tres valores:
+>     1. `'Materia prima'`
+>     2. `'Consumible de proyecto'`
+>     3. `'Consumible de uso general'` *(Nota RN-02: estos son los insumos de overhead que se compran por lotes institucionales sin asignarse a un proyecto y entran al prorrateo).*
+> - **Reglas y Validaciones (Flujo BPMN):**
+>   - **Unicidad compuesta:** El sistema debe impedir que existan dos insumos activos con el mismo `name` y la misma `unit_of_measure`. Si ya existe, debe bloquear el guardado y mostrar en la UI el insumo existente.
+>   - **Stock inicial:** Todo insumo nuevo nace obligatoriamente con `current_stock = 0` (el stock solo puede cambiar mediante recepciones y despachos de lotes).
+>
+> ---
+>
+> #### 2. Configuración de Stock Mínimo (`F3.2` | `HU-07`)
+> - **Actor permitido:** Exclusivamente `Administrador del Sistema`.
+> - **Qué hace:** Permite configurar o actualizar la cantidad mínima (`min_stock`) de cada insumo en su unidad de medida.
+> - **Reglas y Validaciones:**
+>   - Si un insumo no tiene `min_stock` configurado (`null`), no genera alertas de stock mínimo ni solicitudes de reposición automática.
+>   - Al configurar un `min_stock`, validar que sea un número positivo (`> 0`).
+>   - **Evaluación inmediata (Criterio HU-07):** Si al guardar el nuevo `min_stock`, el `current_stock` actual del insumo ya está por debajo de ese nuevo valor (`current_stock < min_stock`), el sistema debe activar de inmediato la alerta de stock mínimo (`F3.4`) y disparar la lógica de reposición automática (`F3.5`).
+>
+> ---
+>
+> #### 3. Actualización Transaccional de Stock y Vista de Lotes (`F3.3` | `HU-08` | `RNF-10`)
+> - **Actor permitido:** `Aprobador / Gestor de Inventario` y `Administrador del Sistema`.
+> - **Qué hace:** Garantiza que el stock total de cada insumo (`items.current_stock`) y el stock disponible de cada lote (`batches.available_quantity`) se mantengan sincronizados en tiempo real.
+> - **Reglas de Negocio y Servicio Transaccional:**
+>   - Crea o expón en el servicio de inventario el método transaccional atómico (`RNF-10`) para registrar movimientos de stock (aumentar en recepciones de lotes y disminuir en despachos). Si falla la actualización del stock o el registro del movimiento/bitácora, debe hacerse **rollback completo** de la transacción para que el stock quede intacto.
+>   - **Ficha del Insumo en el Frontend:** Al abrir el detalle/ficha de un insumo en la UI, se debe mostrar:
+>     1. Datos del insumo (nombre, unidad, tipo).
+>     2. Stock total actual (`current_stock`), stock mínimo configurado (`min_stock`) y el pronóstico de consumo (`F3.7`).
+>     3. Tabla/desglose de todos sus **lotes asociados** (`batches`), mostrando por cada lote: ID/código, fecha de ingreso, proveedor, costo unitario, ubicación, cantidad inicial, cantidad disponible actual, fecha de vencimiento y estado de vencimiento.
+>
+> ---
+>
+> #### 4. Alerta de Stock Mínimo (`F3.4` | `HU-09`)
+> - **Qué hace:** Detecta y señaliza visualmente cuando el `current_stock` total de un insumo es menor que su `min_stock` configurado (`current_stock < min_stock`).
+> - **Comportamiento (Flujo BPMN):**
+>   - Después de cada movimiento (o cambio de `min_stock`), el sistema compara `current_stock` contra `min_stock`.
+>   - **Si `current_stock < min_stock`:** El insumo queda marcado con alerta activa de "Stock bajo el mínimo". En el listado de inventario y en su ficha debe mostrarse un indicador visual claro (badge de alerta) indicando tanto el stock actual como el mínimo configurado. *(Además, asegúrate de que este estado sea fácilmente consultable por el Dashboard Ejecutivo).*
+>   - **Si `current_stock >= min_stock` (tras una recepción):** La alerta de stock mínimo se retira automáticamente.
+>
+> ---
+>
+> #### 5. Solicitud de Reposición Automática (`F3.5` | `HU-09` | `RN-03`)
+> - **Actores:** Generada automáticamente por el `Sistema`; gestionada por el `Aprobador / Gestor de Inventario`.
+> - **Qué hace (Flujo BPMN):**
+>   - Cuando se activa la alerta de stock mínimo (`F3.4`) para un insumo, el sistema verifica primero: **¿Ya existe una solicitud de reposición abierta (en estado `'Borrador'` o `'Pendiente de Aprobación'`) para este mismo insumo?**
+>   - **Si YA existe una abierta:** Conserva la solicitud abierta y **NO crea una segunda solicitud** duplicada.
+>   - **Si NO existe una abierta:** Crea automáticamente un registro en la tabla de solicitudes (`requests` y su detalle en `request_items`) con:
+>     - Tipo/Marca: `'Reposición automática'` (solicitud de gasto para reponer el insumo).
+>     - Estado inicial (`RN-03`): `'Borrador'`.
+>     - Cantidad sugerida inicial: por ejemplo, la diferencia para alcanzar o superar el stock mínimo (o basada en el pronóstico si existe), editable por el Aprobador.
+> - **Acciones del Aprobador en la UI (Bandeja / Vista de Reposiciones en Inventario):**
+>   - El `Aprobador / Gestor de Inventario` recibe el aviso y puede abrir la reposición en `'Borrador'`, revisar la cantidad y el pronóstico del insumo, modificar la cantidad si hace falta y tomar una de dos decisiones:
+>     1. **Enviar a aprobación:** Pasa la solicitud de `'Borrador'` a `'Pendiente de Aprobación'` dentro del flujo de solicitudes (`RN-03`).
+>     2. **Descartar reposición:** Cancela/descarta el borrador sin comprar nada; la alerta de stock mínimo (`F3.4`) debe seguir visible mientras el stock físico continúe bajo el mínimo.
+>
+> ---
+>
+> #### 6. Alerta y Bloqueo de Lotes por Vencimiento (`F3.6` | `HU-10`)
+> - **Qué hace (Flujo BPMN):** Evalúa la fecha de vencimiento (`expiration_date`) de cada lote con stock disponible (`available_quantity > 0`) contra la fecha actual y el parámetro general de **"días de anticipación de alerta de vencimiento"** configurado en el Módulo 1 (`F1.5`, por defecto 30 días si no se ha editado).
+> - **Reglas de Clasificación y Bloqueo:**
+>   1. **Lote Vencido (`expiration_date < CURRENT_DATE`):**
+>      - El lote pasa a estado `'Vencido'`.
+>      - **Bloqueo estricto:** Un lote `'Vencido'` queda bloqueado para despacho (no puede despacharse en el Módulo 6).
+>   2. **Lote Próximo a Vencer (`CURRENT_DATE <= expiration_date <= CURRENT_DATE + days_threshold`):**
+>      - El lote se marca como `'Próximo a vencer'`.
+>      - En la interfaz del inventario, debe mostrarse la etiqueta `'Próximo a vencer'` junto con el cálculo exacto de **cuántos días faltan** para su vencimiento (ej. *"Próximo a vencer (20 días restantes)"*).
+>   3. **Lote Vigente:** Cuando supera el umbral de anticipación o no perece (`expiration_date IS NULL`).
+> - **Ejecución:** Implementa una función/servicio de verificación de vencimientos que se ejecute automáticamente al consultar el inventario/lotes (o mediante job/endpoint de sincronización diaria) para garantizar que los estados y días restantes estén siempre al día.
+>
+> ---
+>
+> #### 7. Pronóstico de Consumo de Insumos (`F3.7` / `IA-01` | `HU-11`)
+> - **Qué hace (Flujo BPMN):** Calcula el consumo esperado de cada insumo para el próximo período contable basándose en el historial real de la bitácora de despachos (`dispatches`).
+> - **Reglas de Negocio:**
+>   - Consulta el parámetro general del Módulo 1 (`F1.5`): **"meses mínimos de historial para mostrar un pronóstico"** (ej. 3 meses).
+>   - Verifica si el insumo tiene registros de despachos que abarquen al menos esa cantidad de meses de antigüedad/historial:
+>     - **Si NO tiene historial suficiente:** `forecasted_consumption` queda en `null` y en la ficha del insumo se debe mostrar textualmente: **"Sin historial suficiente para pronosticar"**.
+>     - **Si SÍ tiene historial suficiente:** Calcula el pronóstico de consumo para el próximo período (por ejemplo, promedio móvil / media ponderada del consumo mensual o por período de los despachos netos registrados en `dispatches`, descontando movimientos compensatorios si existen) y guárdalo/muéstralo en la ficha del insumo junto al stock actual y al stock mínimo.
+>   - **Restricción (`HU-11`):** El pronóstico es puramente informativo para ayudar a ajustar el stock mínimo con datos; por sí solo **nunca crea solicitudes ni compras automáticas** aunque el pronóstico supere al stock actual.
+>   - Deja expuesto el método `recalculateConsumptionForecasts()` en el servicio del Módulo 3 para que se ejecute tanto al cerrar un período contable como bajo demanda al abrir la ficha o actualizar el catálogo.
