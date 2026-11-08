@@ -16,6 +16,7 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 8. [Consolidación del Modelo de Datos Relacional Completo (Módulos 1 al 8) y Seeders](#8-consolidación-del-modelo-de-datos-relacional-completo-módulos-1-al-8-y-seeders)
 9. [Implementación del Módulo 3: Inventario de materia prima y consumibles](#9-implementación-del-módulo-3-inventario-de-materia-prima-y-consumibles)
 10. [Implementación del Módulo 6: Almacén y Bitácora Inalterable](#10-implementación-del-módulo-6-almacén-y-bitácora-inalterable)
+11. [Implementación del Módulo 7: Cierre de período y prorrateo](#11-implementación-del-módulo-7-cierre-de-período-y-prorrateo)
 
 ---
 
@@ -383,3 +384,49 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 > #### 5. Solicitud y Aprobación de Corrección Compensatoria (`F6.5`, `F6.6` | `HU-21` | `RF-35`)
 > - Coordinador solicita corrección con justificación obligatoria (mínimo 5 caracteres).
 > - Aprobador decide: si deniega, el despacho original queda intacto; si aprueba, se genera un movimiento compensatorio enlazado en `dispatches` (`is_compensatory = true`), ajustando stock y presupuesto ejecutado.
+
+## 11. Implementación del Módulo 7: Cierre de período y prorrateo
+
+> Actúa como un Ingeniero de Software Fullstack Senior y Arquitecto de Sistemas. Vamos a implementar el **Módulo 7: Cierre de período y prorrateo** (`F7.1` a `F7.4` | `HU-22` y `HU-23`) del "Sistema de Control de Proyectos y Recursos".
+>
+> Dado que no tienes acceso a los documentos de especificación ni al diagrama BPMN original del Módulo 7, este prompt contiene **todas las reglas de negocio (`RN-02`, `RN-05`, `RN-06`, `RN-07`), el flujo BPMN paso a paso y los criterios de aceptación oficiales**. Síguelos estrictamente.
+>
+> ---
+>
+> ### FASE 0: CONTROL DE VERSIONES (RAMA DE DESARROLLO OBLIGATORIA)
+> 1. Revisa el estado de Git (`git status`, `git branch`).
+> 2. Crea la nueva rama `feature/module-7-proration` partiendo desde el estado actual que ya contiene los Módulos 1, 3 y 6.
+> 3. Confirma que estás en la rama `feature/module-7-proration` con el árbol de trabajo limpio antes de continuar.
+>
+> ---
+>
+> ### FASE 1: REVISIÓN Y ANÁLISIS EXHAUSTIVO DEL PROYECTO ACTUAL
+> Inspecciona el código existente para garantizar compatibilidad absoluta con lo ya implementado:
+> 1. Modelos de Base de Datos: `accounting_periods`, `period_project_confirmations`, `overhead_allocations`, `projects`, `items`, `batches`, `dispatches`, `requests` y `audit_logs`.
+> 2. Integración con Módulos 1, 2, 3 y 6: Roles, auditoría transaccional, cálculo de ejecución presupuestaria, pronósticos de consumo y bloqueo de movimientos en períodos cerrados.
+>
+> ---
+>
+> ### FASE 2: ESPECIFICACIONES DETALLADAS DEL MÓDULO 7 (CIERRE Y PRORRATEO)
+>
+> #### 1. Apertura de Revisión y Confirmación de Cargos Pre-Cierre (`F7.1` | `HU-22` | `RN-07`)
+> - Aprobador abre el período en 'En revisión' y el sistema genera `period_project_confirmations` para los proyectos activos ('En ejecución').
+> - Coordinadores revisan y confirman los cargos directos de sus proyectos asignados (despachos valorizados y solicitudes de gasto ejecutadas).
+>
+> #### 2. Cierre de Período Contable (`F7.2` | `HU-23`)
+> - Validación estricta de NO solapamiento de fechas con períodos cerrados o prorrateados.
+> - Bloqueo de nuevos despachos, gastos o correcciones dentro del rango de fechas cerrado.
+> - Actualización del pronóstico de consumo de insumos del Módulo 3 (`F3.7`).
+>
+> #### 3. Prorrateo Proporcional al Consumo (`F7.3` | `HU-23` | `RN-02`, `RN-05`)
+> - Exclusivo para proyectos activos (`operational_status == 'En ejecución'`). Proyectos no activos reciben 0.00.
+> - Reparte el overhead en proporción al consumo directo de cada proyecto activo en el período.
+> - Residuo por redondeo se asigna al proyecto activo de código menor (`min(code)`).
+>
+> #### 4. Prorrateo Equitativo en Partes Iguales (`F7.4` | `HU-23` | `RN-02`, `RN-05`)
+> - Divide el overhead en partes iguales entre los proyectos activos.
+> - Residuo por redondeo se asigna obligatoriamente al proyecto activo de código menor.
+>
+> #### 5. Vista Previa y Confirmación Transaccional del Prorrateo
+> - Vista previa (dry-run) que permite comparar y visualizar ambos repartos lado a lado.
+> - Al confirmar, guarda en `overhead_allocations`, actualiza el período a 'Prorrateado' (inmutable), suma el monto asignado a `projects.executed_budget` y registra en `audit_logs`.

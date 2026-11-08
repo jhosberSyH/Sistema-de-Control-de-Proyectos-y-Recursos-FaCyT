@@ -21,6 +21,7 @@ from app.modulos.usuarios.models import (
     User,
     Location,
     SystemParameter,
+    AccountingPeriod,
 )
 from app.modulos.inventario.service import (
     get_system_param_int,
@@ -331,6 +332,24 @@ def execute_dispatch(
 
     project = req.project
     today = date.today()
+
+    # Bloqueo de movimientos en períodos cerrados (F7.2)
+    closed_period = db.query(AccountingPeriod).filter(
+        AccountingPeriod.status.in_(["Cerrado", "Prorrateado"]),
+        AccountingPeriod.start_date <= today,
+        AccountingPeriod.end_date >= today,
+    ).first()
+    if closed_period:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"No se pueden registrar despachos con fecha {today.strftime('%d/%m/%Y')}: "
+                f"el período contable '{closed_period.period_name}' "
+                f"({closed_period.start_date.strftime('%d/%m/%Y')} al {closed_period.end_date.strftime('%d/%m/%Y')}) "
+                f"ya se encuentra cerrado (F7.2)."
+            )
+        )
+
     dispatches_created: List[Dispatch] = []
     total_dispatched_cost = Decimal("0.00")
 
