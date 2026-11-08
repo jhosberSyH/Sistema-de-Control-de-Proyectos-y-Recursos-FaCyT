@@ -15,6 +15,7 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 7. [Implementación del Módulo 1: Usuarios, catálogos y parámetros](#7-implementación-del-módulo-1-usuarios-catálogos-y-parámetros)
 8. [Consolidación del Modelo de Datos Relacional Completo (Módulos 1 al 8) y Seeders](#8-consolidación-del-modelo-de-datos-relacional-completo-módulos-1-al-8-y-seeders)
 9. [Implementación del Módulo 3: Inventario de materia prima y consumibles](#9-implementación-del-módulo-3-inventario-de-materia-prima-y-consumibles)
+10. [Implementación del Módulo 6: Almacén y Bitácora Inalterable](#10-implementación-del-módulo-6-almacén-y-bitácora-inalterable)
 
 ---
 
@@ -325,3 +326,60 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 >     - **Si SÍ tiene historial suficiente:** Calcula el pronóstico de consumo para el próximo período (por ejemplo, promedio móvil / media ponderada del consumo mensual o por período de los despachos netos registrados en `dispatches`, descontando movimientos compensatorios si existen) y guárdalo/muéstralo en la ficha del insumo junto al stock actual y al stock mínimo.
 >   - **Restricción (`HU-11`):** El pronóstico es puramente informativo para ayudar a ajustar el stock mínimo con datos; por sí solo **nunca crea solicitudes ni compras automáticas** aunque el pronóstico supere al stock actual.
 >   - Deja expuesto el método `recalculateConsumptionForecasts()` en el servicio del Módulo 3 para que se ejecute tanto al cerrar un período contable como bajo demanda al abrir la ficha o actualizar el catálogo.
+
+## 10. Implementación del Módulo 6: Almacén y Bitácora Inalterable
+
+> Actúa como un Ingeniero de Software Fullstack Senior y Arquitecto de Sistemas. Vamos a implementar el **Módulo 6: Almacén** (`F6.1` a `F6.6` | `HU-18` a `HU-21`) del "Sistema de Control de Proyectos y Recursos".
+>
+> Dado que no tienes acceso a los documentos de especificación ni a los diagramas BPMN originales, este prompt contiene **todas las reglas de negocio, flujos de proceso y criterios de aceptación oficiales**. Síguelos estrictamente.
+>
+> ---
+>
+> ### FASE 0: CONTROL DE VERSIONES (RAMA DE DESARROLLO OBLIGATORIA)
+> Antes de analizar o tocar cualquier archivo:
+> 1. Verifica el estado actual de Git (`git status`, `git branch`).
+> 2. Crea y cámbiate a una nueva rama de desarrollo dedicada exclusivamente a este módulo (`feature/module-6-warehouse`).
+> 3. Confirma en qué rama estás trabajando antes de pasar a la Fase 1.
+>
+> ---
+>
+> ### FASE 1: REVISIÓN Y ANÁLISIS EXHAUSTIVO DEL PROYECTO ACTUAL (NO MODIFIQUES NADA AÚN)
+> Realiza una inspección profunda del código fuente actual (Backend, Frontend y Base de Datos) para asegurar que el Módulo 6 se acople con 0 fricciones a lo ya construido:
+> 1. **Inspección del Módulo 1 (Usuarios, Ubicaciones, Parámetros y Auditoría):**
+>    - Revisa cómo funcionan la autenticación, los middlewares de roles (`Administrador del Sistema`, `Coordinador de Proyecto`, `Aprobador / Gestor de Inventario`) y cómo se obtiene el catálogo de ubicaciones activas (`locations` de `F1.4`).
+>    - Revisa el servicio/utilidad que escribe en `audit_log` (`F8.5` / `RN-06` / `RNF-12`) para reutilizarlo en todas las transacciones del Módulo 6.
+> 2. **Inspección del Módulo 3 (Inventario de Materia Prima y Consumibles):**
+>    - Revisa cómo están implementados el catálogo unificado de insumos (`items`), la actualización transaccional de stock (`F3.3` / `RNF-10`), la evaluación de alertas de stock mínimo + solicitud de reposición automática (`F3.4` y `F3.5`), y la lógica de estados de vencimiento de lotes (`F3.6`: `'Vigente'`, `'Próximo a vencer'`, `'Vencido'`).
+> 3. **Inspección de los Módulos 2 y 5 (Proyectos, Ejecución Presupuestaria y Solicitudes):**
+>    - Verifica el modelo/esquema de proyectos (`projects`), cómo se calcula o actualiza la ejecución presupuestaria (`F2.7`: suma gastos ejecutados + costo de insumos despachados + overhead), y cómo están estructuradas las solicitudes (`requests` y `request_items`, específicamente las de tipo `'Gasto'` y `'Retiro'`).
+> 4. **Inspección del Esquema de Base de Datos y Frontend (`RNF-03`):**
+>    - Revisa las definiciones actuales de las tablas `batches` (lotes), `dispatches` (bitácora de despachos), `raw_material_usages` (uso de materia prima) y `dispatch_corrections` (solicitudes de corrección), así como los triggers de inmutabilidad (`RNF-11`).
+>
+> ---
+>
+> ### FASE 2: ESPECIFICACIONES DETALLADAS DEL MÓDULO 6 (ALMACÉN)
+>
+> #### 1. Recepción de Lotes de Compra (`F6.1` | `HU-18`)
+> - **Actor permitido:** Exclusivamente `Aprobador / Gestor de Inventario` y `Administrador del Sistema`.
+> - **Qué hace:** Registra la entrada física al almacén de un lote de compra con insumo, cantidad (`> 0`), fecha de ingreso, costo unitario (`>= 0`), proveedor, ubicación y fecha de vencimiento (opcional si no perece).
+> - **Regla de Overhead (`RN-02`):** Consumibles de uso general entran al almacén institucional y no se asignan directamente a proyectos.
+> - **Validación de vencimiento (`HU-18`):** Si la fecha de vencimiento ya pasó, advierte explícitamente y requiere confirmación.
+> - **Efecto Transaccional:** Inserta en `batches`, actualiza `items.current_stock` y audita en `audit_log`.
+>
+> #### 2. Despacho de Insumos desde Solicitud de Retiro Aprobada (`F6.2` | `HU-19`)
+> - **Actor permitido:** Exclusivamente `Aprobador / Gestor de Inventario`.
+> - **Sugerencia FEFO:** Sugiere lotes ordenados por vencimiento (primero los que vencen antes).
+> - **Bloqueo estricto de vencidos (`F3.6`, `HU-19`):** Lotes vencidos no son seleccionables y se rechaza su despacho.
+> - **Atómico:** Descuenta stock, genera `dispatches` inmutable, pasa solicitud a `'Ejecutado'`, actualiza `project.executed_budget` y dispara reposición automática si cae bajo stock mínimo.
+>
+> #### 3. Bitácora Inalterable de Despachos (`F6.3` | `HU-19` | `RN-06` | `RNF-11`)
+> - Inmutable por trigger en BD (no editable ni eliminable).
+> - Alcance por rol (`RN-07`): Coordinador solo ve despachos de sus proyectos asignados; Administrador y Aprobador ven todos.
+>
+> #### 4. Registro de Uso de Materia Prima (`F6.4` | `HU-20`)
+> - Coordinador documenta uso real de material despachado a su proyecto.
+> - Compara cantidad usada vs despachada; si supera lo despachado, advierte la diferencia pero permite registrar.
+>
+> #### 5. Solicitud y Aprobación de Corrección Compensatoria (`F6.5`, `F6.6` | `HU-21` | `RF-35`)
+> - Coordinador solicita corrección con justificación obligatoria (mínimo 5 caracteres).
+> - Aprobador decide: si deniega, el despacho original queda intacto; si aprueba, se genera un movimiento compensatorio enlazado en `dispatches` (`is_compensatory = true`), ajustando stock y presupuesto ejecutado.

@@ -12,6 +12,7 @@ from app.core.security import hash_password
 from app.autenticacion.router import router as auth_router
 from app.modulos.usuarios.router import router as usuarios_router
 from app.modulos.inventario.router import router as inventario_router
+from app.modulos.almacen.router import router as almacen_router
 from app.modulos.usuarios.models import User, Location, SystemParameter, Project
 from app.auditoria.service import record_audit_log
 
@@ -173,6 +174,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix=settings.API_PREFIX)
 app.include_router(usuarios_router, prefix=settings.API_PREFIX)
 app.include_router(inventario_router, prefix=settings.API_PREFIX)
+app.include_router(almacen_router, prefix=settings.API_PREFIX)
 
 
 @app.get("/api/health")
