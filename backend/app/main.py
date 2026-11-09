@@ -11,10 +11,15 @@ from app.core.database import engine, Base, SessionLocal
 from app.core.security import hash_password
 from app.autenticacion.router import router as auth_router
 from app.modulos.usuarios.router import router as usuarios_router
+from app.modulos.proyectos.router import router as proyectos_router
 from app.modulos.inventario.router import router as inventario_router
+from app.modulos.equipos.router import router as equipos_router
 from app.modulos.almacen.router import router as almacen_router
+from app.modulos.solicitudes.router import router as solicitudes_router
 from app.modulos.prorrateo.router import router as prorrateo_router
 from app.modulos.usuarios.models import User, Location, SystemParameter, Project
+from app.modulos.reportes.router import router as reportes_router
+from app.auditoria.router import router as auditoria_router
 from app.auditoria.service import record_audit_log
 
 
@@ -174,9 +179,15 @@ app.add_middleware(
 # Mount module routers under /api
 app.include_router(auth_router, prefix=settings.API_PREFIX)
 app.include_router(usuarios_router, prefix=settings.API_PREFIX)
+app.include_router(proyectos_router, prefix=settings.API_PREFIX)
 app.include_router(inventario_router, prefix=settings.API_PREFIX)
+app.include_router(equipos_router, prefix=settings.API_PREFIX)
 app.include_router(almacen_router, prefix=settings.API_PREFIX)
+app.include_router(solicitudes_router, prefix=settings.API_PREFIX)
 app.include_router(prorrateo_router, prefix=settings.API_PREFIX)
+app.include_router(reportes_router, prefix=settings.API_PREFIX)
+app.include_router(auditoria_router, prefix=settings.API_PREFIX)
+
 
 
 @app.get("/api/health")
