@@ -9,6 +9,8 @@
 | 0.1 | 25/10/2026 | Equipo del proyecto | Borrador inicial con los requisitos del enunciado, las decisiones D1 a D13 y las propuestas aprobadas RF-35, RF-36, RF-37, IA-01 y RF-38 |
 | 0.1.1 | 27/10/2026 | Equipo del proyecto | Simplificación de los flujos aprobada el 27/10/2026 (cambios A1 a E4 de `docs/diagramas/flujos/revision_flujos.md`). Cambia el Cómo de F1.2, F2.3, F2.4, F3.1 a F3.7, F4.2, F5.1, F5.3, F5.4, F5.7, F6.1, F6.2, F6.6, F7.1 a F7.4, F8.2 a F8.4 y F8.6, los criterios de HU-05, HU-09, HU-15, HU-18 y HU-23, y el anexo C (SP-05 resuelto, SP-13 nuevo). Solo en Markdown |
 | 0.1.2 | 28/10/2026 | Equipo del proyecto | Glosario: en la interfaz el prorrateo se llama "reparto de gastos compartidos" y el overhead, "gastos compartidos", para que se entienda mejor. Los requisitos no cambian. Solo en Markdown |
+| 0.1.3 | 03/11/2026 | Equipo del proyecto | Decisiones del equipo tras la revisión de las vistas: HU-19 criterio 2 y el Cómo de F6.2 (el lote vencido aparece bloqueado), y SP-06, SP-07 y SP-08 resueltos (quita sus marcas `[POR CONFIRMAR]` de F4.6, F6.4 y F7.1). SP-09, SP-10 y SP-13 siguen por confirmar con el profesor, con la propuesta del equipo anotada. Solo en Markdown |
+| 0.1.4 | 03/11/2026 | Equipo del proyecto | Resueltos SP-09 (lotes recibidos), SP-10 (anchos 320, 390, 768 y 1280 px; local con Docker Compose y despliegue verificado en la nube con Railway y Supabase) y SP-13 (se permite reactivar un proyecto suspendido). Cambia el Cómo de F2.3 y F7.3, y los criterios de RNF-03 y RNF-04. Del profesor solo queda por confirmar SP-03 (lista de parámetros generales). Solo en Markdown |
 
 ## Índice
 
@@ -180,7 +182,7 @@ Cubre el registro de los proyectos, su estatus operativo, sus hitos y el cálcul
 
 **Qué:** Cubre el paso de un proyecto entre Propuesta, En ejecución, Suspendido y Finalizado. El estatus "En ejecución" define qué proyectos son activos para el prorrateo y el dashboard, según RN-05. `[PROPUESTA]` Este documento asigna el cambio al Administrador porque él registra los proyectos. El enunciado no dice qué rol lo hace.
 
-**Cómo:** El administrador abre la ficha del proyecto y elige el nuevo estatus. El sistema registra el cambio en el audit log con el estatus anterior y el nuevo. Un proyecto "Suspendido" puede volver a "En ejecución" o pasar a "Finalizado". Un proyecto "Finalizado" ya no admite solicitudes nuevas ni reservas de equipos. `[POR CONFIRMAR: si se permite reactivar un proyecto suspendido]`.
+**Cómo:** El administrador abre la ficha del proyecto y elige el nuevo estatus. El sistema registra el cambio en el audit log con el estatus anterior y el nuevo. Un proyecto "Suspendido" puede volver a "En ejecución" o pasar a "Finalizado". Un proyecto "Finalizado" ya no admite solicitudes nuevas ni reservas de equipos. La reactivación queda en el audit log como cualquier otro cambio de estatus.
 
 **Para qué:** El estatus decide qué proyectos reciben costo de overhead y cuáles aparecen en el dashboard. Si cambia sin registro, el reparto de un período no se puede explicar después.
 
@@ -372,7 +374,7 @@ Cubre el catálogo de equipos y maquinaria, su estado operacional, las reservas 
 
 #### F4.6 — El coordinador registra el uso de un equipo en su proyecto
 
-**Qué:** Cubre el registro de cada uso real de un equipo, con fecha, hora de inicio y de fin, proyecto y observaciones. Un uso puede asociarse a una reserva aprobada o registrarse sin ella. `[POR CONFIRMAR: si se permite registrar uso sin reserva previa]`.
+**Qué:** Cubre el registro de cada uso real de un equipo, con fecha, hora de inicio y de fin, proyecto y observaciones. Un uso puede asociarse a una reserva aprobada o registrarse sin ella. Si hay una reserva aprobada del proyecto en ese momento, el uso queda asociado a ella.
 
 **Cómo:** El coordinador abre el equipo, elige su proyecto y registra el inicio y el fin del uso. Mientras el uso está abierto, el equipo aparece "En uso". Al cerrar el registro, el equipo vuelve a "Disponible", salvo que esté En mantenimiento.
 
@@ -488,7 +490,7 @@ Cubre la entrada y la salida física de los insumos, la bitácora inalterable de
 
 **Qué:** Cubre la salida del almacén de los insumos de una solicitud en "Aprobado". El aprobador elige de qué lote sale cada cantidad. Un lote vencido no se despacha.
 
-**Cómo:** El aprobador abre la solicitud aprobada. Para cada insumo, el sistema sugiere el lote que vence primero entre los que tienen stock y no están vencidos. En la misma pantalla, el aprobador confirma los lotes o cambia alguno e indica quién retira. Al confirmar, el sistema registra el despacho en la bitácora (F6.3) y descuenta el stock (F3.3) en una sola operación, y pasa la solicitud a "Ejecutado". Si un lote está vencido, el sistema no lo muestra como opción.
+**Cómo:** El aprobador abre la solicitud aprobada. Para cada insumo, el sistema sugiere el lote que vence primero entre los que tienen stock y no están vencidos. En la misma pantalla, el aprobador confirma los lotes o cambia alguno e indica quién retira. Al confirmar, el sistema registra el despacho en la bitácora (F6.3) y descuenta el stock (F3.3) en una sola operación, y pasa la solicitud a "Ejecutado". Si un lote está vencido, el sistema lo muestra bloqueado, con su fecha de vencimiento, y no deja elegirlo.
 
 **Para qué:** Hoy los insumos salen sin quedar asociados a un proyecto, y el consumo real de cada proyecto se desconoce. El despacho atado a la solicitud carga cada salida al proyecto que la pidió.
 
@@ -506,7 +508,7 @@ Cubre la entrada y la salida física de los insumos, la bitácora inalterable de
 
 #### F6.4 — El coordinador registra el uso de materia prima en su proyecto
 
-**Qué:** Cubre el registro de la materia prima que el proyecto consumió, con insumo, cantidad, fecha y observaciones. `[POR CONFIRMAR: si este registro descuenta stock o solo documenta el consumo de lo ya despachado]`.
+**Qué:** Cubre el registro de la materia prima que el proyecto consumió, con insumo, cantidad, fecha y observaciones. Este registro solo documenta el consumo: el stock ya bajó cuando se despachó el insumo (F6.2), así que no se descuenta dos veces.
 
 **Cómo:** El coordinador abre su proyecto, elige registrar uso, selecciona el insumo y escribe la cantidad usada. El sistema muestra cuánto de ese insumo se despachó al proyecto y cuánto lleva registrado como usado. Si el uso registrado supera lo despachado, el sistema lo avisa.
 
@@ -548,7 +550,7 @@ Cubre la revisión de los cargos del período, el cierre del período contable y
 
 #### F7.1 — El coordinador confirma los cargos de su proyecto antes del cierre
 
-**Qué:** Cubre la revisión, por parte de cada coordinador, de los gastos ejecutados y los despachos cargados a sus proyectos en el período. El coordinador confirma los cargos o pide la corrección de los que estén mal con F6.5. `[POR CONFIRMAR: si el cierre se bloquea mientras falte la confirmación de algún coordinador]`.
+**Qué:** Cubre la revisión, por parte de cada coordinador, de los gastos ejecutados y los despachos cargados a sus proyectos en el período. El coordinador confirma los cargos o pide la corrección de los que estén mal con F6.5. El cierre no se bloquea si falta la confirmación de algún coordinador: el aprobador ve quién falta y, si cierra igual, el audit log guarda qué proyectos no habían confirmado.
 
 **Cómo:** El aprobador abre la revisión eligiendo el tipo de período y sus fechas. El sistema valida en ese momento que el rango no se cruce con otro período cerrado y, si se cruza, muestra el período en conflicto antes de enviar nada. Después, cada coordinador ve en su bandeja la lista de cargos de cada proyecto, con fecha, concepto y monto. Puede confirmar la lista completa o abrir un cargo y pedir su corrección. El aprobador ve qué proyectos ya confirmaron y cuáles no.
 
@@ -568,7 +570,7 @@ Cubre la revisión de los cargos del período, el cierre del período contable y
 
 #### F7.3 — El aprobador prorratea el overhead en proporción al consumo de cada proyecto
 
-**Qué:** Cubre el reparto del costo de los lotes de consumibles de uso general del período entre los proyectos activos, en proporción al consumo total de cada uno. El consumo total suma la materia prima y los insumos despachados al proyecto en el período. Solo participan los proyectos activos, según RN-05. `[POR CONFIRMAR: qué lotes entran en un período, si los recibidos o los consumidos en ese rango]`.
+**Qué:** Cubre el reparto del costo de los lotes de consumibles de uso general del período entre los proyectos activos, en proporción al consumo total de cada uno. El consumo total suma la materia prima y los insumos despachados al proyecto en el período. Solo participan los proyectos activos, según RN-05. Entran los lotes recibidos dentro del rango del período, porque su costo se conoce al comprarlos; contar los consumidos sería circular con el reparto según el consumo.
 
 **Cómo:** Al cerrar el período, el sistema calcula los dos repartos, el proporcional y el equitativo de F7.4, y los muestra lado a lado. La columna proporcional muestra, para cada proyecto activo, su consumo, su porcentaje del total y el monto que le toca. El aprobador elige este criterio y confirma en un solo paso. Al confirmar, el monto de cada proyecto entra a su gasto ejecutado (F2.7). Un período ya prorrateado no se vuelve a prorratear.
 
@@ -895,7 +897,7 @@ Cubre el dashboard ejecutivo, la exportación de reportes a PDF y Excel, y el re
 
 **Criterios de aceptación**
 - **Dado** una solicitud de retiro aprobada, **cuando** confirmo el despacho, **entonces** la solicitud pasa a "Ejecutado" y la bitácora muestra fecha, hora, proyecto, insumo, cantidad y responsable.
-- **Dado** un lote vencido, **cuando** elijo el lote a despachar, **entonces** ese lote no aparece entre las opciones.
+- **Dado** un lote vencido, **cuando** elijo el lote a despachar, **entonces** ese lote aparece bloqueado, con su fecha de vencimiento, y no se puede elegir. El sistema rechaza el despacho de un lote vencido aunque la petición llegue sin pasar por la pantalla.
 - **Dado** un registro de la bitácora, **cuando** cualquier usuario intenta editarlo o borrarlo, **entonces** el sistema no lo permite.
 
 ### HU-20 — Uso de materia prima
@@ -1022,8 +1024,8 @@ La Tabla 1 lista los requisitos de calidad que da el enunciado y los que se deri
 | Código | Categoría | Requisito | Criterio de medición |
 |---|---|---|---|
 | RNF-01 | Mantenibilidad | El sistema sigue una arquitectura cliente-servidor con módulos separados | El cliente y el servidor se ejecutan como componentes separados y cada módulo de este documento corresponde a un componente identificable del código (verificación por inspección) |
-| RNF-03 | Capacidad de interacción | La interfaz es responsive y sigue las guías de diseño estilo Apple, con espacio en blanco, bordes redondeados, paleta de colores neutra y modo claro y oscuro | La interfaz ofrece modo claro y modo oscuro y se usa sin desplazamiento horizontal en `[POR CONFIRMAR: anchos de pantalla de verificación]` |
-| RNF-04 | Flexibilidad | La aplicación está empaquetada o configurada para desplegarse en un servidor local o en la nube, simulando un ambiente de producción | La aplicación se instala y se ejecuta siguiendo solo los pasos del README en `[POR CONFIRMAR: entorno de verificación, local o nube]` |
+| RNF-03 | Capacidad de interacción | La interfaz es responsive y sigue las guías de diseño estilo Apple, con espacio en blanco, bordes redondeados, paleta de colores neutra y modo claro y oscuro | La interfaz ofrece modo claro y modo oscuro y se usa sin desplazamiento horizontal en pantallas de 320, 390, 768 y 1280 px de ancho |
+| RNF-04 | Flexibilidad | La aplicación está empaquetada o configurada para desplegarse en un servidor local o en la nube, simulando un ambiente de producción | La aplicación se instala y se ejecuta siguiendo solo los pasos del README: en local con Docker Compose y en la nube con Railway para la aplicación y Supabase para la base de datos. El despliegue se verifica en la nube |
 | RNF-10 | Adecuación funcional | El stock se actualiza en la misma operación que registra cada recepción o despacho | Al confirmar una recepción o un despacho, la siguiente consulta del stock ya muestra la cantidad nueva, y ninguna operación deja el stock pendiente de actualizar |
 | RNF-11 | Seguridad de la información | Ningún usuario, incluido el Administrador, puede editar ni eliminar un registro de la bitácora de despachos | Cada intento de edición o eliminación desde la aplicación es rechazado (verificación por prueba) |
 | RNF-12 | Seguridad de la información | Ningún usuario, incluido el Administrador, puede editar ni eliminar un registro del audit log | Cada intento de edición o eliminación desde la aplicación es rechazado (verificación por prueba) |
@@ -1126,11 +1128,11 @@ La Tabla 2 lista las restricciones y los entregables que fija el enunciado. No s
 | SP-03 | `[POR CONFIRMAR]` | Lista completa de los parámetros generales del Administrador (F1.5) | Profesor de la asignatura |
 | SP-04 | `[POR CONFIRMAR]` | Días de anticipación iniciales de la alerta de vencimiento (F3.6) y meses mínimos de historial para el pronóstico (F3.7) | Equipo del proyecto |
 | SP-05 | Resuelto | Qué rol aprueba una solicitud de reposición automática (F3.5). Resuelto el 27/10/2026 con el cambio B7, porque el aprobador la decide en un solo paso y el sistema registra las dos transiciones | Equipo del proyecto |
-| SP-06 | `[POR CONFIRMAR]` | Si se puede registrar el uso de un equipo sin reserva previa (F4.6) | Equipo del proyecto |
-| SP-07 | `[POR CONFIRMAR]` | Si el registro de uso de materia prima descuenta stock o solo documenta el consumo de lo ya despachado (F6.4) | Equipo del proyecto |
-| SP-08 | `[POR CONFIRMAR]` | Si el cierre del período se bloquea mientras falte la confirmación de algún coordinador (F7.1) | Equipo del proyecto |
-| SP-09 | `[POR CONFIRMAR]` | Qué lotes de consumibles de uso general entran en un período, si los recibidos o los consumidos en ese rango (F7.3, F7.4) | Profesor de la asignatura |
-| SP-10 | `[POR CONFIRMAR]` | Anchos de pantalla en que se verifica el diseño responsive (RNF-03) y entorno en que se verifica el despliegue (RNF-04) | Profesor de la asignatura |
+| SP-06 | Resuelto | Si se puede registrar el uso de un equipo sin reserva previa (F4.6). Resuelto el 03/11/2026: se permite, y si hay una reserva aprobada en ese momento el uso queda asociado a ella, porque en un laboratorio se usan equipos libres sin reservar y la hoja de vida (F8.4) necesita esas horas | Equipo del proyecto |
+| SP-07 | Resuelto | Si el registro de uso de materia prima descuenta stock o solo documenta el consumo de lo ya despachado (F6.4). Resuelto el 03/11/2026: solo documenta, porque el stock baja en el despacho y descontarlo otra vez lo contaría dos veces | Equipo del proyecto |
+| SP-08 | Resuelto | Si el cierre del período se bloquea mientras falte la confirmación de algún coordinador (F7.1). Resuelto el 03/11/2026: no se bloquea, para que un período no quede abierto por una sola persona; el audit log guarda quién no había confirmado | Equipo del proyecto |
+| SP-09 | Resuelto | Qué lotes de consumibles de uso general entran en un período, si los recibidos o los consumidos en ese rango (F7.3, F7.4). Resuelto el 03/11/2026: los recibidos, porque su costo se conoce al comprarlos y el reparto ya se hace según el consumo | Equipo del proyecto |
+| SP-10 | Resuelto | Anchos de pantalla en que se verifica el diseño responsive (RNF-03) y entorno en que se verifica el despliegue (RNF-04). Resuelto el 03/11/2026: 320 px (reflujo), 390 px (teléfono), 768 px (tableta) y 1280 px (escritorio); el entorno local es Docker Compose y el despliegue se verifica en la nube, con Railway y Supabase | Equipo del proyecto |
 | SP-11 | Hallazgo | El enunciado no define el atributo "presupuesto asignado". Se agregó por la decisión D9 para poder calcular la ejecución presupuestaria | Equipo del proyecto |
-| SP-13 | `[POR CONFIRMAR]` | Si un proyecto "Suspendido" puede volver a "En ejecución" (F2.3). El enunciado lista los estatus pero no las transiciones permitidas | Profesor de la asignatura |
+| SP-13 | Resuelto | Si un proyecto "Suspendido" puede volver a "En ejecución" (F2.3). Resuelto el 03/11/2026: se permite, y el cambio queda en el audit log, porque una suspensión suele ser temporal y así no se pierde el historial del proyecto | Equipo del proyecto |
 | SP-12 | Hallazgo | La propuesta RF-38 incluía revisar el overhead prorrateado antes del cierre, pero el prorrateo se calcula después del cierre (RF-24). F7.1 revisa solo los cargos directos del período | Equipo del proyecto |

@@ -1,0 +1,83 @@
+/* Vistas 21 y 22: revisión de cargos y cierre de período. Copia de los estilos de
+   docs/mockups/21-revision-cargos y 22-cierre-periodo, dentro de .vista-cargos y .vista-cierre. Las dos
+   pantallas del mockup 22 (.vista-abrir y .vista-tablero) se pintan por separado. */
+.vista-cargos {
+  display: contents;
+
+  .selector { display: flex; gap: 10px; flex-wrap: wrap; }
+  .selector button { font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 14px 16px; display: grid; gap: 4px; min-width: 240px; background: var(--surface); }
+  .selector button[aria-pressed="true"] { outline: 2px solid var(--primary); outline-offset: -1px; }
+  .selector b { font-family: var(--f-mono); }
+  .cargos { padding: 0; overflow: hidden; }
+  .cargos .cab-c { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 16px 18px; border-bottom: 1px solid var(--line); align-items: center; }
+  .cargos .tabla-env { padding: 0 8px; }
+  .total { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; padding: 16px 18px; border-top: 1px solid var(--line); background: var(--bg); }
+  .total b { font-size: 22px; font-family: var(--f-display); font-variant-numeric: tabular-nums; }
+  tr.neg td.n { color: var(--text); }
+  .confirmado { padding: 20px; display: flex; gap: 14px; align-items: flex-start; border-left: 4px solid var(--ok); }
+  .confirmado .ico { width: 28px; height: 28px; color: var(--ok); flex: none; }
+
+  /* Piezas sin dibujar (plan §7.1) */
+  .confirmado:focus { outline: none; }
+  @media (max-width: 760px) {
+    .selector button { min-width: 0; flex: 1 1 100%; }
+  }
+}
+
+.vista-cierre {
+  display: contents;
+
+  .pasos { display: flex; gap: 0; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; }
+  .pasos li { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 0; font-size: 15px; color: var(--muted); }
+  .pasos li + li::before { content: ""; width: 28px; height: 2px; background: var(--line); margin-right: 6px; }
+  .pasos .num { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; border: 2px solid var(--line); }
+  .pasos li[aria-current="step"] { color: var(--text); font-weight: 600; }
+  .pasos li[aria-current="step"] .num { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
+  .pasos li.hecho .num { border-color: var(--ok); color: var(--ok); }
+  .abrir { padding: 22px; display: grid; gap: 18px; max-width: 760px; }
+  .tablero { padding: 0; overflow: hidden; }
+  .tablero .cab-t { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; padding: 18px; border-bottom: 1px solid var(--line); }
+  .tablero .tabla-env { padding: 0 8px; }
+  .prog { display: grid; gap: 6px; min-width: 260px; }
+  .prog .t { display: flex; justify-content: space-between; font-size: 15px; }
+  .cerrar { padding: 20px; display: grid; gap: 14px; }
+
+  /* Piezas sin dibujar (plan §7.1) */
+  .hecho:focus { outline: none; }
+  @media (max-width: 760px) {
+    .prog { min-width: 0; width: 100%; }
+  }
+}
+
+.vista-cargos .hecho:focus { outline: none; }
+
+/* Vista 23: reparto de gastos compartidos. Copia de docs/mockups/23-prorrateo, dentro de .vista-reparto. */
+.vista-reparto {
+  display: contents;
+
+  .base { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .base div { padding: 16px; display: grid; gap: 2px; }
+  .base span { font-size: 14px; color: var(--muted); }
+  .base b { font-size: 26px; font-family: var(--f-display); font-variant-numeric: tabular-nums; color: var(--primary); font-weight: 600; }
+
+  .comparacion { padding: 0; overflow: hidden; }
+  .comparacion .tabla-env { padding: 0 8px; }
+  .comparacion th.grupo { text-align: center; border-bottom: 0; padding-top: 14px; }
+  .opcion { font: inherit; color: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; border: 1px solid var(--border); border-radius: var(--r-m); background: var(--surface); font-weight: 600; }
+  .opcion[aria-checked="true"] { border-color: var(--primary); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--primary); }
+  .opcion .punto { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); display: grid; place-items: center; }
+  .opcion[aria-checked="true"] .punto { border-color: var(--primary); }
+  .opcion[aria-checked="true"] .punto::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+  td.sel, th.sel { background: var(--surface-2); }
+  .barra-mini { display: inline-block; height: 8px; border-radius: 0 4px 4px 0; background: var(--primary); vertical-align: middle; margin-right: 8px; }
+  tfoot td { font-weight: 700; border-top: 2px solid var(--line); }
+  .aplicar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 18px; border-top: 1px solid var(--line); }
+  .hecho { padding: 22px; display: grid; gap: 10px; border-left: 4px solid var(--ok); }
+
+  /* Piezas sin dibujar (plan §7.1) */
+  .hecho:focus { outline: none; }
+  .opcion[aria-disabled="true"] { cursor: not-allowed; opacity: .6; }
+  @media (max-width: 760px) {
+    .base { grid-template-columns: minmax(0, 1fr); }
+  }
+}

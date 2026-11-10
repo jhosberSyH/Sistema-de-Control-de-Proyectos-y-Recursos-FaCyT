@@ -1,0 +1,54 @@
+# Entorno local completo (README §10): db + api + web en http://localhost:8080
+# Uso: copia .env.example a .env y corre `docker compose up --build`.
+# Los scripts de database/ solo corren con el volumen vacío (`docker compose down -v` lo borra).
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-control_proyectos}
+      POSTGRES_USER: ${POSTGRES_USER:-cpq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # El orden importa: initdb los corre por nombre
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/02_constraints_triggers.sql:/docker-entrypoint-initdb.d/02_constraints_triggers.sql:ro
+      - ./database/seeders.sql:/docker-entrypoint-initdb.d/03_seeders.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://${POSTGRES_USER:-cpq}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-control_proyectos}}
+      APP_ENV: ${APP_ENV:-development}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-["http://localhost:8080"]}
+      API_HOST: "::"
+      API_PORT: 8000
+      STORAGE_LOCAL_DIR: /app/var/archivos
+    volumes:
+      - archivos:/app/var/archivos
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    environment:
+      PORT: 8080
+      API_UPSTREAM: ${API_UPSTREAM:-http://api:8000}
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+    depends_on:
+      - api
+
+volumes:
+  db-data:
+  archivos:

@@ -33,6 +33,14 @@ class Settings(BaseSettings):
     SESSION_ABSOLUTE_HOURS: int = 8
     ALLOWED_ORIGINS: List[str] = ["http://localhost:8080", "http://localhost:5173"]
 
+    # Archivos (decisión 7): cotizaciones de gastos
+    STORAGE_BACKEND: str = "local"  # local | supabase
+    STORAGE_LOCAL_DIR: str = "./var/archivos"
+    SUPABASE_URL: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
+    SUPABASE_STORAGE_BUCKET: str = "cotizaciones"
+    MAX_COTIZACION_MB: int = 10
+
 
 settings = Settings()
 

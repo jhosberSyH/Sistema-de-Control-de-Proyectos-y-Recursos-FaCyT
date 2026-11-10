@@ -9,6 +9,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.auditoria.service import record_audit_log
+from app.avisos.service import avisar, avisar_a, ids_por_rol
 from app.modulos.usuarios.models import (
     Item,
     Batch,
@@ -42,6 +43,49 @@ def get_system_param_int(db: Session, key: str, default_val: int) -> int:
     if param and param.parameter_value is not None and param.parameter_value > 0:
         return int(param.parameter_value)
     return default_val
+
+
+# -----------------------------------------------------------------------------
+# Reposición automática: reglas compartidas (F3.4, F3.5)
+# -----------------------------------------------------------------------------
+
+#: Una reposición sigue "abierta" hasta que se recibe el lote (Ejecutado) o se descarta (Rechazado)
+REPOSICION_ABIERTA = ("Borrador", "Pendiente de Aprobación", "Aprobado")
+
+
+def _minuscula(texto: str) -> str:
+    return texto[:1].lower() + texto[1:] if texto else texto
+
+
+def reposicion_abierta(db: Session, item_id: str) -> Optional[Request]:
+    """La reposición automática abierta del insumo (la más reciente), si hay una."""
+    return (
+        db.query(Request)
+        .join(RequestItem)
+        .filter(
+            RequestItem.item_id == item_id,
+            Request.request_type == "Reposición automática",
+            Request.status.in_(REPOSICION_ABIERTA),
+        )
+        .order_by(Request.created_at.desc())
+        .first()
+    )
+
+
+def _siguiente_correlativo(db: Session, columna, prefijo: str) -> int:
+    """Siguiente número de un código PREFIJO-n, a partir del mayor que existe (no de count(), D10)."""
+    mayor = 0
+    for (valor,) in db.query(columna).filter(columna.like(f"{prefijo}-%")).all():
+        parte = (valor or "")[len(prefijo) + 1:].split("-")[0]
+        if parte.isdigit():
+            mayor = max(mayor, int(parte))
+    return mayor + 1
+
+
+def siguiente_numero_reposicion(db: Session) -> str:
+    """REP-2026-0001, REP-2026-0002… (el año en curso)."""
+    prefijo = f"REP-{datetime.now(timezone.utc).year}"
+    return f"{prefijo}-{_siguiente_correlativo(db, Request.request_number, prefijo):04d}"
 
 
 # -----------------------------------------------------------------------------
@@ -261,37 +305,16 @@ def check_and_create_replenishment(
     if Decimal(str(item.current_stock)) >= item.min_stock:
         return None
 
-    # Check for existing open replenishment request for this item
-    existing_open = db.query(Request).join(RequestItem).filter(
-        RequestItem.item_id == item.id,
-        Request.request_type == "Reposición automática",
-        Request.status.in_(["Borrador", "Pendiente de Aprobación"])
-    ).first()
+    # Una reposición abierta (también la aprobada que espera la compra) basta: no se duplica
+    existing_open = reposicion_abierta(db, item.id)
 
     if existing_open:
         # Keep existing request without creating a duplicate
         return existing_open
 
-    # Determine default project for FK constraint (select active project or first available)
-    project = db.query(Project).filter(Project.operational_status == "En ejecución").first()
-    if not project:
-        project = db.query(Project).first()
-
-    if not project:
-        # Fallback project if database has none
-        project = Project(
-            id=str(uuid.uuid4()),
-            code="GEN-001",
-            title="Gastos Generales e Institucionales FaCyT",
-            operational_status="En ejecución",
-            priority_level="Media",
-            assigned_budget=Decimal("50000.00"),
-            executed_budget=Decimal("0.00"),
-            physical_progress_pct=Decimal("0.00"),
-        )
-        db.add(project)
-        db.flush()
-
+    # Decisión 4: la compra para reponer stock no se carga a ningún proyecto (centro de costo
+    # 'general'). A los proyectos les llega el costo cuando se les despacha; los consumibles de uso
+    # general se reparten en el cierre del período (RN-02, M7).
     # Determine user/requester
     requester_id = user_id
     if not requester_id:
@@ -302,15 +325,11 @@ def check_and_create_replenishment(
         system_user = db.query(User).first()
         requester_id = system_user.id if system_user else None
 
-    # Suggested quantity: deficit = min_stock - current_stock (or forecast if higher)
-    deficit = Decimal(str(item.min_stock)) - Decimal(str(item.current_stock))
-    suggested_qty = max(deficit, Decimal("1.000"))
-    if item.forecasted_consumption and item.forecasted_consumption > suggested_qty:
-        suggested_qty = item.forecasted_consumption
+    # Cantidad sugerida: llegar al doble del mínimo (como el mock y la semilla del frontend)
+    suggested_qty = (Decimal(str(item.min_stock)) * 2 - Decimal(str(item.current_stock))).quantize(Decimal("0.001"))
+    suggested_qty = max(suggested_qty, Decimal("0.001"))
 
-    # Unique request number
-    count = db.query(Request).filter(Request.request_type == "Reposición automática").count() + 1
-    req_number = f"REP-{datetime.now(timezone.utc).year}-{count:04d}"
+    req_number = siguiente_numero_reposicion(db)
 
     # Estimated unit cost snapshot based on latest batch or 0
     latest_batch = db.query(Batch).filter(Batch.item_id == item.id).order_by(Batch.received_date.desc()).first()
@@ -321,7 +340,8 @@ def check_and_create_replenishment(
         id=str(uuid.uuid4()),
         request_number=req_number,
         request_type="Reposición automática",
-        project_id=project.id,
+        cost_center="general",
+        project_id=None,
         requester_user_id=requester_id,
         status="Borrador",  # RN-03 initial state
         estimated_amount=estimated_total,
@@ -340,7 +360,12 @@ def check_and_create_replenishment(
         unit_cost_estimate=unit_cost_est,
     )
     db.add(req_item)
+    if hasattr(Request, "description"):
+        req.description = f"Reposición automática de {_minuscula(item.name)}"
     db.flush()
+    avisar_a(db, ids_por_rol(db, "Aprobador / Gestor de Inventario"), "info",
+             f"Reposición automática en Borrador: {_minuscula(item.name)}", f"/bandeja?tipo=reposicion&pedido={req.id}",
+             detalle="El stock está bajo el mínimo. Revisa la cantidad sugerida antes de aprobar.")
 
     record_audit_log(
         db=db,
@@ -465,9 +490,8 @@ def evaluate_batch_expirations(db: Session) -> Dict[str, Any]:
             b.expiration_status = new_status
             updated_count += 1
 
-    if updated_count > 0:
-        db.commit()
-
+    # Sin commit: las lecturas no escriben (decisión 5). El estado de vencimiento se calcula al
+    # consultar desde la fecha; esta columna solo se guarda si la operación que llama hace commit.
     return {"alert_days_threshold": alert_days, "batches_evaluated": len(active_batches), "updated_count": updated_count}
 
 
@@ -475,7 +499,7 @@ def evaluate_batch_expirations(db: Session) -> Dict[str, Any]:
 # F3.7: Consumption Forecast Calculation (IA-01, HU-11)
 # -----------------------------------------------------------------------------
 
-def recalculate_consumption_forecasts(db: Session, item_id: Optional[str] = None) -> Dict[str, Any]:
+def recalculate_consumption_forecasts(db: Session, item_id: Optional[str] = None, commit: bool = True) -> Dict[str, Any]:
     """
     Calculate consumption forecast for items based on dispatches history (F3.7 / IA-01 | HU-11).
     Uses SystemParameter 'min_dispatch_history_months' (default 3 months).
@@ -553,7 +577,10 @@ def recalculate_consumption_forecasts(db: Session, item_id: Optional[str] = None
                     "months_history": round(months_history, 1),
                 }
 
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     return {"min_history_months_threshold": min_months, "items_processed": len(items), "details": results}
 
 

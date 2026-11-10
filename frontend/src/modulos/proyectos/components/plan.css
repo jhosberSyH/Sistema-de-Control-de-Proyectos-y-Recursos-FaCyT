@@ -1,0 +1,66 @@
+/* Vista 08, plan de hitos y avance. Copia de los estilos de docs/mockups/_fuente/08-plan-hitos.html, dentro de
+   .vista-plan-hitos porque .dos se repite con otras medidas en otros mockups. La regla .vista-plan / .vista-avance
+   del mockup no hace falta: cada modo se pinta por separado. */
+.vista-plan-hitos {
+  display: contents;
+
+  .editor { padding: 0; overflow: hidden; }
+  .editor .bloque-cab { padding: 18px 20px 10px; }
+  .fila-h { display: grid; grid-template-columns: 32px minmax(0, 1fr) 170px 120px 44px; gap: 12px; align-items: end; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+  .fila-h .n-h { color: var(--muted); font-variant-numeric: tabular-nums; padding-bottom: 12px; }
+  .fila-h .campo label { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .fila-h .peso { position: relative; }
+  .fila-h .peso .entrada { text-align: right; padding-right: 30px; font-variant-numeric: tabular-nums; }
+  .fila-h .peso span { position: absolute; right: 12px; bottom: 11px; color: var(--muted); }
+  .fila-h .quitar { width: 44px; height: 44px; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: var(--r-m); cursor: pointer; display: grid; place-items: center; }
+  .agregar { padding: 14px 20px; }
+  .suma { margin: 0 20px 20px; padding: 16px; border-radius: var(--r-l); background: var(--bg); border: 1px solid var(--line); display: grid; gap: 10px; }
+  .suma .t { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+  .suma .t b { font-size: 20px; font-variant-numeric: tabular-nums; font-family: var(--f-display); }
+  .suma .pista { position: relative; height: 12px; border-radius: 999px; background: var(--surface-2); }
+  .suma .pista i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--warn); }
+  .suma.lista .pista i { background: var(--ok); }
+  .suma .pista .meta { position: absolute; right: 0; top: -6px; bottom: -6px; border-left: 2px dashed var(--muted); }
+  .confirmar { display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap; padding: 0 20px 20px; }
+  .confirmar p { font-size: 14px; color: var(--muted); }
+  .lado { display: grid; gap: 24px; align-content: start; }
+  .dos { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 760px) {
+    .dos { grid-template-columns: minmax(0, 1fr); }
+    .fila-h { grid-template-columns: 24px minmax(0, 1fr) 44px; padding: 12px 14px; }
+    .fila-h .campo.nom { grid-column: 2 / 4; }
+    .fila-h .campo.fecha { grid-column: 2; }
+    .fila-h .peso { grid-column: 2; }
+    .fila-h .quitar { grid-column: 3; grid-row: 1; align-self: start; }
+    .suma { margin: 0 14px 16px; }
+  }
+
+  /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+  /* Con un error bajo un campo, la fila se alinea arriba para que las entradas no se desplacen */
+  .fila-h:has(.msg-error) { align-items: start; }
+  .fila-h:has(.msg-error) .n-h { padding: 37px 0 0; }
+  .fila-h:has(.msg-error) .quitar { margin-top: 25px; }
+  /* El "%" va junto a la entrada (.sufijo-pct) y no en el mensaje de error, que también lleva un span */
+  .fila-h .peso .msg-error span { position: static; }
+  .fila-h .quitar[aria-disabled='true'] { cursor: not-allowed; background: var(--surface-2); }
+  .fila-h .quitar .ico { width: 18px; height: 18px; }
+  .nota-plan { margin: 0 20px 14px; font-size: 14px; color: var(--muted); }
+  .error-plan { margin: 0 20px 16px; }
+  @media (max-width: 760px) {
+    .fila-h:has(.msg-error) .quitar { margin-top: 0; }
+    .nota-plan { margin: 0 14px 14px; }
+    .error-plan { margin: 0 14px 16px; }
+  }
+}
+
+/* El diálogo de carga se pinta en un portal, fuera de .vista-plan-hitos */
+.hist-av { list-style: none; margin: 0; padding: 0; display: grid; }
+.hist-av li { display: grid; grid-template-columns: 90px 56px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14.5px; }
+.hist-av li:first-child { border-top: 0; }
+.hist-av time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.hist-av b { font-variant-numeric: tabular-nums; }
+.hist-av .sec { color: var(--muted); }
+/* Entrada con "%" a la derecha, como el avance alcanzado del mockup */
+.sufijo-pct { position: relative; }
+.sufijo-pct .entrada { padding-right: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+.sufijo-pct > span { position: absolute; right: 12px; top: 11px; color: var(--muted); }

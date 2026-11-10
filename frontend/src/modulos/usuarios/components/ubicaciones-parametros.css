@@ -1,0 +1,33 @@
+/* Vista 05, ubicaciones y parámetros. Copia de los estilos de docs/mockups/_fuente/05-ubicaciones-parametros.html;
+   la container query pasa a media query. Va dentro de .vista-ubicaciones: varias vistas del mockup definen .dos con otras columnas y el CSS de una
+   vista queda cargado al pasar a otra. */
+.vista-ubicaciones {
+  /* La envoltura no cuenta para la rejilla de main.contenido: el espaciado queda igual que en el mockup */
+  display: contents;
+
+  .dos { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .alta { display: grid; /* Nombre y descripción del mismo ancho: con 1fr / 1,4fr el nombre cortaba textos como «Depósito de reactivos B» */ grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) auto; gap: 12px; align-items: start; padding: 16px; border: 1px dashed var(--border); border-radius: var(--r-l); background: var(--bg); }
+  .alta .btn { margin-top: 28px; }
+  .param { display: grid; gap: 8px; padding: 16px 0; border-top: 1px solid var(--line); }
+  .param:first-of-type { border-top: 0; padding-top: 0; }
+  .param .fila { display: flex; gap: 10px; align-items: center; }
+  .param .fila .entrada { max-width: 120px; text-align: right; font-variant-numeric: tabular-nums; }
+  .param .unidad { color: var(--muted); }
+  .param .hist { font-size: 13.5px; color: var(--muted); display: flex; gap: 6px; align-items: flex-start; }
+  .param .hist .ico { width: 16px; height: 16px; margin-top: 2px; }
+  @media (max-width: 760px) {
+    .dos { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    .alta { grid-template-columns: minmax(0, 1fr); }
+    .alta .btn { margin-top: 0; }
+  }
+}
+
+/* Piezas sin dibujar, con el mismo lenguaje (plan §7.1). Fuera de .vista-ubicaciones porque los diálogos
+   se pintan en un portal, fuera de la vista */
+
+/* Uso de la ubicación en su diálogo: desactivar o, si nunca tuvo lotes, eliminar (F1.4) */
+.uso-ubic { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 16px; }
+.uso-ubic b { display: block; font-weight: 600; }
+.uso-ubic .sec { font-size: 14px; }
+.uso-ubic .botones { display: flex; gap: 8px; flex-wrap: wrap; }
+.mk .uso-ubic .btn-sec.peligro { color: var(--err); border-color: var(--err); }

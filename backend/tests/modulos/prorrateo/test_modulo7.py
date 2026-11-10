@@ -110,7 +110,6 @@ def db_session():
             title="Bioensayos de aguas residuales",
             status="En ejecución",
             assigned_budget=Decimal("10000.00"),
-            executed_budget=Decimal("1500.00"),
             coordinator_id=coord_bio.id
         )
         # Active project 2
@@ -120,7 +119,6 @@ def db_session():
             title="Películas delgadas",
             status="En ejecución",
             assigned_budget=Decimal("8000.00"),
-            executed_budget=Decimal("500.00"),
             coordinator_id=coord_fis.id
         )
         # Active project 3
@@ -130,7 +128,6 @@ def db_session():
             title="Óxidos catalíticos",
             status="En ejecución",
             assigned_budget=Decimal("6000.00"),
-            executed_budget=Decimal("800.00"),
             coordinator_id=coord_bio.id
         )
         # Suspended project (excluded from proration - RN-05)
@@ -140,7 +137,6 @@ def db_session():
             title="Resonancia acústica",
             status="Suspendido",
             assigned_budget=Decimal("4000.00"),
-            executed_budget=Decimal("0.00"),
             coordinator_id=coord_fis.id
         )
         db.add_all([p_bio, p_fis, p_qui, p_susp])
@@ -532,6 +528,11 @@ def test_f7_3_proration_proportional_and_exclusion(db_session):
     assert alloc_map["FIS-006"] == Decimal("0.00")    # Suspended: 0.00
     assert alloc_map["QUI-024"] == Decimal("0.00")    # Finalized: 0.00
 
+    # Gasto ejecutado antes del reparto: se calcula desde los movimientos (decisión 5)
+    db_session.refresh(p_bio)
+    db_session.refresh(p_fis)
+    bio_antes, fis_antes = p_bio.executed_budget, p_fis.executed_budget
+
     # Execute proration
     exec_res = service.execute_proration(
         db=db_session,
@@ -549,10 +550,9 @@ def test_f7_3_proration_proportional_and_exclusion(db_session):
     # Verify project executed budgets incremented
     db_session.refresh(p_bio)
     db_session.refresh(p_fis)
-    # p_bio initial executed was 1500 + 600 = 2100
-    assert p_bio.executed_budget == Decimal("2100.00")
-    # p_fis initial executed was 500 + 200 = 700
-    assert p_fis.executed_budget == Decimal("700.00")
+    # El reparto suma lo asignado a cada proyecto activo
+    assert p_bio.executed_budget == bio_antes + Decimal("600.00")
+    assert p_fis.executed_budget == fis_antes + Decimal("200.00")
 
 
 # =============================================================================
@@ -601,28 +601,22 @@ def test_f7_3_immutable_proration_rejects_second_attempt(db_session):
 # =============================================================================
 
 def test_api_rbac_prorrateo(client, db_session):
-    """Role-based access tests for /api/prorrateo routes."""
+    """Permisos de POST /api/periodos (contrato del frontend): solo el aprobador abre la revisión."""
     approver = db_session.query(User).filter(User.role == "Aprobador / Gestor de Inventario").first()
     coord_bio = db_session.query(User).filter(User.id == "coord-bio-uuid").first()
 
     token_approver = create_auth_session(db_session, approver.id)
     token_coord = create_auth_session(db_session, coord_bio.id)
 
-    period_payload = {
-        "period_name": "Noviembre 2026",
-        "period_type": "Mensual",
-        "start_date": "2026-11-01",
-        "end_date": "2026-11-30",
-        "total_overhead_cost": 500.0,
-    }
+    period_payload = {"tipo": "mensual", "inicio": "2026-11-01", "fin": "2026-11-30"}
 
     # 1. Unauthenticated -> 401
-    res_unauth = client.post("/api/prorrateo/periodos", json=period_payload)
+    res_unauth = client.post("/api/periodos", json=period_payload)
     assert res_unauth.status_code == 401
 
     # 2. Coordinator cannot open period -> 403 Forbidden
     res_coord_forbidden = client.post(
-        "/api/prorrateo/periodos",
+        "/api/periodos",
         json=period_payload,
         headers={"Authorization": f"Bearer {token_coord}"}
     )
@@ -630,9 +624,10 @@ def test_api_rbac_prorrateo(client, db_session):
 
     # 3. Approver can open period -> 201 Created
     res_approver_ok = client.post(
-        "/api/prorrateo/periodos",
+        "/api/periodos",
         json=period_payload,
         headers={"Authorization": f"Bearer {token_approver}"}
     )
-    assert res_approver_ok.status_code == 201
-    assert res_approver_ok.json()["period_name"] == "Noviembre 2026"
+    assert res_approver_ok.status_code == 201, res_approver_ok.text
+    assert res_approver_ok.json()["estado"] == "en_revision"
+    assert res_approver_ok.json()["abiertoPor"] == "Carmen Pérez"

@@ -32,7 +32,7 @@ from app.modulos.usuarios.models import (
     OverheadAllocation,
     SystemParameter,
 )
-from app.modulos.proyectos.service import recalculate_project_metrics
+from app.modulos.proyectos.service import recalculate_project_metrics, get_project_metrics_snapshot
 from app.modulos.reportes.schemas import (
     DashboardResponse,
     DashboardProjectItem,
@@ -227,7 +227,7 @@ def get_dashboard(db: Session) -> DashboardResponse:
     total_executed = Decimal("0.00")
 
     for project in active_projects:
-        _, metrics = recalculate_project_metrics(db, project.id, commit=False)
+        _, metrics = get_project_metrics_snapshot(db, project.id)
         assigned = Decimal(str(project.assigned_budget or 0))
         executed = Decimal(str(metrics["executed_budget"]))
         total_assigned += assigned
@@ -372,7 +372,7 @@ def build_expenses_report(
         despachos = (
             db.query(
                 func.coalesce(
-                    func.sum(Dispatch.dispatched_quantity * Dispatch.unit_cost_snapshot), 0
+                    func.sum(Dispatch.signed_quantity * Dispatch.unit_cost_snapshot), 0
                 )
             )
             .filter(

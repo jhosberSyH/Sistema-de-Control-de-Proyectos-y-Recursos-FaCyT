@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime, JSON, Text
-from app.core.database import Base
+from app.core.database import Base, IdType
 
 
 class AuditLog(Base):
@@ -13,9 +13,9 @@ class AuditLog(Base):
     """
     __tablename__ = "audit_logs"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(IdType, primary_key=True, default=lambda: str(uuid.uuid4()))
     timestamp = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
-    user_id = Column(String(36), nullable=True, index=True)  # Nullable for system bootstrap or unauthenticated failures
+    user_id = Column(IdType, nullable=True, index=True)  # Nullable for system bootstrap or unauthenticated failures
     ip_address = Column(String(45), nullable=False)
     action_type = Column(String(50), nullable=False, index=True)
     target_object = Column(String(100), nullable=True)  # Maintained for M1 backward compatibility

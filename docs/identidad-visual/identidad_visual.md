@@ -150,9 +150,15 @@ Archivos en [`logos/`](logos/), descargados de dominios de la UC el 27/10/2026. 
 |---|---|---|
 | `facyt/facyt-isotipo_512x512_transparente.png` | Marca en barras y encabezados, en claro y en oscuro | Ninguna para pantalla |
 | `facyt/facyt-logo-completo_3375x3375.jpg` | Pantalla de inicio de sesión, sobre fondo blanco | Fondo blanco, sin transparencia |
-| `uc/escudo-uc-color_980x1287_odontologia.jpg` | Escudo de la UC, siempre sobre una placa blanca | Fondo blanco, sin transparencia ni vector |
+| `uc/escudo-uc-color_980x1287_odontologia_SIN-FONDO.png` | Escudo de la UC, directamente sobre el fondo, sin placa, en claro y en oscuro | Derivado del JPEG oficial de odontología (se le quitó el fondo blanco; ver `logos/FUENTES.md`). Sin vector |
 
-**Pendiente: escudo de la UC en buena calidad.** No hay SVG ni PNG transparente del escudo de la UC en una fuente primaria oficial. El PNG transparente de ing.uc.edu.ve es una copia idéntica del archivo de Wikimedia, de autor desconocido, y no lo usamos. Hasta tener la versión oficial, el escudo va sobre una placa blanca, también en modo oscuro.
+**Escudo sin placa blanca (cambio del 28/10/2026).** No hay SVG ni PNG transparente del escudo de la UC en una fuente primaria oficial. El PNG transparente de ing.uc.edu.ve es una copia idéntica del archivo de Wikimedia, de autor desconocido, y no lo usamos.
+
+Hasta el 28/10/2026 el escudo iba sobre una placa blanca, también en modo oscuro. Ese día el equipo pidió quitarla. Al JPEG oficial se le borró el fondo blanco exterior con `scripts/quitar_fondo_escudo.py`; el blanco del interior del escudo no cambia. Desde entonces el escudo va directamente sobre el fondo, en la app y en los mockups.
+
+En modo oscuro el marco negro del escudo se confunde con el fondo, pero se sigue reconociendo por las letras blancas y los cuarteles de color.
+
+**Pendiente:** el escudo oficial en vector. Si se consigue, reemplaza a este derivado.
 
 ## Anexo. Verificación del contraste
 

@@ -117,7 +117,6 @@ def db_session():
             status="En ejecución",
             priority="Crítica",
             assigned_budget=Decimal("10000.00"),
-            executed_budget=Decimal("2000.00"),
             coordinator_id=coord_bio.id
         )
         p_fis = Project(
@@ -127,7 +126,6 @@ def db_session():
             status="En ejecución",
             priority="Media",
             assigned_budget=Decimal("5000.00"),
-            executed_budget=Decimal("1000.00"),
             coordinator_id=coord_fis.id
         )
         db.add_all([p_bio, p_fis])
@@ -731,8 +729,10 @@ def test_dispatch_correction_flow(db_session):
         is_compensatory=False
     )
     db_session.add(orig_disp)
-    initial_executed = p_bio.executed_budget  # 2000.00
     db_session.commit()
+    # Gasto calculado desde los movimientos (decisión 5): ya incluye el despacho original de 30 x 10
+    db_session.refresh(p_bio)
+    initial_executed = p_bio.executed_budget
 
     # 1. Attempt without reason / justification (< 5 chars) -> rejects
     with pytest.raises(Exception) as exc:
@@ -814,7 +814,10 @@ def test_dispatch_correction_flow(db_session):
     comp_d = db_session.query(Dispatch).filter(Dispatch.id == approval_resp.compensatory_dispatch_id).first()
     assert comp_d is not None
     assert comp_d.is_compensatory is True
-    assert comp_d.dispatched_quantity == Decimal("-10.000")
+    # Decisión 3: la cantidad siempre es positiva; el sentido marca la devolución y signed_quantity es negativa
+    assert comp_d.dispatched_quantity == Decimal("10.000")
+    assert comp_d.direction == "devolucion"
+    assert comp_d.signed_quantity == Decimal("-10.000")
     assert comp_d.original_dispatch_id == orig_disp.id
 
 
@@ -823,8 +826,7 @@ def test_dispatch_correction_flow(db_session):
 # =============================================================================
 
 def test_api_rbac_almacen(client, db_session):
-    """Verify role permissions over /api/almacen endpoints."""
-    admin = db_session.query(User).filter(User.role == "Administrador del Sistema").first()
+    """Permisos de la recepción de lotes con el contrato del frontend (POST /api/lotes)."""
     approver = db_session.query(User).filter(User.role == "Aprobador / Gestor de Inventario").first()
     coord_bio = db_session.query(User).filter(User.id == "coord-bio-uuid").first()
     item = db_session.query(Item).filter(Item.name == "Etanol 96 %").first()
@@ -834,31 +836,27 @@ def test_api_rbac_almacen(client, db_session):
     token_approver = create_test_session(db_session, approver)
 
     batch_payload = {
-        "item_id": item.id,
-        "location_id": loc.id,
-        "batch_number": "RBAC-BATCH",
-        "quantity": 10.0,
-        "unit_cost": 2.5,
-        "received_date": str(date.today()),
+        "solicitud": None,
+        "insumoId": item.id,
+        "ubicacionId": loc.id,
+        "loteProveedor": "RBAC-BATCH",
+        "cantidad": 10.0,
+        "costoUnitario": 2.5,
+        "proveedor": "Proveedor de prueba",
+        "ingreso": str(date.today()),
+        "vence": None,
     }
 
     # 1. Unauthenticated request -> 401
-    res_unauth = client.post("/api/almacen/lotes", json=batch_payload)
+    res_unauth = client.post("/api/lotes", json=batch_payload)
     assert res_unauth.status_code == 401
 
     # 2. Coordinator cannot receive batches -> 403 Forbidden
-    res_coord_forbidden = client.post(
-        "/api/almacen/lotes",
-        json=batch_payload,
-        headers={"Authorization": f"Bearer {token_coord}"}
-    )
+    res_coord_forbidden = client.post("/api/lotes", json=batch_payload, headers={"Authorization": f"Bearer {token_coord}"})
     assert res_coord_forbidden.status_code == 403
 
-    # 3. Approver can receive batches -> 201 Created
-    res_approver_ok = client.post(
-        "/api/almacen/lotes",
-        json=batch_payload,
-        headers={"Authorization": f"Bearer {token_approver}"}
-    )
-    assert res_approver_ok.status_code == 201
-    assert res_approver_ok.json()["batch_number"] == "RBAC-BATCH"
+    # 3. Approver can receive batches -> 201 Created (el stock sube en la misma operación)
+    res_approver_ok = client.post("/api/lotes", json=batch_payload, headers={"Authorization": f"Bearer {token_approver}"})
+    assert res_approver_ok.status_code == 201, res_approver_ok.text
+    assert res_approver_ok.json()["codigo"] == "L-0001"
+    assert res_approver_ok.json()["stockDespues"] == 10.0

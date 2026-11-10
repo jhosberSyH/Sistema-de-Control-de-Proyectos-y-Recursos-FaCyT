@@ -177,7 +177,7 @@ class RequestResponse(BaseModel):
     request_number: str
     request_type: str
     status: str
-    project_id: str
+    project_id: Optional[str] = None  # None en solicitudes de centro de costo general (decisión 4)
     project_code: str
     project_title: str
     description: Optional[str] = None

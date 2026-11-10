@@ -1,0 +1,40 @@
+/* Vista 07, ficha de proyecto. Copia de los estilos de docs/mockups/_fuente/07-ficha-proyecto.html, dentro de
+   .vista-ficha porque .dos y .metricas se repiten con otras medidas en otros mockups (ver paso 5). La regla
+   .solo-adm / .solo-coo del mockup no hace falta: cada rol recibe solo sus botones. */
+.vista-ficha {
+  display: contents;
+
+  .cab-p { display: grid; gap: 10px; }
+  .cab-p .cod { font-family: var(--f-mono); font-size: 15px; color: var(--muted); }
+  .cab-p .chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .cab-p .coord { font-size: 15px; color: var(--muted); }
+  .cab-p .coord b { color: var(--text); font-weight: 600; }
+  .metricas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .met { padding: 18px; display: grid; gap: 8px; align-content: start; }
+  .met .eti { font-size: 14.5px; color: var(--muted); }
+  .met .val { font-family: var(--f-display); font-size: 34px; font-weight: 600; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--primary); }
+
+  .met .desg { display: grid; gap: 4px; font-size: 14px; margin-top: 4px; }
+  .met .desg div { display: flex; justify-content: space-between; gap: 8px; }
+  .met .desg b { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .panel { display: grid; gap: 20px; padding-top: 20px; }
+  .hitos-t td:first-child { width: 36px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .linea-t { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .linea-t li { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 14px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; }
+  .linea-t li:first-child { border-top: 0; }
+  .linea-t time { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .linea-t small { display: block; color: var(--muted); font-size: 14px; }
+  .dos { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 760px) {
+    .metricas, .dos { grid-template-columns: minmax(0, 1fr); }
+    .linea-t li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  }
+
+  /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+  .sin-coord-p { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; color: var(--text); }
+  .sin-coord-p .ico { width: 16px; height: 16px; color: var(--warn); }
+  .met .val.nd { font-size: 22px; color: var(--muted); }
+  .met .sobre-p { display: flex; gap: 6px; align-items: center; font-size: 14px; font-weight: 600; }
+  .met .sobre-p .ico { width: 16px; height: 16px; color: var(--warn); flex: none; }
+  .bloque-cab button.enlace { font: inherit; font-size: 14.5px; color: var(--link); background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+}

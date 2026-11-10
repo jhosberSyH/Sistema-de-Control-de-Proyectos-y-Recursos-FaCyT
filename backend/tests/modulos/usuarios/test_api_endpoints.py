@@ -1,4 +1,4 @@
-"""Integration tests for Module 1 HTTP API endpoints."""
+"""Integration tests for Module 1 HTTP API endpoints (contrato del frontend, en SQLite)."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -54,7 +54,8 @@ def client_and_db():
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    client = TestClient(app)
+    # HTTPS: la cookie __Host-sesion es Secure y el cliente solo la reenvía por HTTPS
+    client = TestClient(app, base_url="https://testserver")
 
     yield client, db
 
@@ -63,90 +64,70 @@ def client_and_db():
     app.dependency_overrides.clear()
 
 
+def _entrar(client, correo):
+    client.cookies.clear()
+    r = client.post("/api/auth/iniciar-sesion", json={"correo": correo, "clave": "Demo2026*"})
+    assert r.status_code == 200, r.text
+    client.headers["X-CSRF-Token"] = r.json()["csrf"]
+    return r.json()
+
+
 def test_api_login_and_admin_protection(client_and_db):
-    """Admin can login and access /api/users, non-admin gets 403."""
+    """Admin can login and access /api/usuarios, non-admin gets 403."""
     client, db = client_and_db
 
-    # 1. Login as Admin
-    res_admin = client.post("/api/auth/login", json={"email": "admin@cpq.local", "password": "Demo2026*"})
-    assert res_admin.status_code == 200
-    assert res_admin.json()["role"] == "Administrador del Sistema"
+    sesion = _entrar(client, "admin@cpq.local")
+    assert sesion["usuario"]["rol"] == "administrador"
 
-    # Access /api/users with admin session
-    res_users = client.get("/api/users")
+    res_users = client.get("/api/usuarios")
     assert res_users.status_code == 200
-    assert len(res_users.json()) >= 2
+    assert res_users.json()["total"] >= 2
 
-    # 2. Login as Coordinator
-    res_coord = client.post("/api/auth/login", json={"email": "coord.quimica@cpq.local", "password": "Demo2026*"})
-    assert res_coord.status_code == 200
-
-    # Coordinator attempting to access admin-only /api/users gets 403 Forbidden
-    res_forbidden = client.get("/api/users")
+    _entrar(client, "coord.quimica@cpq.local")
+    res_forbidden = client.get("/api/usuarios")
     assert res_forbidden.status_code == 403
-    assert "Acceso denegado" in res_forbidden.json()["detail"]
+    assert "permiso" in res_forbidden.json()["detail"]
 
 
 def test_api_create_user_and_prevent_duplicate(client_and_db):
-    """API creates user and prevents duplicate email."""
+    """API creates user with a temporary password and prevents duplicate email."""
     client, db = client_and_db
-    client.post("/api/auth/login", json={"email": "admin@cpq.local", "password": "Demo2026*"})
+    _entrar(client, "admin@cpq.local")
 
-    # Create new
-    payload = {
-        "full_name": "Nuevo Coordinador",
-        "email": "nuevo.coord@cpq.local",
-        "role": "Coordinador de Proyecto",
-        "password": "Password123*"
-    }
-    res = client.post("/api/users", json=payload)
-    assert res.status_code == 200
+    payload = {"nombre": "Nuevo Coordinador", "correo": "nuevo.coord@cpq.local", "rol": "coordinador"}
+    res = client.post("/api/usuarios", json=payload)
+    assert res.status_code == 201
     data = res.json()
-    assert data["email"] == "nuevo.coord@cpq.local"
-    assert data["is_active"] is True
+    assert data["cuenta"]["correo"] == "nuevo.coord@cpq.local"
+    assert data["cuenta"]["activo"] is True and data["cuenta"]["debeCambiarClave"] is True
+    assert data["claveTemporal"]
 
-    # Duplicate
-    res_dup = client.post("/api/users", json=payload)
+    res_dup = client.post("/api/usuarios", json=payload)
     assert res_dup.status_code == 409
-    assert res_dup.json()["detail"]["existing_user"]["full_name"] == "Nuevo Coordinador"
+    assert res_dup.json()["detail"]["cuenta"]["nombre"] == "Nuevo Coordinador"
 
 
 def test_api_locations_and_parameters_flow(client_and_db):
     """API manages storage locations and system parameters."""
     client, db = client_and_db
-    client.post("/api/auth/login", json={"email": "admin@cpq.local", "password": "Demo2026*"})
+    _entrar(client, "admin@cpq.local")
 
-    # 1. Create location
-    res_loc = client.post("/api/locations", json={
-        "name": "Depósito de Reactivos A",
-        "description": "Planta baja"
-    })
-    assert res_loc.status_code == 200
-    loc_id = res_loc.json()["id"]
+    res_loc = client.post("/api/ubicaciones", json={"nombre": "Depósito de Reactivos A", "descripcion": "Planta baja"})
+    assert res_loc.status_code == 201
 
-    # 2. Duplicate active location rejected
-    res_loc_dup = client.post("/api/locations", json={"name": "depósito de reactivos a"})
+    res_loc_dup = client.post("/api/ubicaciones", json={"nombre": "depósito de reactivos a"})
     assert res_loc_dup.status_code == 409
 
-    # 3. Seed and update parameter
-    param = SystemParameter(
-        parameter_key="batch_expiration_alert_days",
-        parameter_value=30,
-        label="Alerta de vencimiento",
-        unit="días"
-    )
-    db.add(param)
+    db.add(SystemParameter(
+        parameter_key="batch_expiration_alert_days", parameter_value=30,
+        label="Alerta de vencimiento", unit="días",
+    ))
     db.commit()
 
-    # Reject non-positive integer
-    res_p_neg = client.put("/api/system-parameters/batch_expiration_alert_days", json={"parameter_value": -10})
-    assert res_p_neg.status_code == 422
+    for invalido in (-10, 0):
+        res = client.put("/api/parametros", json={"valores": {"anticipacion_vencimiento_dias": invalido}})
+        assert res.status_code == 422
 
-    # Reject zero
-    res_p_zero = client.put("/api/system-parameters/batch_expiration_alert_days", json={"parameter_value": 0})
-    assert res_p_zero.status_code == 422
-
-    # Accept positive integer
-    res_p_ok = client.put("/api/system-parameters/batch_expiration_alert_days", json={"parameter_value": 45})
-    assert res_p_ok.status_code == 200
-    assert res_p_ok.json()["parameter_value"] == 45
+    res_ok = client.put("/api/parametros", json={"valores": {"anticipacion_vencimiento_dias": 45}})
+    assert res_ok.status_code == 200
+    assert res_ok.json()["items"][0]["valor"] == 45

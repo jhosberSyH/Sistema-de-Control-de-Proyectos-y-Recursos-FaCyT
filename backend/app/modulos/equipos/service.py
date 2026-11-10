@@ -10,6 +10,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.auditoria.service import record_audit_log
+from app.avisos.service import avisar, avisar_a, ids_por_rol
 from app.modulos.usuarios.models import (
     User,
     Location,
@@ -496,6 +497,9 @@ def _cancel_future_blocking_reservations(
         old_status = reservation.status
         reservation.status = "Cancelado"
         reservation.updated_at = now
+        avisar(db, reservation.reserved_by_user_id, "warn",
+               f"Se canceló tu reserva de {reservation.equipment.name}", "/reservas",
+               detalle="El equipo pasó a mantenimiento. Elige otro horario o equipo.")
         record_audit_log(
             db=db,
             user_id=current_user.id,
@@ -792,6 +796,8 @@ def approve_reservation(
     old_status = reservation.status
     reservation.status = "Aprobado"
     reservation.approved_by_user_id = current_user.id
+    avisar(db, reservation.reserved_by_user_id, "ok",
+           f"Aprobaron tu reserva de {reservation.equipment.name}", "/reservas", detalle=payload.reason)
     reservation.updated_at = _now()
     if payload.reason:
         reservation.notes = (reservation.notes or "") + f"\n[Aprobación] {payload.reason}"
@@ -832,6 +838,8 @@ def reject_reservation(
     old_status = reservation.status
     reservation.status = "Rechazado"
     reservation.approved_by_user_id = current_user.id
+    avisar(db, reservation.reserved_by_user_id, "err",
+           f"Rechazaron tu reserva de {reservation.equipment.name}", "/reservas", detalle=payload.reason)
     reservation.updated_at = _now()
     if payload.reason:
         reservation.notes = (reservation.notes or "") + f"\n[Rechazo] {payload.reason}"

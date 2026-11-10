@@ -10,11 +10,11 @@
 -- ----------------------------------------------------------------------------
 INSERT INTO app.users (id, full_name, email, password_hash, role, is_active)
 VALUES
-    ('a0000000-0000-0000-0000-000000000001', 'José Rodríguez', 'admin@cpq.local', '$argon2id$v=19$m=65536,t=3,p=4$j29f8f4h28gh48f2h48f$sC0+Nq0t9O4/Fm7eZ4pX1aQ7wK4uI6rE3tY8uI2oP5a', 'Administrador del Sistema', true),
-    ('a0000000-0000-0000-0000-000000000002', 'Carmen Pérez', 'aprobador@cpq.local', '$argon2id$v=19$m=65536,t=3,p=4$j29f8f4h28gh48f2h48f$sC0+Nq0t9O4/Fm7eZ4pX1aQ7wK4uI6rE3tY8uI2oP5a', 'Aprobador / Gestor de Inventario', true),
-    ('a0000000-0000-0000-0000-000000000003', 'Daniela Rivas', 'coord.quimica@cpq.local', '$argon2id$v=19$m=65536,t=3,p=4$j29f8f4h28gh48f2h48f$sC0+Nq0t9O4/Fm7eZ4pX1aQ7wK4uI6rE3tY8uI2oP5a', 'Coordinador de Proyecto', true),
-    ('a0000000-0000-0000-0000-000000000004', 'María Fernanda Ochoa', 'coord.biologia@cpq.local', '$argon2id$v=19$m=65536,t=3,p=4$j29f8f4h28gh48f2h48f$sC0+Nq0t9O4/Fm7eZ4pX1aQ7wK4uI6rE3tY8uI2oP5a', 'Coordinador de Proyecto', true),
-    ('a0000000-0000-0000-0000-000000000005', 'Andrés Salazar', 'coord.fisica@cpq.local', '$argon2id$v=19$m=65536,t=3,p=4$j29f8f4h28gh48f2h48f$sC0+Nq0t9O4/Fm7eZ4pX1aQ7wK4uI6rE3tY8uI2oP5a', 'Coordinador de Proyecto', true)
+    ('a0000000-0000-0000-0000-000000000001', 'José Rodríguez', 'admin@cpq.local', '$argon2id$v=19$m=65536,t=3,p=4$sGb3wqbRh+uOZlKvSTIXug$4zIre8QE0BwDfe+0RgTDGNfPgJXkuDybcAyahG2XdXw', 'Administrador del Sistema', true),
+    ('a0000000-0000-0000-0000-000000000002', 'Carmen Pérez', 'aprobador@cpq.local', '$argon2id$v=19$m=65536,t=3,p=4$sGb3wqbRh+uOZlKvSTIXug$4zIre8QE0BwDfe+0RgTDGNfPgJXkuDybcAyahG2XdXw', 'Aprobador / Gestor de Inventario', true),
+    ('a0000000-0000-0000-0000-000000000003', 'Daniela Rivas', 'coord.quimica@cpq.local', '$argon2id$v=19$m=65536,t=3,p=4$sGb3wqbRh+uOZlKvSTIXug$4zIre8QE0BwDfe+0RgTDGNfPgJXkuDybcAyahG2XdXw', 'Coordinador de Proyecto', true),
+    ('a0000000-0000-0000-0000-000000000004', 'María Fernanda Ochoa', 'coord.biologia@cpq.local', '$argon2id$v=19$m=65536,t=3,p=4$sGb3wqbRh+uOZlKvSTIXug$4zIre8QE0BwDfe+0RgTDGNfPgJXkuDybcAyahG2XdXw', 'Coordinador de Proyecto', true),
+    ('a0000000-0000-0000-0000-000000000005', 'Andrés Salazar', 'coord.fisica@cpq.local', '$argon2id$v=19$m=65536,t=3,p=4$sGb3wqbRh+uOZlKvSTIXug$4zIre8QE0BwDfe+0RgTDGNfPgJXkuDybcAyahG2XdXw', 'Coordinador de Proyecto', true)
 ON CONFLICT (email) DO NOTHING;
 
 -- ----------------------------------------------------------------------------
@@ -44,19 +44,21 @@ SET parameter_value = EXCLUDED.parameter_value,
 -- ----------------------------------------------------------------------------
 -- 4. Projects (M2: Realistic Chemistry, Biology & Physics projects)
 -- ----------------------------------------------------------------------------
-INSERT INTO app.projects (id, code, title, operational_status, priority_level, assigned_budget, executed_budget, physical_progress_pct, coordinator_id)
+-- Solo QUI-024 tiene su plan de hitos confirmado (pesos 30 + 40 + 30 = 100): su avance físico es
+-- 30 × 100 % + 40 × 37,5 % = 45 %. Los otros dos todavía no cargan el plan: avance "No disponible".
+INSERT INTO app.projects (id, code, title, area, operational_status, priority_level, assigned_budget, physical_progress_pct, plan_confirmed, coordinator_id)
 VALUES
-    ('b0000000-0000-0000-0000-000000000001', 'QUI-024', 'Síntesis de nanopartículas para catálisis heterogénea', 'En ejecución', 'Alta', 8500.00, 3200.00, 45.00, 'a0000000-0000-0000-0000-000000000003'),
-    ('b0000000-0000-0000-0000-000000000002', 'BIO-011', 'Bioensayos microbiológicos en aguas residuales industriales', 'En ejecución', 'Crítica', 12000.00, 6800.00, 60.00, 'a0000000-0000-0000-0000-000000000004'),
-    ('b0000000-0000-0000-0000-000000000003', 'FIS-008', 'Caracterización óptica de películas delgadas semiconductoras', 'En ejecución', 'Media', 6200.00, 2900.00, 30.00, 'a0000000-0000-0000-0000-000000000005')
+    ('b0000000-0000-0000-0000-000000000001', 'QUI-024', 'Síntesis de nanopartículas para catálisis heterogénea', 'Química', 'En ejecución', 'Alta', 8500.00, 45.00, true, 'a0000000-0000-0000-0000-000000000003'),
+    ('b0000000-0000-0000-0000-000000000002', 'BIO-011', 'Bioensayos microbiológicos en aguas residuales industriales', 'Biología', 'En ejecución', 'Crítica', 12000.00, 0.00, false, 'a0000000-0000-0000-0000-000000000004'),
+    ('b0000000-0000-0000-0000-000000000003', 'FIS-008', 'Caracterización óptica de películas delgadas semiconductoras', 'Física', 'En ejecución', 'Media', 6200.00, 0.00, false, 'a0000000-0000-0000-0000-000000000005')
 ON CONFLICT (code) DO NOTHING;
 
 -- Project Milestones (M2)
-INSERT INTO app.project_milestones (id, project_id, name, description, weight, current_progress_pct, target_date)
+INSERT INTO app.project_milestones (id, project_id, name, description, weight, current_progress_pct, target_date, position)
 VALUES
-    ('b1000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', 'Fase 1: Preparación de precursores químicos', 'Purificación de sales y solventes de grado analítico', 30.00, 100.00, CURRENT_DATE - INTERVAL '15 days'),
-    ('b1000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000001', 'Fase 2: Síntesis hidrotérmica y calcinación', 'Operación controlada en reactor y mufla', 40.00, 37.50, CURRENT_DATE + INTERVAL '45 days'),
-    ('b1000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000001', 'Fase 3: Pruebas catalíticas y reporte final', 'Cálculo de rendimiento y selectividad', 30.00, 0.00, CURRENT_DATE + INTERVAL '90 days')
+    ('b1000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', 'Fase 1: Preparación de precursores químicos', 'Purificación de sales y solventes de grado analítico', 30.00, 100.00, CURRENT_DATE - INTERVAL '15 days', 1),
+    ('b1000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000001', 'Fase 2: Síntesis hidrotérmica y calcinación', 'Operación controlada en reactor y mufla', 40.00, 37.50, CURRENT_DATE + INTERVAL '45 days', 2),
+    ('b1000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000001', 'Fase 3: Pruebas catalíticas y reporte final', 'Cálculo de rendimiento y selectividad', 30.00, 0.00, CURRENT_DATE + INTERVAL '90 days', 3)
 ON CONFLICT DO NOTHING;
 
 -- ----------------------------------------------------------------------------
@@ -108,3 +110,95 @@ INSERT INTO app.audit_logs (timestamp, user_id, ip_address, action_type, target_
 VALUES
     (clock_timestamp(), 'a0000000-0000-0000-0000-000000000001', '127.0.0.1', 'SYSTEM_INITIALIZATION', 'SYSTEM:SEED', 'system', 'root', NULL, jsonb_build_object('status', 'Initialized relational database schema and seeders for Modules 1-8'), 'Data seeding execution');
 
+
+-- ----------------------------------------------------------------------------
+-- 10. Gastos compartidos (M7): el mes de hace dos meses, revisado, cerrado y a la espera del reparto.
+--     Los gastos compartidos son los lotes de consumibles de uso general recibidos en su rango (SP-09).
+--     Sin repartir a propósito: un reparto cambiaría el gasto ejecutado de los proyectos de la semilla.
+-- ----------------------------------------------------------------------------
+INSERT INTO app.accounting_periods (id, period_name, period_type, start_date, end_date, status, total_overhead_cost,
+                                    opened_by_user_id, closed_by_user_id, closed_at, created_at, updated_at)
+SELECT '70000000-0000-0000-0000-000000000001',
+       (ARRAY['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre',
+              'noviembre', 'diciembre'])[EXTRACT(MONTH FROM m.inicio)::int] || ' de ' || EXTRACT(YEAR FROM m.inicio)::int,
+       'Mensual', m.inicio, m.fin, 'Cerrado',
+       COALESCE((SELECT SUM(b.initial_quantity * b.unit_cost)
+                 FROM app.batches b JOIN app.items i ON i.id = b.item_id
+                 WHERE i.item_type = 'Consumible de uso general' AND b.received_date BETWEEN m.inicio AND m.fin), 0),
+       'a0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000002',
+       (m.fin + TIME '17:00') AT TIME ZONE 'America/Caracas',
+       (m.fin - 8 + TIME '09:00') AT TIME ZONE 'America/Caracas',
+       (m.fin + TIME '17:00') AT TIME ZONE 'America/Caracas'
+FROM (SELECT date_trunc('month', CURRENT_DATE - INTERVAL '2 months')::date AS inicio,
+             (date_trunc('month', CURRENT_DATE - INTERVAL '1 month') - INTERVAL '1 day')::date AS fin) m
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO app.period_project_confirmations (id, period_id, project_id, coordinator_user_id, confirmed, confirmed_at)
+SELECT c.id::uuid, '70000000-0000-0000-0000-000000000001', c.proyecto::uuid, c.coordinador::uuid, true,
+       p.closed_at - c.antes
+FROM (VALUES
+    ('70000000-0000-0000-0000-000000000011', 'b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000003', INTERVAL '3 days'),
+    ('70000000-0000-0000-0000-000000000012', 'b0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000004', INTERVAL '2 days'),
+    ('70000000-0000-0000-0000-000000000013', 'b0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000005', INTERVAL '1 day')
+) AS c(id, proyecto, coordinador, antes)
+JOIN app.accounting_periods p ON p.id = '70000000-0000-0000-0000-000000000001'
+ON CONFLICT DO NOTHING;
+
+
+-- ----------------------------------------------------------------------------
+-- 11. Inventario y almacén (M3, M6) con datos para las alertas, la bitácora y el pronóstico (D11).
+--     Ids 3x...: insumos 30…, lotes 31…, despachos 32…, usos de materia prima 33….
+--     - Acetona: bajo su mínimo (alerta y reposición al primer movimiento).
+--     - Tripsina: su único lote vence en 12 días ("Próximo a vencer").
+--     - Peptona: un lote vencido con existencia (no se despacha) y otro vigente.
+--     - Medio LB agar: despachos mensuales a BIO-011 (seis meses, sin el mes cerrado de M7) para el
+--       pronóstico, y un uso de materia prima registrado este mes. El stock de cada insumo es la suma
+--       de sus lotes y cada lote descuenta lo despachado.
+--     No toca QUI-024: su gasto ejecutado sigue en 72,50 (pruebas de base_datos).
+-- ----------------------------------------------------------------------------
+INSERT INTO app.items (id, name, unit_of_measure, item_type, current_stock, min_stock, is_active)
+VALUES
+    ('30000000-0000-0000-0000-000000000001', 'Acetona grado analítico', 'L', 'Materia prima', 2.500, 5.000, true),
+    ('30000000-0000-0000-0000-000000000002', 'Tripsina 0,25 %', 'L', 'Materia prima', 0.400, 0.200, true),
+    ('30000000-0000-0000-0000-000000000003', 'Medio LB agar', 'kg', 'Materia prima', 2.300, 0.500, true),
+    ('30000000-0000-0000-0000-000000000004', 'Peptona de caseína', 'kg', 'Materia prima', 1.500, 0.500, true)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO app.batches (id, item_id, location_id, batch_number, supplier_lot_code, initial_quantity, available_quantity,
+                         unit_cost, supplier, received_date, expiration_date, expiration_status)
+VALUES
+    ('31000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000004',
+     'L-0101', 'MK-AC-2291', 2.500, 2.500, 18.40, 'Merck Químicos C.A.', CURRENT_DATE - 40, CURRENT_DATE + 400, 'Vigente'),
+    ('31000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000002',
+     'L-0102', 'TRP-0925', 0.400, 0.400, 95.00, 'Bioquim de Venezuela', CURRENT_DATE - 60, CURRENT_DATE + 12, 'Próximo a vencer'),
+    ('31000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000002',
+     'L-0103', 'LB-44817', 5.000, 2.300, 58.00, 'Bioquim de Venezuela', (date_trunc('month', CURRENT_DATE) - INTERVAL '7 months')::date,
+     CURRENT_DATE + 200, 'Vigente'),
+    ('31000000-0000-0000-0000-000000000004', '30000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000002',
+     'L-0104', 'PEP-1187', 0.500, 0.500, 42.00, 'Bioquim de Venezuela', CURRENT_DATE - 300, CURRENT_DATE - 6, 'Vencido'),
+    ('31000000-0000-0000-0000-000000000005', '30000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000002',
+     'L-0105', 'PEP-1342', 1.000, 1.000, 42.00, 'Bioquim de Venezuela', CURRENT_DATE - 20, CURRENT_DATE + 300, 'Vigente')
+ON CONFLICT DO NOTHING;
+
+-- Un despacho por mes (día 10, 10:00 en Caracas); el mes de hace dos meses está cerrado en M7 y queda sin despachos
+INSERT INTO app.dispatches (id, dispatch_number, movement_code, batch_id, project_id, dispatched_quantity, direction,
+                            unit_cost_snapshot, dispatched_by, received_by_name, is_compensatory, dispatched_at)
+SELECT d.id::uuid, d.codigo, d.codigo, '31000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000002',
+       d.cantidad, 'salida', 58.00, 'a0000000-0000-0000-0000-000000000002', 'Lic. Pedro Gómez', false,
+       ((date_trunc('month', CURRENT_DATE)::date - d.meses * INTERVAL '1 month')::date + d.dia + TIME '10:00')
+           AT TIME ZONE 'America/Caracas'
+FROM (VALUES
+    ('32000000-0000-0000-0000-000000000001', 'DES-0101', 6, 9, 0.400),
+    ('32000000-0000-0000-0000-000000000002', 'DES-0102', 5, 9, 0.500),
+    ('32000000-0000-0000-0000-000000000003', 'DES-0103', 4, 9, 0.450),
+    ('32000000-0000-0000-0000-000000000004', 'DES-0104', 3, 9, 0.600),
+    ('32000000-0000-0000-0000-000000000005', 'DES-0105', 1, 9, 0.550),
+    ('32000000-0000-0000-0000-000000000006', 'DES-0106', 0, 0, 0.200)
+) AS d(id, codigo, meses, dia, cantidad)
+ON CONFLICT (dispatch_number) DO NOTHING;
+
+INSERT INTO app.raw_material_usages (id, project_id, item_id, reported_by_user_id, quantity_used, usage_date, notes)
+VALUES
+    ('33000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000003',
+     'a0000000-0000-0000-0000-000000000004', 0.150, date_trunc('month', CURRENT_DATE)::date, 'Preparación de placas para el bioensayo')
+ON CONFLICT DO NOTHING;
