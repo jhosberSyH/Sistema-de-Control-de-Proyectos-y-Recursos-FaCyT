@@ -15,7 +15,7 @@ services:
     plan: free
     # Conviene la misma zona que Supabase (us-east-1 → virginia, us-west → oregon, eu-central → frankfurt)
     region: virginia
-    branch: integracion-backend
+    # Sin "branch": los servicios usan la rama elegida al crear el Blueprint (main)
     rootDir: backend
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -50,7 +50,6 @@ services:
   - type: web
     name: cpq-web
     runtime: static
-    branch: integracion-backend
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
