@@ -1,16 +1,16 @@
 # Despliegue en Render con el plan gratuito (Blueprint). La base de datos sigue en Supabase.
 #
-#   navegador ──HTTPS──> cpq-web (sitio estático, CDN, no se duerme)
-#                          └─ /api/* se reenvía a cpq-api (un solo origen: cookie __Host- y SameSite=Strict)
-#                        cpq-api (Docker, gratis: se duerme tras 15 min sin uso; despertar tarda ~1 min)
+#   navegador ──HTTPS──> control-proyectos-facyt (sitio estático, CDN, no se duerme)
+#                          └─ /api/* se reenvía a control-proyectos-facyt-api (un solo origen: cookie __Host- y SameSite=Strict)
+#                        control-proyectos-facyt-api (Docker, gratis: se duerme tras 15 min sin uso; despertar tarda ~1 min)
 #                          └─ Supabase por el Session pooler (puerto 5432, TLS)
 #
-# En el plan gratuito no hay red privada, así que cpq-api tiene URL pública; todo lo que no sea
+# En el plan gratuito no hay red privada, así que control-proyectos-facyt-api tiene URL pública; todo lo que no sea
 # /api/health exige sesión y las escrituras exigen el token CSRF.
 
 services:
   - type: web
-    name: cpq-api
+    name: control-proyectos-facyt-api
     runtime: docker
     plan: free
     # Conviene la misma zona que Supabase (us-east-1 → virginia, us-west → oregon, eu-central → frankfurt)
@@ -30,9 +30,9 @@ services:
         value: America/Caracas
       - key: FORWARDED_ALLOW_IPS
         value: "*"
-      # Dominio exacto que Render le asignó a cpq-web
+      # Dominio de la web (el nombre del servicio define el subdominio)
       - key: ALLOWED_ORIGINS
-        value: '["https://cpq-web-itvn.onrender.com"]'
+        value: '["https://control-proyectos-facyt.onrender.com"]'
       - key: STORAGE_BACKEND
         value: supabase
       - key: SUPABASE_URL
@@ -48,7 +48,7 @@ services:
         sync: false
 
   - type: web
-    name: cpq-web
+    name: control-proyectos-facyt
     runtime: static
     rootDir: frontend
     buildCommand: npm ci && npm run build
@@ -61,10 +61,10 @@ services:
       - key: VITE_ENABLE_API_MOCKING
         value: "false"
     routes:
-      # Primero la API: dominio que Render le asignó a cpq-api (el nombre sin sufijo es de otra persona)
+      # Primero la API: dominio de la API (si Render le agregara un sufijo, cámbialo aquí y en ALLOWED_ORIGINS)
       - type: rewrite
         source: /api/*
-        destination: https://cpq-api-0hyo.onrender.com/api/*
+        destination: https://control-proyectos-facyt-api.onrender.com/api/*
       # Rutas de React Router
       - type: rewrite
         source: /*
