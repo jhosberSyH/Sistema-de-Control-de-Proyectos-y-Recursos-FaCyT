@@ -1,0 +1,9 @@
+# Lo que `railway up` no sube
+node_modules/
+dist/
+coverage/
+.claude/
+revision/
+.env
+.env.local
+*.log

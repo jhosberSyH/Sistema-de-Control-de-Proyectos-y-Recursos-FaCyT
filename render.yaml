@@ -1,0 +1,85 @@
+# Despliegue en Render con el plan gratuito (Blueprint). La base de datos sigue en Supabase.
+#
+#   navegador ──HTTPS──> cpq-web (sitio estático, CDN, no se duerme)
+#                          └─ /api/* se reenvía a cpq-api (un solo origen: cookie __Host- y SameSite=Strict)
+#                        cpq-api (Docker, gratis: se duerme tras 15 min sin uso; despertar tarda ~1 min)
+#                          └─ Supabase por el Session pooler (puerto 5432, TLS)
+#
+# En el plan gratuito no hay red privada, así que cpq-api tiene URL pública; todo lo que no sea
+# /api/health exige sesión y las escrituras exigen el token CSRF.
+
+services:
+  - type: web
+    name: cpq-api
+    runtime: docker
+    plan: free
+    # Conviene la misma zona que Supabase (us-east-1 → virginia, us-west → oregon, eu-central → frankfurt)
+    region: virginia
+    branch: integracion-backend
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: API_HOST
+        value: "::"
+      - key: APP_TIMEZONE
+        value: America/Caracas
+      - key: FORWARDED_ALLOW_IPS
+        value: "*"
+      # Debe ser el dominio exacto de cpq-web (si Render le agrega un sufijo, cámbialo aquí)
+      - key: ALLOWED_ORIGINS
+        value: '["https://cpq-web.onrender.com"]'
+      - key: STORAGE_BACKEND
+        value: supabase
+      - key: SUPABASE_URL
+        value: https://rlgzcigldoyvfqektdmu.supabase.co
+      - key: SUPABASE_STORAGE_BUCKET
+        value: cotizaciones
+      - key: MAX_COTIZACION_MB
+        value: "10"
+      # Secretos: Render los pide en el panel al crear el Blueprint (no se guardan en el repo)
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+  - type: web
+    name: cpq-web
+    runtime: static
+    branch: integracion-backend
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Siempre contra el backend real: los datos ficticios (MSW) quedan apagados
+      - key: VITE_ENABLE_API_MOCKING
+        value: "false"
+    routes:
+      # Primero la API (si cpq-api cambia de dominio, cámbialo aquí)
+      - type: rewrite
+        source: /api/*
+        destination: https://cpq-api.onrender.com/api/*
+      # Rutas de React Router
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable

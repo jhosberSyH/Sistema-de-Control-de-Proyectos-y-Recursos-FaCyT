@@ -1,0 +1,11 @@
+# Servicio "web" en Railway (Root Directory: /frontend, Config file: /frontend/railway.toml). README §15.2
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+watchPatterns = ["/frontend/**"]
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

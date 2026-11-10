@@ -1,0 +1,53 @@
+# Sirve el build de React y reenvía /api a API_UPSTREAM (README §7: un solo origen, sin CORS).
+# PORT lo pone Railway; en local vale 8080.
+
+server {
+    listen ${PORT};
+    listen [::]:${PORT};
+    server_name _;
+    server_tokens off;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # La cotización de un gasto pesa hasta 10 MB (MAX_COTIZACION_MB)
+    client_max_body_size 11m;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Resolver en cada petición: nginx arranca aunque la API todavía no exista y sigue sus cambios de IP
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+
+    location /api/ {
+        set $api_upstream ${API_UPSTREAM};
+        proxy_pass $api_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_read_timeout 120s;
+    }
+
+    # Archivos con hash en el nombre: se pueden guardar un año
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
+        try_files $uri =404;
+    }
+
+    # Rutas de React Router: todo lo demás devuelve index.html, que nunca se guarda en caché
+    location / {
+        add_header Cache-Control "no-cache";
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        try_files $uri $uri/ /index.html;
+    }
+}

@@ -1,0 +1,8 @@
+# Lo que `railway up` no sube (var/ guarda las claves temporales y las cotizaciones locales)
+.venv/
+**/__pycache__/
+.pytest_cache/
+var/
+tests/
+*.db
+.env
