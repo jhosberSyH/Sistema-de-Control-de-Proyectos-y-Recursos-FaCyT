@@ -30,9 +30,9 @@ services:
         value: America/Caracas
       - key: FORWARDED_ALLOW_IPS
         value: "*"
-      # Debe ser el dominio exacto de cpq-web (si Render le agrega un sufijo, cámbialo aquí)
+      # Dominio exacto que Render le asignó a cpq-web
       - key: ALLOWED_ORIGINS
-        value: '["https://cpq-web.onrender.com"]'
+        value: '["https://cpq-web-itvn.onrender.com"]'
       - key: STORAGE_BACKEND
         value: supabase
       - key: SUPABASE_URL
@@ -61,10 +61,10 @@ services:
       - key: VITE_ENABLE_API_MOCKING
         value: "false"
     routes:
-      # Primero la API (si cpq-api cambia de dominio, cámbialo aquí)
+      # Primero la API: dominio que Render le asignó a cpq-api (el nombre sin sufijo es de otra persona)
       - type: rewrite
         source: /api/*
-        destination: https://cpq-api.onrender.com/api/*
+        destination: https://cpq-api-0hyo.onrender.com/api/*
       # Rutas de React Router
       - type: rewrite
         source: /*
