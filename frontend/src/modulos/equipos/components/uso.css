@@ -1,0 +1,23 @@
+/* Vista 13, uso de equipo. Copia de los estilos de docs/mockups/_fuente/13-uso-equipo.html, dentro de
+   .vista-uso porque .dos y .uso se repiten con otras medidas en otros mockups. La regla .vista-libre /
+   .vista-uso del mockup no hace falta: cada estado se pinta por separado. */
+.vista-uso {
+  display: contents;
+
+  .dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 24px; align-items: start; }
+  .uso { padding: 22px; display: grid; gap: 16px; }
+  .uso .estado-g { display: flex; align-items: center; gap: 14px; }
+  .uso .estado-g .ic { width: 56px; height: 56px; border-radius: var(--r-l); display: grid; place-items: center; background: var(--surface-2); flex: none; }
+  .uso .estado-g .ic .ico { width: 28px; height: 28px; }
+  .uso .estado-g.libre .ic { color: var(--ok); } .uso .estado-g.ocupado .ic { color: var(--info); }
+  .uso .estado-g b { font-size: 22px; font-family: var(--f-display); display: block; }
+  .uso .reloj { font-family: var(--f-mono); font-size: 34px; font-variant-numeric: tabular-nums; font-weight: 500; }
+  .uso .btn { width: 100%; min-height: 52px; font-size: 17px; }
+  @media (max-width: 760px) { .dos { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+  .uso .estado-g.mant .ic { color: var(--warn); }
+  .uso .resultado:focus { outline: none; }
+  .cab .acc { align-items: flex-end; }
+  .cab .acc .campo { min-width: 240px; }
+}

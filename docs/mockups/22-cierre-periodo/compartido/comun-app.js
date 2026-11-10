@@ -30,7 +30,7 @@
       }).join("") + "</ul></nav>" +
       '<div class="nav-pie"><span class="avatar">' + r.ini + '</span><div class="quien"><strong>' + r.nombre + "</strong><span>" + r.rol + '</span></div><button class="salir" type="button" aria-label="Cerrar sesión">' + ico("salir") + "</button></div>";
     document.getElementById("editorial").innerHTML =
-      '<span class="placa-escudo"><img src="logos/escudo-uc.jpg" alt="Escudo de la Universidad de Carabobo" width="40" height="53"></span>' +
+      '<img src="logos/escudo-uc.png" alt="Escudo de la Universidad de Carabobo" width="40" height="53">' +
       '<div class="txt"><span class="ins">Universidad de Carabobo · FaCyT · ' + (cfg.ins || cfg.titulo) + '</span><span class="fecha">' + (cfg.fecha || "Martes 27 de octubre de 2026 · El período de octubre cierra el sábado 31/10") + "</span></div>";
     document.getElementById("barra").innerHTML =
       '<button class="icono-btn menu" type="button" aria-label="Abrir menú">' + ico("menu") + "</button>" +

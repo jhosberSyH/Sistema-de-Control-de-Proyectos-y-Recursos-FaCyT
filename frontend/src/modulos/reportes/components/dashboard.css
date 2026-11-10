@@ -1,0 +1,100 @@
+/* Vista 03: dashboard ejecutivo. Copia de los estilos de docs/mockups/03-dashboard, dentro de
+   .vista-dashboard. El gráfico de gasto por mes es GraficoColumnas (Recharts), con su propio estilo. */
+.vista-dashboard {
+  display: contents;
+
+  .cab-dash { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .cab-dash h1 { font-size: 34px; font-weight: 600; }
+  .cab-dash p { color: var(--muted); margin-top: 4px; }
+  .filtros { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .filtros .campo { min-width: 170px; }
+  .filtros select.entrada { padding-right: 32px; appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%; background-size: 5px 5px; background-repeat: no-repeat; }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .kpi { font: inherit; color: inherit; text-align: left; padding: 18px; display: grid; gap: 6px; cursor: pointer; background: var(--surface); }
+  .kpi[aria-expanded="true"] { outline: 2px solid var(--primary); outline-offset: -1px; }
+  .kpi .eti { font-size: 14.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .kpi .val { font-family: var(--f-display); font-size: 36px; font-weight: 600; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--primary); }
+  .kpi .sub { font-size: 14px; color: var(--muted); }
+  .kpi .ver { font-size: 14px; color: var(--link); display: inline-flex; align-items: center; gap: 4px; }
+  .kpi .ver .ico { width: 16px; height: 16px; }
+  .kpi.alerta .eti .ico { color: var(--err); }
+  .kpi.espera .eti .ico { color: var(--warn); }
+
+  .detalle { padding: 20px; display: grid; gap: 12px; }
+
+  .graficos { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .graf { padding: 20px; display: grid; gap: 16px; min-width: 0; }
+  .graf-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .graf-cab h2 { font-size: 13px; font-family: var(--f-mono); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--primary); }
+  .graf-cab p { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .btn-chico { min-height: 36px; padding: 0 12px; font-size: 14px; }
+
+  /* Barras horizontales: ejecución presupuestaria por proyecto, escala 0 a 120 % */
+  .barras { display: grid; gap: 4px; position: relative; }
+  .fila-b { display: grid; grid-template-columns: minmax(150px, 38%) minmax(0, 1fr) 64px; gap: 12px; align-items: center; min-height: 40px; border-radius: var(--r-s); padding: 0 4px; }
+  .fila-b:hover, .fila-b:focus-visible { background: var(--surface-2); }
+  .fila-b .nom { font-size: 14.5px; line-height: 1.25; min-width: 0; }
+  .fila-b .nom small { display: block; color: var(--muted); font-size: 13px; }
+  .pista { position: relative; height: 14px; }
+  .pista .marca-b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--primary); border-radius: 0 4px 4px 0; }
+  .pista .ref { position: absolute; top: -8px; bottom: -8px; width: 0; border-left: 2px dashed var(--muted); }
+  .fila-b .v { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14.5px; }
+  .fila-b .v.sobre { display: inline-flex; align-items: center; gap: 4px; justify-content: flex-end; }
+  .fila-b .v.sobre .ico { width: 16px; height: 16px; color: var(--err); }
+  .eje-b { display: grid; grid-template-columns: minmax(150px, 38%) minmax(0, 1fr) 64px; gap: 12px; padding: 0 4px; font-size: 12.5px; color: var(--muted); }
+  .eje-b .esc { position: relative; height: 16px; }
+  .eje-b .esc span { position: absolute; transform: translateX(-50%); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .eje-b .esc span:first-child { transform: none; }
+
+  .leyenda { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); }
+  .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .leyenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; background: var(--primary); }
+  .leyenda i.ref { width: 0; height: 14px; border-left: 2px dashed var(--muted); background: none; border-radius: 0; }
+
+  /* Columnas: gasto ejecutado por mes */
+  .columnas { position: relative; height: 220px; margin-left: 52px; border-bottom: 1px solid var(--border); }
+  .columnas .linea { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); }
+  .columnas .linea span { position: absolute; right: calc(100% + 8px); top: -9px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .columnas .cols { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; align-items: end; padding: 0 6px; }
+  .columnas .col-m { position: relative; height: 100%; display: flex; align-items: flex-end; justify-content: center; border-radius: var(--r-s); }
+  .columnas .col-m:hover, .columnas .col-m:focus-visible { background: var(--surface-2); }
+  .columnas .col-m i { display: block; width: min(44px, 60%); background: var(--primary); border-radius: 4px 4px 0 0; }
+  .columnas .col-m.parcial i { background: repeating-linear-gradient(135deg, var(--primary) 0 6px, transparent 6px 9px); border: 2px solid var(--primary); border-bottom: 0; }
+  .columnas .col-m b { position: absolute; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; transform: translateY(-4px); }
+  .meses { margin-left: 52px; display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 6px 0; font-size: 13px; color: var(--muted); text-align: center; }
+
+  .tip { position: absolute; z-index: 10; pointer-events: none; background: var(--text); color: var(--bg); font-size: 13.5px; line-height: 1.4; padding: 8px 10px; border-radius: var(--r-s); box-shadow: 0 6px 20px rgba(0,0,0,.18); max-width: 260px; }
+  .tip b { display: block; }
+
+  .tablas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  table.datos { width: 100%; border-collapse: collapse; font-size: 15px; }
+  table.datos caption { text-align: left; font-size: 14px; color: var(--muted); padding-bottom: 6px; }
+  table.datos th { padding: 8px 10px; }
+  table.datos td { padding: 11px 10px; border-bottom: 1px solid var(--line); }
+  table.datos tr:last-child td { border-bottom: 0; }
+  table.datos td.n, table.datos th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .tabla-env { overflow-x: auto; }
+
+  /* Tableta: cada gráfico y tabla con todo el ancho (en dos columnas, la escala de las barras se encimaba) */
+  @media (max-width: 960px) {
+    .graficos, .tablas { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @media (max-width: 760px) {
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .kpi { padding: 14px; }
+    .kpi .val { font-size: 28px; }
+    .graficos, .tablas { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    .graf { padding: 16px; }
+    .fila-b, .eje-b { grid-template-columns: minmax(0, 1fr) 76px; }
+    .fila-b .nom { grid-column: 1 / -1; }
+    .eje-b > span:first-child { display: none; }
+    .filtros .campo { min-width: 0; flex: 1 1 140px; }
+    .cab-dash h1 { font-size: 26px !important; }
+  }
+
+  /* Piezas sin dibujar (plan §7.1) */
+  .detalle h2:focus { outline: none; }
+  .fila-b:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+}

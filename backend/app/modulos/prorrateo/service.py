@@ -9,6 +9,7 @@ from sqlalchemy import func, or_, and_
 from sqlalchemy.orm import Session
 
 from app.auditoria.service import record_audit_log
+from app.avisos.service import avisar, avisar_a, ids_por_rol
 from app.modulos.usuarios.models import (
     AccountingPeriod,
     PeriodProjectConfirmation,
@@ -173,6 +174,8 @@ def open_accounting_period_review(
             comments=None,
         )
         db.add(conf)
+        avisar(db, proj.coordinator_id, "info", f"Confirma los cargos de {proj.code}",
+               "/cierre/cargos", detalle=f"El período cierra el {period.end_date.strftime('%d/%m/%Y')}.")
 
     record_audit_log(
         db=db,
@@ -227,7 +230,7 @@ def get_period_confirmation_dashboard(
             func.date(Dispatch.dispatched_at) >= period.start_date,
             func.date(Dispatch.dispatched_at) <= period.end_date,
         ).all()
-        disp_amount = sum(d.dispatched_quantity * d.unit_cost_snapshot for d in dispatches)
+        disp_amount = sum(d.signed_quantity * d.unit_cost_snapshot for d in dispatches)
 
         expenses = db.query(Request).filter(
             Request.project_id == c.project_id,
@@ -313,7 +316,7 @@ def get_project_charges_for_coordinator(
     for d in dispatches:
         b = d.batch
         it = b.item if b else None
-        amt = _round_currency(d.dispatched_quantity * d.unit_cost_snapshot)
+        amt = _round_currency(d.signed_quantity * d.unit_cost_snapshot)
         total_amount += amt
 
         concept = f"{it.name if it else 'Insumo'} · {d.dispatched_quantity} {it.unit_of_measure if it else ''}"
@@ -515,7 +518,8 @@ def close_accounting_period(
     period.updated_at = now
 
     # Trigger consumption forecast recalculation (F3.7)
-    recalculate_consumption_forecasts(db, current_user_id=current_user.id, ip_address=ip_address)
+    # Sin commit propio: el cierre del período debe ser atómico (el router hace el commit)
+    recalculate_consumption_forecasts(db, commit=False)
 
     record_audit_log(
         db=db,
@@ -577,7 +581,7 @@ def calculate_proration(
     project_consumptions: Dict[str, Decimal] = {}
     for p in active_projects:
         disp_sum = db.query(
-            func.coalesce(func.sum(Dispatch.dispatched_quantity * Dispatch.unit_cost_snapshot), 0)
+            func.coalesce(func.sum(Dispatch.signed_quantity * Dispatch.unit_cost_snapshot), 0)
         ).filter(
             Dispatch.project_id == p.id,
             func.date(Dispatch.dispatched_at) >= period.start_date,
@@ -734,12 +738,8 @@ def execute_proration(
         db.add(alloc)
         allocations_saved.append(alloc)
 
-        # Update Project executed budget (F2.7)
-        proj = db.query(Project).filter(Project.id == item.project_id).first()
-        if proj:
-            old_budget = proj.executed_budget or Decimal("0.00")
-            proj.executed_budget = old_budget + item.allocated_overhead
-            proj.updated_at = now
+        # F2.7: el gasto del proyecto incluye esta asignación automáticamente (Project.executed_budget
+        # suma overhead_allocations, decisión 5); no se escribe aquí.
 
     # Update period status
     period.status = "Prorrateado"

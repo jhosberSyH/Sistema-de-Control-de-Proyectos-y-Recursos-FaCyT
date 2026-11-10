@@ -119,31 +119,11 @@ def _calculate_project_metrics(db: Session, project: Project) -> Dict[str, Any]:
     else:
         physical_progress_pct = None
 
-    requests_sum = (
-        db.query(func.coalesce(func.sum(Request.actual_amount), 0))
-        .filter(
-            Request.project_id == project.id,
-            Request.status == "Ejecutado",
-            Request.request_type.in_(["Gasto", "Reposición automática"]),
-        )
-        .scalar()
-    )
-    dispatches_sum = (
-        db.query(func.coalesce(func.sum(Dispatch.dispatched_quantity * Dispatch.unit_cost_snapshot), 0))
-        .filter(Dispatch.project_id == project.id)
-        .scalar()
-    )
-    overhead_sum = (
-        db.query(func.coalesce(func.sum(OverheadAllocation.allocated_amount), 0))
-        .filter(OverheadAllocation.project_id == project.id)
-        .scalar()
-    )
-    executed_budget = (
-        Decimal(str(requests_sum or 0))
-        + Decimal(str(dispatches_sum or 0))
-        + Decimal(str(overhead_sum or 0))
-    )
-    executed_budget = _round2(executed_budget)
+    # Fuente única (decisión 5): Project.executed_budget se calcula desde despachos, gastos ejecutados
+    # y reparto (misma fórmula que app.v_project_spend). Se consulta fresco para no leer un valor viejo.
+    executed_budget = _round2(Decimal(str(
+        db.query(Project.executed_budget).filter(Project.id == project.id).scalar() or 0
+    )))
 
     assigned_budget = Decimal(str(project.assigned_budget)) if project.assigned_budget else Decimal("0")
     if assigned_budget > 0:
@@ -161,10 +141,18 @@ def _calculate_project_metrics(db: Session, project: Project) -> Dict[str, Any]:
     }
 
 
+def get_project_metrics_snapshot(db: Session, project_id: str) -> Tuple[Project, Dict[str, Any]]:
+    """Métricas del proyecto sin escribir nada: para pantallas y reportes."""
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proyecto no encontrado.")
+    return project, _calculate_project_metrics(db, project)
+
+
 def recalculate_project_metrics(
     db: Session, project_id: str, commit: bool = True
 ) -> Tuple[Project, Dict[str, Any]]:
-    """Recalculate and persist project.physical_progress_pct and project.executed_budget."""
+    """Recalculate and persist project.physical_progress_pct (el gasto ejecutado no se guarda: decisión 5)."""
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proyecto no encontrado.")
@@ -174,7 +162,6 @@ def recalculate_project_metrics(
         project.physical_progress_pct = metrics["physical_progress_pct"]
     else:
         project.physical_progress_pct = Decimal("0.00")
-    project.executed_budget = metrics["executed_budget"]
     db.flush()
 
     if commit:
@@ -336,7 +323,6 @@ def create_project(
         operational_status="Propuesta",
         priority_level=payload.priority,
         assigned_budget=payload.assigned_budget,
-        executed_budget=Decimal("0.00"),
         physical_progress_pct=Decimal("0.00"),
         coordinator_id=None,
     )
@@ -488,8 +474,8 @@ def get_project_detail(
     project = _get_project_or_404(db, project_id)
     _assert_project_access(project, current_user)
 
-    project, metrics = recalculate_project_metrics(db, project_id, commit=True)
-    db.refresh(project)
+    # Lectura pura: un GET no escribe en la base (decisión 5)
+    metrics = _calculate_project_metrics(db, project)
     return _build_project_detail_response(db, project, metrics)
 
 
@@ -501,8 +487,7 @@ def get_project_metrics(
     project = _get_project_or_404(db, project_id)
     _assert_project_access(project, current_user)
 
-    project, metrics = recalculate_project_metrics(db, project_id, commit=True)
-    db.refresh(project)
+    metrics = _calculate_project_metrics(db, project)
 
     return ProjectMetricsResponse(
         assigned_budget=project.assigned_budget,

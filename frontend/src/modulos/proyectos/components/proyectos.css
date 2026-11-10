@@ -1,0 +1,26 @@
+/* Vista 06, proyectos. Copia de los estilos de docs/mockups/_fuente/06-proyectos.html (.prefijo ya está en
+   components/estilos/extensiones.css porque lo comparten varias vistas). */
+.lista-p { padding: 0; overflow: hidden; }
+.lista-p .herr { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.lista-p .tabla-env { padding: 0 8px; }
+.lista-p .paginacion { padding: 12px 20px 16px; border-top: 1px solid var(--line); }
+.resumen-est { display: flex; gap: 8px; flex-wrap: wrap; }
+.resumen-est button { font: inherit; font-size: 14px; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; padding: 0 12px; border-radius: var(--r-s); border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+.resumen-est button[aria-pressed="true"] { border-color: var(--primary); background: var(--surface-2); font-weight: 600; }
+.resumen-est b { font-variant-numeric: tabular-nums; }
+
+.nom-p b { display: block; font-weight: 600; }
+.sin-coord { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; font-size: 14px; }
+.sin-coord .ico { width: 16px; height: 16px; color: var(--warn); }
+
+/* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+
+/* El código lleva a la ficha (vista 07): se ve como en el mockup y se subraya al pasar o enfocar */
+.mk .nom-p a { color: var(--text); text-decoration: none; }
+.mk .nom-p a:hover, .mk .nom-p a:focus-visible { text-decoration: underline; }
+.lista-p .resultado { padding: 16px 20px 0; }
+.lista-p .resultado:focus { outline: none; }
+.lista-p .vacio { margin: 20px; }
+/* "Sin coordinador · Asignar": no se parte en tres líneas como en el mockup */
+.sin-coord { flex-wrap: wrap; }
+.sin-coord a { font-weight: 500; }

@@ -105,7 +105,6 @@ def db_session():
             operational_status="En ejecución",
             priority_level="Alta",
             assigned_budget=Decimal("10000.00"),
-            executed_budget=Decimal("0.00"),
             physical_progress_pct=Decimal("0.00"),
             coordinator_id=coord.id
         )
@@ -371,10 +370,8 @@ def test_f3_6_batch_expiration_classification_and_dispatch_block(db_session):
     db_session.add_all([b_near, b_expired])
     db_session.commit()
 
-    # Trigger evaluation
+    # Trigger evaluation (sin commit: las lecturas no escriben; el estado queda en la sesión)
     service.evaluate_batch_expirations(db_session)
-    db_session.refresh(b_near)
-    db_session.refresh(b_expired)
 
     assert b_near.expiration_status == "Próximo a vencer"
     assert b_expired.expiration_status == "Vencido"
@@ -489,47 +486,45 @@ def test_f3_7_forecast_with_sufficient_history_calculates_numerical_forecast(db_
 # =============================================================================
 
 def test_api_rbac_inventory(client, db_session):
-    """Test RBAC policies: Coordinator can read; only Admin can create/update items."""
+    """RBAC con el contrato del frontend (/api/insumos): el coordinador lee la lista; solo el
+    administrador da de alta y cambia el mínimo; la ficha es del aprobador y del administrador."""
     admin_token = create_auth_session(db_session, "admin-uuid")
     coord_token = create_auth_session(db_session, "coord-uuid")
+    approver_token = create_auth_session(db_session, "approver-uuid")
 
-    # 1. Admin creates item -> 201
+    def h(token):
+        return {"Authorization": f"Bearer {token}"}
+
+    # 1. Admin creates item -> 201 (nace bajo su mínimo: reposición en Borrador)
     res = client.post(
-        "/api/inventario/items",
-        json={"name": "Hidróxido de Sodio", "unit_of_measure": "kg", "item_type": "Materia prima", "min_stock": 15},
-        headers={"Authorization": f"Bearer {admin_token}"}
+        "/api/insumos",
+        json={"nombre": "Hidróxido de Sodio", "unidad": "kg", "tipo": "Materia prima", "stockMinimo": 15},
+        headers=h(admin_token),
     )
-    assert res.status_code == 201
-    item_id = res.json()["id"]
+    assert res.status_code == 201, res.text
+    item_id = res.json()["insumo"]["id"]
+    assert res.json()["reposicion"].startswith("REP-")
 
     # 2. Coordinator attempts to create item -> 403 Forbidden
     res_coord_create = client.post(
-        "/api/inventario/items",
-        json={"name": "Otro Insumo", "unit_of_measure": "g", "item_type": "Materia prima"},
-        headers={"Authorization": f"Bearer {coord_token}"}
+        "/api/insumos",
+        json={"nombre": "Otro Insumo", "unidad": "g", "tipo": "Materia prima", "stockMinimo": 1},
+        headers=h(coord_token),
     )
     assert res_coord_create.status_code == 403
 
     # 3. Coordinator reads item list -> 200 OK
-    res_list = client.get(
-        "/api/inventario/items",
-        headers={"Authorization": f"Bearer {coord_token}"}
-    )
+    res_list = client.get("/api/insumos", headers=h(coord_token))
     assert res_list.status_code == 200
-    assert len(res_list.json()) >= 1
+    assert res_list.json()["total"] >= 1
 
-    # 4. Coordinator reads item detail -> 200 OK
-    res_detail = client.get(
-        f"/api/inventario/items/{item_id}",
-        headers={"Authorization": f"Bearer {coord_token}"}
-    )
+    # 4. La ficha: el coordinador no; el aprobador sí
+    assert client.get(f"/api/insumos/{item_id}", headers=h(coord_token)).status_code == 403
+    res_detail = client.get(f"/api/insumos/{item_id}", headers=h(approver_token))
     assert res_detail.status_code == 200
-    assert res_detail.json()["name"] == "Hidróxido de Sodio"
+    assert res_detail.json()["nombre"] == "Hidróxido de Sodio"
 
     # 5. Coordinator attempts to update min_stock -> 403 Forbidden
-    res_update_min = client.patch(
-        f"/api/inventario/items/{item_id}/min-stock",
-        json={"min_stock": 25},
-        headers={"Authorization": f"Bearer {coord_token}"}
-    )
+    res_update_min = client.patch(f"/api/insumos/{item_id}/minimo", json={"stockMinimo": 25}, headers=h(coord_token))
     assert res_update_min.status_code == 403
+    assert client.patch(f"/api/insumos/{item_id}/minimo", json={"stockMinimo": 25}, headers=h(admin_token)).json()["stockMinimo"] == 25

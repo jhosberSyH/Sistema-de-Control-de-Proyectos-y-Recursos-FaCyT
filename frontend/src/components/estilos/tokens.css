@@ -1,0 +1,39 @@
+/* Copia de docs/mockups/_fuente/compartido/comun.css, tokens (diseño aprobado, versión E).
+   Se conserva tal cual para que la app quede idéntica al mockup. Solo cambia lo que era
+   del comparador: el ancho de teléfono pasa de container query (@container mk) a media query. */
+
+/* ---------- Tokens del diseño aprobado (modo claro) ---------- */
+.mk {
+  /* Paleta FaCyT */
+  --bg: #F4F6F9; --surface: #FFFFFF; --surface-2: #E8F1F8; --line: #DCE2EA;
+  --text: #0F1B2D; --muted: #4A5568; --border: #7D8A9C;
+  --primary: #003A6A; --on-primary: #FFFFFF; --accent: #0092D0; --link: #00609A;
+  --side-bg: #FFFFFF; --side-fg: #0F1B2D; --side-muted: #4A5568; --side-active: #E8F1F8; --side-mark: #003A6A;
+  /* Estados */
+  --ok: #1E7B34; --warn: #8A5A00; --err: #B42318; --info: #0B62A4; --on-err: #FFFFFF;
+  /* Forma y tipografía */
+  --r-s: 4px; --r-m: 8px; --r-l: 10px; --r-xl: 14px;
+  --f-display: "IBM Plex Sans", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  background: var(--bg); color: var(--text); font-family: var(--f-body);
+  font-size: 16px; line-height: 1.5; min-height: 640px;
+}
+
+/* ---------- Tokens del diseño aprobado (modo oscuro) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .mk {
+    --bg: #0B1420; --surface: #13202F; --surface-2: #183049; --line: #22324A;
+    --text: #E8EEF5; --muted: #A3B1C2; --border: #5D6E84;
+    --primary: #5CC0F0; --on-primary: #04121F; --accent: #0092D0; --link: #7CCBF2;
+    --side-bg: #13202F; --side-fg: #E8EEF5; --side-muted: #A3B1C2; --side-active: #183049; --side-mark: #5CC0F0;
+    --ok: #5FD47F; --warn: #F5B841; --err: #FF8A80; --info: #7CC4FF; --on-err: #2A0A07;
+  }
+}
+:root[data-theme="dark"] .mk {
+  --bg: #0B1420; --surface: #13202F; --surface-2: #183049; --line: #22324A;
+  --text: #E8EEF5; --muted: #A3B1C2; --border: #5D6E84;
+  --primary: #5CC0F0; --on-primary: #04121F; --accent: #0092D0; --link: #7CCBF2;
+  --side-bg: #13202F; --side-fg: #E8EEF5; --side-muted: #A3B1C2; --side-active: #183049; --side-mark: #5CC0F0;
+  --ok: #5FD47F; --warn: #F5B841; --err: #FF8A80; --info: #7CC4FF; --on-err: #2A0A07;
+}

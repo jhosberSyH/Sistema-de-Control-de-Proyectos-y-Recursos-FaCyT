@@ -17,6 +17,9 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 9. [Implementación del Módulo 3: Inventario de materia prima y consumibles](#9-implementación-del-módulo-3-inventario-de-materia-prima-y-consumibles)
 10. [Implementación del Módulo 6: Almacén y Bitácora Inalterable](#10-implementación-del-módulo-6-almacén-y-bitácora-inalterable)
 11. [Implementación del Módulo 7: Cierre de período y prorrateo](#11-implementación-del-módulo-7-cierre-de-período-y-prorrateo)
+12. [Prompt para el frontend con datos mock](#12-prompt-para-el-frontend-con-datos-mock)
+13. [Prompt para revisar a fondo las vistas](#13-prompt-para-revisar-a-fondo-las-vistas)
+14. [Prompt para validación del backend e integración](#14-prompt-para-validación-del-backend-e-integración)
 
 ---
 
@@ -430,3 +433,32 @@ Cada prompt aparece con un título que dice para qué se usó y su texto tal com
 > #### 5. Vista Previa y Confirmación Transaccional del Prorrateo
 > - Vista previa (dry-run) que permite comparar y visualizar ambos repartos lado a lado.
 > - Al confirmar, guarda en `overhead_allocations`, actualiza el período a 'Prorrateado' (inmutable), suma el monto asignado a `projects.executed_budget` y registra en `audit_logs`.
+
+## 12. Prompt para el frontend con datos mock
+
+> Ahora vamos a construir el frontend de todo el aplicativo. Guíate al cien por ciento por los mockups aprobados de cada vista que están en la carpeta mockups: colores, tipografía, distribución y componentes tienen que quedar igual. Usa las tecnologías que ya definimos en el README.md y respeta la estructura de carpetas que armamos.
+>
+> Por ahora es solo frontend, sin backend. Para ver cómo se comporta todo vamos a usar datos ficticios (mock), pero no pueden estar metidos dentro de los componentes ni en el código de las vistas. Tienen que vivir aparte y poder activarse o desactivarse cuando queramos, por ejemplo con una variable de entorno, sin tener que tocar ni romper nada del código. La idea es que el día que conectemos el backend real solo apaguemos los mocks y todo siga funcionando igual.
+>
+> Antes de escribir código, investiga en internet las mejores prácticas para manejar datos mock en el stack que elegimos y cómo lo hacen los proyectos serios. Quiero fuentes reales. Con eso dime qué enfoque recomiendas, por qué, y una alternativa.
+>
+> Después arma el plan de desarrollo completo: en qué orden vamos a construir las vistas, qué componentes compartidos hay que hacer primero, cómo se organizan los datos mock, cómo se activan y desactivan, y qué requisitos (RF-XX) cubre cada vista. Guárdalo en plan_frontend.md.
+>
+> Cuando tengas el plan para ahí. No empieces a desarrollar hasta que yo lo revise y te lo apruebe.
+>
+> Ya con el plan aprobado, vamos vista por vista. Cuando termines cada una dime cómo la pruebo y espera a que te la valide antes de pasar a la siguiente. No hagas commit ni push.
+
+## 13. Prompt para revisar a fondo las vistas
+
+> Hagamos el plan para validar todos las vistas que se generarron para saber si estan generado de buena manera y si estan todo acorde a las vista una revision a profundidad para validar que todo esta acorde
+
+## 14. Prompt para validación del backend e integración
+
+> Tu trabajo es hacer una investigación en el repositorio y realizar las validaciones necesarias:
+>
+> Buscar en todas las ramas: en teoría, mis compañeros ya subieron el backend de todos los módulos. La idea es validarlo y conectarlo con el front en caso de que no lo esté.
+> Buscar incoherencias y todo lo que falte.
+> Validar que la base de datos esté conectada adecuadamente con todos los cambios.
+> Hacer pruebas unitarias y pruebas end-to-end ya con la extensión de Chrome, para ver que todo esté funcionando adecuadamente.
+>
+> La idea es ver si falta algo para subirlo a productivo o si ya está óptimo para pasar a producción. Una vez hagamos esto, dime todos los hallazgos.

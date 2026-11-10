@@ -9,6 +9,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.auditoria.service import record_audit_log
+from app.avisos.service import avisar, avisar_a, ids_por_rol
 from app.modulos.usuarios.models import (
     Item,
     Batch,
@@ -443,10 +444,8 @@ def execute_dispatch(
             justification=f"Despacho físico desde solicitud de retiro {req.request_number} (F6.2 - HU-19)"
         )
 
-    # Project executed budget update (F2.7)
-    old_proj_budget = Decimal(str(project.executed_budget or "0.00"))
-    project.executed_budget = old_proj_budget + total_dispatched_cost
-    project.updated_at = datetime.now(timezone.utc)
+    # F2.7: el gasto ejecutado del proyecto se calcula desde los despachos (Project.executed_budget,
+    # decisión 5); no se escribe aquí.
 
     # Request status update (Aprobado -> Ejecutado) (RN-03)
     req.status = "Ejecutado"
@@ -474,7 +473,7 @@ def execute_dispatch(
                 project_title=project.title,
                 dispatched_quantity=d.dispatched_quantity,
                 unit_cost_snapshot=d.unit_cost_snapshot,
-                total_cost=d.dispatched_quantity * d.unit_cost_snapshot,
+                total_cost=d.signed_quantity * d.unit_cost_snapshot,
                 dispatched_by=current_user.id,
                 dispatched_by_name=current_user.full_name,
                 received_by_name=d.received_by_name,
@@ -553,7 +552,7 @@ def list_dispatches(
                 project_title=proj.title,
                 dispatched_quantity=d.dispatched_quantity,
                 unit_cost_snapshot=d.unit_cost_snapshot,
-                total_cost=d.dispatched_quantity * d.unit_cost_snapshot,
+                total_cost=d.signed_quantity * d.unit_cost_snapshot,
                 dispatched_by=d.dispatched_by,
                 dispatched_by_name=dispatcher.full_name if dispatcher else "Usuario",
                 received_by_name=d.received_by_name,
@@ -706,7 +705,7 @@ def get_project_material_balance(
                 "used": Decimal("0.000"),
                 "waste": Decimal("0.000"),
             }
-        items_map[it.id]["dispatched"] += d.dispatched_quantity
+        items_map[it.id]["dispatched"] += d.signed_quantity
 
     # Usages for this project
     usages = db.query(RawMaterialUsage).filter(RawMaterialUsage.project_id == project.id).all()
@@ -887,6 +886,10 @@ def review_dispatch_correction(
     compensatory_dispatch = None
     diff = correction.correct_quantity - orig_dispatch.dispatched_quantity
 
+    avisar(db, correction.requested_by_user_id, "ok" if payload.approved else "err",
+           f"{'Aprobaron' if payload.approved else 'Denegaron'} tu corrección del despacho {orig_dispatch.dispatch_number}",
+           "/proyectos/bitacora", detalle=payload.review_notes)
+
     if not payload.approved:
         correction.status = "Denegado"
         record_audit_log(
@@ -921,50 +924,53 @@ def review_dispatch_correction(
         item.current_stock = item.current_stock - diff
         item.updated_at = now
 
-        # Project executed budget update
+        # El costo del proyecto se ajusta solo, porque Project.executed_budget suma signed_quantity
         cost_diff = diff * orig_dispatch.unit_cost_snapshot
-        project.executed_budget = (project.executed_budget or Decimal("0.00")) + cost_diff
-        project.updated_at = now
 
-        # Create compensatory dispatch record (RNF-11 / RF-35)
-        comp_disp_num = _generate_sequential_number(db, "DES", Dispatch, Dispatch.id)
-        compensatory_dispatch = Dispatch(
-            id=str(uuid.uuid4()),
-            dispatch_number=comp_disp_num,
-            batch_id=batch.id,
-            project_id=project.id,
-            dispatched_quantity=diff,  # Can be negative in compensatory context
-            unit_cost_snapshot=orig_dispatch.unit_cost_snapshot,
-            dispatched_by=current_user.id,
-            received_by_name=orig_dispatch.received_by_name,
-            request_id=orig_dispatch.request_id,
-            is_compensatory=True,
-            original_dispatch_id=orig_dispatch.id,
-            dispatched_at=now,
-        )
-        db.add(compensatory_dispatch)
+        # Misma cantidad (diff == 0): se aprueba sin línea compensatoria (una línea en 0 violaría CHECK > 0)
 
-        record_audit_log(
-            db=db,
-            user_id=current_user.id,
-            ip_address=ip_address,
-            target_object=f"CORRECCION_DESPACHO:{comp_disp_num}:ORIGEN:{orig_dispatch.dispatch_number}",
-            target_table="dispatches",
-            target_id=compensatory_dispatch.id,
-            action_type="DISPATCH_CORRECTION_APPROVED",
-            old_value={
-                "original_dispatch_id": orig_dispatch.id,
-                "original_quantity": str(orig_dispatch.dispatched_quantity),
-            },
-            new_value={
-                "compensatory_dispatch_id": compensatory_dispatch.id,
-                "compensatory_dispatch_number": comp_disp_num,
-                "quantity_adjustment": str(diff),
-                "cost_adjustment": str(cost_diff),
-                "review_notes": payload.review_notes,
-            },
-            justification=f"Aprobación de movimiento compensatorio de despacho (F6.6 - RF-35)"
-        )
+        # Línea compensatoria (RNF-11 / RF-35, decisión 3): cantidad siempre positiva y el sentido
+        # dice si sale más del almacén (corrección al alza) o vuelve (corrección a la baja)
+        if diff != 0:
+            comp_disp_num = _generate_sequential_number(db, "DES", Dispatch, Dispatch.id)
+            compensatory_dispatch = Dispatch(
+                id=str(uuid.uuid4()),
+                dispatch_number=comp_disp_num,
+                batch_id=batch.id,
+                project_id=project.id,
+                dispatched_quantity=abs(diff),
+                direction="salida" if diff > 0 else "devolucion",
+                unit_cost_snapshot=orig_dispatch.unit_cost_snapshot,
+                dispatched_by=current_user.id,
+                received_by_name=orig_dispatch.received_by_name,
+                request_id=orig_dispatch.request_id,
+                is_compensatory=True,
+                original_dispatch_id=orig_dispatch.id,
+                dispatched_at=now,
+            )
+            db.add(compensatory_dispatch)
+
+            record_audit_log(
+                db=db,
+                user_id=current_user.id,
+                ip_address=ip_address,
+                target_object=f"CORRECCION_DESPACHO:{comp_disp_num}:ORIGEN:{orig_dispatch.dispatch_number}",
+                target_table="dispatches",
+                target_id=compensatory_dispatch.id,
+                action_type="DISPATCH_CORRECTION_APPROVED",
+                old_value={
+                    "original_dispatch_id": orig_dispatch.id,
+                    "original_quantity": str(orig_dispatch.dispatched_quantity),
+                },
+                new_value={
+                    "compensatory_dispatch_id": compensatory_dispatch.id,
+                    "compensatory_dispatch_number": comp_disp_num,
+                    "quantity_adjustment": str(diff),
+                    "cost_adjustment": str(cost_diff),
+                    "review_notes": payload.review_notes,
+                },
+                justification=f"Aprobación de movimiento compensatorio de despacho (F6.6 - RF-35)"
+            )
 
     db.flush()
 

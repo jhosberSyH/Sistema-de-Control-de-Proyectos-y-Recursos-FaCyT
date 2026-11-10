@@ -1,0 +1,33 @@
+/* Vista 10, ficha de insumo. Copia de los estilos de docs/mockups/_fuente/10-ficha-insumo.html, dentro de
+   .vista-ficha-insumo porque .resumen, .dos y .vacio se repiten con otras medidas en otros mockups. Las
+   reglas .graf-c y .meses-c del mockup no hacen falta: el gráfico lo dibuja Recharts (GraficoColumnas). */
+.vista-ficha-insumo {
+  display: contents;
+
+  .resumen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .res { padding: 18px; display: grid; gap: 6px; align-content: start; }
+  .res .eti { font-size: 14.5px; color: var(--muted); }
+  .res .val { font-family: var(--f-display); font-size: 32px; font-weight: 600; line-height: 1.05; font-variant-numeric: tabular-nums; color: var(--primary); }
+
+  .repo { padding: 20px; display: grid; gap: 14px; border-left: 4px solid var(--info); }
+  .repo .fila { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+  .repo .cant { display: flex; gap: 8px; align-items: flex-end; }
+  .repo .cant .entrada { width: 110px; text-align: right; }
+  .dos { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .leyenda { display: flex; gap: 6px 10px; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); }
+  .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .leyenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; background: var(--primary); }
+  .vacio { display: grid; gap: 10px; justify-items: start; padding: 20px; border: 1px dashed var(--border); border-radius: var(--r-l); }
+  .vacio .ico { width: 28px; height: 28px; color: var(--muted); }
+  tr.vencido td { color: var(--muted); }
+  @media (max-width: 760px) { .resumen, .dos { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+  .res .val.nd { font-size: 22px; color: var(--muted); }
+  .res .estado, .repo .estado { justify-self: start; }
+  .repo.aprobada { border-left-color: var(--ok); }
+  .repo .cant .campo { display: grid; gap: 6px; }
+  .repo .cant .msg-error { max-width: 220px; }
+  .venc small { display: block; color: var(--muted); font-size: 13.5px; }
+  .resultado:focus { outline: none; }
+}

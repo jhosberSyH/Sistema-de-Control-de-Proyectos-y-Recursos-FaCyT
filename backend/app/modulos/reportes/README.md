@@ -1,34 +1,27 @@
-## Módulo 8 (Reportes y Auditoría)
+## Módulo 8 (Reportes, dashboard y auditoría)
 
-### Dependencias nuevas
-Se agregaron `reportlab>=4.2.0` (PDF) y `openpyxl>=3.1.0` (Excel) al requirements.txt.
+Contrato del frontend (`frontend/src/testing/mocks/handlers/{reportes,dashboard,auditoria}.ts`):
 
-### F8.5 — Registro automático
-El registro de auditoría ya estaba implementado desde el Módulo 1. El Módulo 8
-no expone un endpoint para "crear" logs; solo consulta y exporta. Cada mutación de
-M1 a M7 sigue llamando a `record_audit_log` antes del commit.
+| Ruta | Quién | Archivo |
+|---|---|---|
+| `GET /api/reportes/opciones` | todos (el Coordinador, solo sus proyectos) | `contrato.py` |
+| `GET /api/reportes/vista-previa?tipo&desde&hasta&proyectoIds&periodo&equipo` | todos | `contrato.py` |
+| `GET /api/reportes/{gastos\|reparto\|hoja-de-vida}?formato=pdf\|xlsx&...` | todos | `contrato.py` |
+| `GET /api/dashboard?periodo&prioridad` | Administrador | `contrato.py` |
+| `GET /api/auditoria?usuario&accion&objeto&desde&pagina` | Administrador | `app/auditoria/contrato.py` |
 
-### F8.4 — Cambios de estado del equipo
-Los cambios de estado operacional se reconstruyen consultando `audit_logs`
-(`target_table='equipments'`, `action_type='EQUIPMENT_STATUS_CHANGE'`,
-`target_id=<id>`). No hay tabla específica para eso.
+- **Archivos.** PDF con reportlab (encabezado institucional y "Página i de n") y Excel con openpyxl (los
+  montos van como número). Sin datos no se genera el archivo: 409 con el motivo, igual que la vista previa
+  devuelve `vacio`.
+- **Gasto ejecutado.** Sale de los movimientos (vista `app.v_project_spend`, decisión 5): despachos
+  valorizados con signo, gastos ejecutados y la parte de los gastos compartidos. El análisis de gastos y el
+  gráfico del dashboard usan las mismas tres fuentes por fecha (un gasto cuenta el día en que se ejecutó; el
+  reparto, el día en que se aplicó).
+- **Fechas.** Días en `APP_TIMEZONE` (`formato.py`), no en UTC.
+- **RN-07.** El Coordinador solo incluye sus proyectos; pedir uno ajeno responde 404.
+- **Hoja de vida (F8.4).** Los cambios de estado del equipo salen de `audit_logs` (no hay tabla propia).
+- **Auditoría (F8.5, F8.6).** Solo lectura. Cada módulo registra con `record_audit_log` y, para que se lea
+  bien, guarda `new_value.descripcion` y `new_value.detalle`; las filas sin descripción se describen en
+  español a partir de `action_type` y del objeto.
 
-### F8.2 — Alcance del coordinador
-El coordinador solo puede exportar gastos de sus proyectos (RN-07). Si envía
-`proyecto_ids` con proyectos ajenos, el servidor los ignora.
-
-### F8.3 — Coordinador
-El coordinador solo ve sus filas en el resumen de prorrateo, pero el costo total
-del overhead del período sigue siendo el global (es el dato de contexto del
-período).
-
-### F8.2 / F8.3 / F8.4 — Rangos de fecha
-Si se envía `periodo_id`, se usa el rango del `AccountingPeriod`. Si no, se
-exigen `fecha_inicio` y `fecha_fin` en formato `YYYY-MM-DD`. Las comparaciones
-de fecha se hacen con `func.date(...)` sobre los timestamps con timezone.
-
-### F8.1 — Cálculo de `executed_budget`
-El dashboard recalcula el `executed_budget` de cada proyecto activo con
-`recalculate_project_metrics` del Módulo 2, por consistencia con D10. Esto
-puede diferir ligeramente de un valor persistido si otros módulos no lo
-recalcularon, pero el dashboard siempre muestra el valor correcto.
+`service.py` y `schemas.py` son la versión anterior (snake_case); ya no están montados en la app.

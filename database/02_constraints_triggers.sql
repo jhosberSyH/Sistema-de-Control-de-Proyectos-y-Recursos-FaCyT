@@ -138,6 +138,21 @@ BEGIN
             FOR EACH ROW
             EXECUTE FUNCTION app.fn_update_timestamp();
     END IF;
+
+    -- D8: estas dos tablas también tienen updated_at y no tenían trigger
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_project_milestones_updated_at') THEN
+        CREATE TRIGGER trg_project_milestones_updated_at
+            BEFORE UPDATE ON app.project_milestones
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_update_timestamp();
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_equipment_reservations_updated_at') THEN
+        CREATE TRIGGER trg_equipment_reservations_updated_at
+            BEFORE UPDATE ON app.equipment_reservations
+            FOR EACH ROW
+            EXECUTE FUNCTION app.fn_update_timestamp();
+    END IF;
 END $$;
 
 -- ----------------------------------------------------------------------------
@@ -145,20 +160,14 @@ END $$;
 -- ----------------------------------------------------------------------------
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'uq_no_overlapping_equipment_reservations'
-    ) THEN
-        ALTER TABLE app.equipment_reservations
-            ADD CONSTRAINT uq_no_overlapping_equipment_reservations
-            EXCLUDE USING GIST (
-                equipment_id WITH =,
-                tstzrange(start_time, end_time) WITH &&
-            )
-            WHERE (status IN ('Borrador', 'Pendiente de Aprobación', 'Aprobado', 'Ejecutado'));
-    END IF;
-EXCEPTION
-    WHEN OTHERS THEN
-        RAISE NOTICE 'Could not create EXCLUDE constraint: %', SQLERRM;
-END $$;
+-- Decisión 2: solo ocupan la agenda las reservas Pendiente de Aprobación y Aprobado (un borrador no
+-- aparta el equipo y lo ejecutado ya pasó). Se recrea siempre para que las bases existentes tomen la regla.
+-- Sin EXCEPTION WHEN OTHERS: si falta btree_gist, el script debe fallar en vez de seguir sin la regla.
+ALTER TABLE app.equipment_reservations DROP CONSTRAINT IF EXISTS uq_no_overlapping_equipment_reservations;
+ALTER TABLE app.equipment_reservations
+    ADD CONSTRAINT uq_no_overlapping_equipment_reservations
+    EXCLUDE USING GIST (
+        equipment_id WITH =,
+        tstzrange(start_time, end_time) WITH &&
+    )
+    WHERE (status IN ('Pendiente de Aprobación', 'Aprobado'));

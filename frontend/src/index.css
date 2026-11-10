@@ -1,0 +1,97 @@
+/* Hoja de estilos de entrada.
+   Tailwind 4 se carga sin su "preflight" (reset): los mockups aprobados se diseñaron sobre los
+   estilos por defecto del navegador, y con el reset cambiarían títulos, listas y botones. */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* IBM Plex Sans + IBM Plex Mono (SIL OFL 1.1), servidas desde el propio sitio, solo el subconjunto latino */
+@import '@fontsource/ibm-plex-sans/latin-400.css';
+@import '@fontsource/ibm-plex-sans/latin-500.css';
+@import '@fontsource/ibm-plex-sans/latin-600.css';
+@import '@fontsource/ibm-plex-sans/latin-700.css';
+@import '@fontsource/ibm-plex-mono/latin-400.css';
+@import '@fontsource/ibm-plex-mono/latin-500.css';
+
+/* Diseño aprobado (docs/mockups/_fuente/compartido) */
+@import './components/estilos/tokens.css' layer(base);
+@import './components/estilos/comun.css' layer(components);
+@import './components/estilos/app.css' layer(components);
+/* Piezas que los mockups no dibujan y ajustes propios de la app real */
+@import './components/estilos/extensiones.css' layer(components);
+
+@layer base {
+  /* Lo mismo que el esqueleto de los mockups (docs/mockups/_fuente/construir.py) */
+  :root {
+    color-scheme: light;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+  }
+  img {
+    max-width: 100%;
+  }
+  [hidden] {
+    display: none !important;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+  }
+}
+
+/* Los tokens también quedan disponibles como utilidades de Tailwind (bg-surface, text-muted, ...) */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-accent: var(--accent);
+  --color-link: var(--link);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-err: var(--err);
+  --color-info: var(--info);
+  --radius-s: var(--r-s);
+  --radius-m: var(--r-m);
+  --radius-l: var(--r-l);
+  --radius-xl: var(--r-xl);
+  --font-sans: var(--f-body);
+  --font-mono: var(--f-mono);
+}
+
+@layer base {
+  /* Variables que esperan los componentes de shadcn/ui, apuntadas a los tokens del diseño.
+     --primary, --muted, --accent y --border ya existen con el significado del mockup
+     (--muted es un color de texto), así que los componentes de shadcn se adaptan a mano
+     en src/components/ui con las clases del mockup en lugar de usarse con su estilo por defecto. */
+  .mk {
+    --background: var(--bg);
+    --foreground: var(--text);
+    --card: var(--surface);
+    --card-foreground: var(--text);
+    --popover: var(--surface);
+    --popover-foreground: var(--text);
+    --primary-foreground: var(--on-primary);
+    --secondary: var(--surface-2);
+    --secondary-foreground: var(--text);
+    --muted-foreground: var(--muted);
+    --destructive: var(--err);
+    --input: var(--border);
+    --ring: var(--primary);
+    --radius: var(--r-m);
+  }
+}

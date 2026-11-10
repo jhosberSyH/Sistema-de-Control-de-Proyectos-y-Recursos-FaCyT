@@ -6,7 +6,7 @@ from typing import Tuple
 
 try:
     from argon2 import PasswordHasher
-    from argon2.exceptions import VerifyMismatchError
+    from argon2.exceptions import VerifyMismatchError, VerificationError, InvalidHashError
     _ph = PasswordHasher()
     _HAS_ARGON2 = True
 except ImportError:
@@ -31,7 +31,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         if _HAS_ARGON2:
             try:
                 return _ph.verify(hashed_password, plain_password)
-            except VerifyMismatchError:
+            except (VerifyMismatchError, VerificationError, InvalidHashError):
+                # Hash corrupto o mal formado: se trata como credencial inválida (401), no como error 500
                 return False
         # If stored with argon2 but library not loaded, reject for security
         return False

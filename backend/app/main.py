@@ -1,25 +1,28 @@
 """FastAPI main application entrypoint."""
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.database import engine, Base, SessionLocal
+from app.core.database import engine, Base, SessionLocal, ES_SQLITE
 from app.core.security import hash_password
 from app.autenticacion.router import router as auth_router
 from app.modulos.usuarios.router import router as usuarios_router
-from app.modulos.proyectos.router import router as proyectos_router
-from app.modulos.inventario.router import router as inventario_router
-from app.modulos.equipos.router import router as equipos_router
-from app.modulos.almacen.router import router as almacen_router
-from app.modulos.solicitudes.router import router as solicitudes_router
-from app.modulos.prorrateo.router import router as prorrateo_router
+from app.modulos.proyectos.contrato import router as proyectos_router
+from app.modulos.busqueda.router import router as busqueda_router
+from app.modulos.inventario.contrato import router as inventario_router
+from app.modulos.equipos.contrato import router as equipos_router
+from app.modulos.almacen.contrato import router as almacen_router
+from app.modulos.solicitudes.contrato import router as solicitudes_router
+from app.modulos.solicitudes.cotizacion import router as cotizacion_router
+from app.modulos.prorrateo.contrato import router as prorrateo_router
 from app.modulos.usuarios.models import User, Location, SystemParameter, Project
-from app.modulos.reportes.router import router as reportes_router
-from app.auditoria.router import router as auditoria_router
+from app.modulos.reportes.contrato import router as reportes_router
+from app.auditoria.contrato import router as auditoria_router
+from app.navegacion.router import router as navegacion_router
+from app.core.api import registrar_manejadores
 from app.auditoria.service import record_audit_log
 
 
@@ -27,6 +30,7 @@ def init_default_data(db: Session):
     """Seed initial data if database is empty (local dev convenience)."""
     # 1. Admin user
     admin = db.query(User).filter(User.email == "admin@cpq.local").first()
+    creado = admin is None
     if not admin:
         admin = User(
             id="a0000000-0000-0000-0000-000000000001",
@@ -74,7 +78,6 @@ def init_default_data(db: Session):
             status="En ejecución",
             priority="Crítica",
             assigned_budget=12000.00,
-            executed_budget=6800.00,
             coordinator_id=coord_bio.id
         )
         p2 = Project(
@@ -84,7 +87,6 @@ def init_default_data(db: Session):
             status="En ejecución",
             priority="Media",
             assigned_budget=6200.00,
-            executed_budget=2900.00,
             coordinator_id=coord_fis.id
         )
         p3 = Project(
@@ -94,7 +96,6 @@ def init_default_data(db: Session):
             status="En ejecución",
             priority="Baja",
             assigned_budget=3100.00,
-            executed_budget=450.00,
             coordinator_id=coord_fis.id
         )
         db.add_all([p1, p2, p3])
@@ -135,27 +136,31 @@ def init_default_data(db: Session):
         )
         db.add(p_disp)
 
-    record_audit_log(
-        db=db,
-        user_id=None,
-        ip_address="127.0.0.1",
-        target_object="SYSTEM",
-        action_type="INITIAL_BOOTSTRAP",
-        old_value=None,
-        new_value={"status": "Initialized local development database"}
-    )
+    if creado:
+        record_audit_log(
+            db=db,
+            user_id=None,
+            ip_address="127.0.0.1",
+            target_object="SYSTEM",
+            action_type="INITIAL_BOOTSTRAP",
+            old_value=None,
+            new_value={"status": "Initialized local development database"}
+        )
     db.commit()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize database tables
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    try:
-        init_default_data(db)
-    finally:
-        db.close()
+    # En PostgreSQL el esquema lo crean los scripts de database/ (schema.sql,
+    # 02_constraints_triggers.sql, seeders.sql); el backend no lo genera.
+    # Solo con SQLite (desarrollo rápido y pruebas) se crean tablas y datos demo.
+    if ES_SQLITE:
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        try:
+            init_default_data(db)
+        finally:
+            db.close()
     yield
 
 
@@ -180,17 +185,23 @@ app.add_middleware(
 app.include_router(auth_router, prefix=settings.API_PREFIX)
 app.include_router(usuarios_router, prefix=settings.API_PREFIX)
 app.include_router(proyectos_router, prefix=settings.API_PREFIX)
+app.include_router(busqueda_router, prefix=settings.API_PREFIX)
 app.include_router(inventario_router, prefix=settings.API_PREFIX)
 app.include_router(equipos_router, prefix=settings.API_PREFIX)
 app.include_router(almacen_router, prefix=settings.API_PREFIX)
 app.include_router(solicitudes_router, prefix=settings.API_PREFIX)
+app.include_router(cotizacion_router, prefix=settings.API_PREFIX)
 app.include_router(prorrateo_router, prefix=settings.API_PREFIX)
 app.include_router(reportes_router, prefix=settings.API_PREFIX)
 app.include_router(auditoria_router, prefix=settings.API_PREFIX)
+app.include_router(navegacion_router, prefix=settings.API_PREFIX)
+
+# Errores con el formato que lee el frontend (422 en español)
+registrar_manejadores(app)
 
 
 
-@app.get("/api/health")
+@app.get(f"{settings.API_PREFIX}/health")
 def health_check():
     """Health check endpoint."""
     return {"status": "ok", "environment": settings.APP_ENV}

@@ -1,0 +1,131 @@
+/* Vista 17, recepción de lote. Copia de los estilos de docs/mockups/17-recepcion-lote/index.html, dentro
+   de .vista-recepcion. El @container mk del mockup pasa a @media; .prefijo ya está en los estilos
+   compartidos (extensiones.css). */
+.vista-recepcion {
+  display: contents;
+
+  .dos { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .form-l { padding: 22px; display: grid; gap: 20px; }
+  .form-l h2 { font-size: 13px; font-family: var(--f-mono); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--primary); }
+
+  .efecto-s { padding: 20px; display: grid; gap: 14px; position: sticky; top: 16px; }
+  .paso-s { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; text-align: center; }
+  .paso-s div { padding: 12px; border: 1px solid var(--line); border-radius: var(--r-m); }
+  .paso-s span { display: block; font-size: 13px; color: var(--muted); }
+  .paso-s b { font-size: 24px; font-family: var(--f-display); font-variant-numeric: tabular-nums; }
+  .paso-s .despues { border-color: var(--primary); background: var(--surface-2); }
+
+  /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+  .con-unidad { display: flex; gap: 8px; align-items: center; }
+  .hecho:focus { outline: none; }
+  .acciones-hecho { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px; }
+
+  @media (max-width: 760px) {
+    .dos { grid-template-columns: minmax(0, 1fr); }
+    .efecto-s { position: static; }
+  }
+}
+
+/* Entrada del almacén (sin mockup): contadores, listas y bloques de la vista 02 */
+.vista-almacen {
+  display: contents;
+
+  .pend .tit .prio { margin-left: 6px; font-size: 13px; }
+  .lista .num { white-space: nowrap; }
+}
+
+/* Vista 18, despacho. Copia de los estilos de docs/mockups/18-despacho/index.html, dentro de
+   .vista-despacho. Las dos pantallas del mockup (.vista-form y .vista-ok) se pintan por separado. */
+.vista-despacho {
+  display: contents;
+
+  .insumo-d { padding: 0; overflow: hidden; }
+  .insumo-d .cab-i { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+  .insumo-d .cab-i h2 { font-size: 18px; }
+  .lotes { list-style: none; margin: 0; padding: 0; }
+  /* Las dos últimas columnas, más anchas que en el mockup: los nombres de las ubicaciones del catálogo son más largos */
+  .lote { display: grid; grid-template-columns: 28px 110px minmax(0, 1fr) 150px 210px; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .lotes > div:last-child .lote { border-bottom: 0; }
+  .lote input { width: 20px; height: 20px; accent-color: var(--primary); margin: 0; }
+  .lote.sel { background: var(--surface-2); box-shadow: inset 4px 0 0 var(--primary); }
+  .lote.bloq { cursor: not-allowed; color: var(--muted); }
+  .lote .n { text-align: right; font-variant-numeric: tabular-nums; }
+  .lote .sug { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; font-weight: 600; color: var(--text); }
+  .lote .sug .ico { width: 16px; height: 16px; color: var(--ok); }
+  .confirmar { padding: 20px; display: grid; gap: 16px; }
+  .exito { padding: 24px; display: grid; gap: 12px; justify-items: start; border-left: 4px solid var(--ok); }
+  .exito .ico { width: 32px; height: 32px; color: var(--ok); }
+  .vista-form, .vista-ok { display: grid; gap: 20px; }
+
+  /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+  .error-lote { margin: 12px 18px 0; }
+  .resumen-d { font-size: 15px; }
+  .exito .mono, .resumen-d .mono { white-space: nowrap; }
+  .exito:focus { outline: none; }
+
+  @media (max-width: 760px) {
+    .lote { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 4px 10px; }
+    .lote > :nth-child(3) { grid-column: 2 / -1; }
+    .lote > :nth-child(4) { grid-column: 2; text-align: left; }
+    /* La ubicación va en su propia línea: sus nombres son largos y aplastaban el código del lote */
+    .lote > :nth-child(5) { grid-column: 2 / -1; text-align: left; color: var(--muted); font-size: 14px; }
+    .lote .mono { white-space: nowrap; }
+  }
+}
+
+/* Vista 19, bitácora. Copia de los estilos de docs/mockups/19-bitacora/index.html, dentro de
+   .vista-bitacora; los del diálogo van fuera porque se pinta en un portal. */
+.vista-bitacora {
+  display: contents;
+
+  .bit { padding: 0; overflow: hidden; }
+  .bit .herr { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+  .bit .tabla-env { padding: 0 8px; }
+  .candado { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); }
+  .candado .ico { width: 16px; height: 16px; }
+  tr.comp td { background: var(--bg); }
+  tr.comp td:first-child { box-shadow: inset 4px 0 0 var(--info); }
+  .enlace-c { display: inline-flex; gap: 4px; align-items: center; font-size: 13.5px; color: var(--muted); }
+  .enlace-c .ico { width: 14px; height: 14px; }
+
+  /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1): el despacho al que lleva un enlace */
+  tr.resaltado td { background: var(--surface-2); }
+  tr.resaltado td:first-child { box-shadow: inset 4px 0 0 var(--primary); }
+  .hecho:focus { outline: none; }
+}
+
+.dialogo .campo-orig { display: grid; gap: 4px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r-m); background: var(--bg); align-content: start; }
+.dialogo .campo-orig span { font-size: 13.5px; color: var(--muted); }
+.dialogo .campo-orig b { font-variant-numeric: tabular-nums; }
+.dialogo .con-unidad { display: flex; gap: 8px; align-items: center; }
+.dialogo .motivo-c { min-height: 96px; padding: 10px 12px; resize: vertical; }
+
+/* Vista 20, uso de materia prima. Copia de los estilos de docs/mockups/20-uso-materia-prima/index.html,
+   dentro de .vista-uso-materia. El @container mk del mockup pasa a @media. */
+.vista-uso-materia {
+  display: contents;
+
+  .dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .form-u { padding: 22px; display: grid; gap: 18px; }
+  .balance { padding: 20px; display: grid; gap: 14px; }
+  .balance h2 { font-size: 18px; }
+  .barra-b { position: relative; height: 22px; border-radius: var(--r-s); background: var(--surface-2); overflow: hidden; }
+  .barra-b .usado { position: absolute; left: 0; top: 0; bottom: 0; background: var(--primary); }
+  .barra-b .nuevo { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--primary) 0 5px, transparent 5px 8px); border: 2px solid var(--primary); }
+  .barra-b .exceso { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, var(--err) 0 5px, transparent 5px 8px); border: 2px solid var(--err); }
+  .cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .cifras div { padding: 12px; border: 1px solid var(--line); border-radius: var(--r-m); display: grid; gap: 2px; }
+  .cifras span { font-size: 13px; color: var(--muted); }
+  .cifras b { font-size: 20px; font-family: var(--f-display); font-variant-numeric: tabular-nums; }
+
+  /* Piezas del mockup con estilo en línea, y las que no estaban dibujadas (plan §7.1) */
+  .leyenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); }
+  .leyenda .exc { color: var(--text); }
+  .con-unidad { display: flex; gap: 8px; align-items: center; }
+  .obs-u { min-height: 80px; padding: 10px 12px; resize: vertical; }
+  .hecho:focus { outline: none; }
+
+  @media (max-width: 760px) {
+    .dos, .cifras { grid-template-columns: minmax(0, 1fr); }
+  }
+}

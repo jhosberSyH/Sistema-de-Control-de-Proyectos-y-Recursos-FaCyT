@@ -10,6 +10,7 @@ from sqlalchemy import func, case
 from sqlalchemy.orm import Session, joinedload
 
 from app.auditoria.service import record_audit_log
+from app.avisos.service import avisar, avisar_a, ids_por_rol
 from app.modulos.usuarios.models import (
     User,
     Project,
@@ -18,7 +19,7 @@ from app.modulos.usuarios.models import (
     Request,
     RequestItem,
 )
-from app.modulos.proyectos.service import recalculate_project_metrics
+from app.modulos.proyectos.service import recalculate_project_metrics, get_project_metrics_snapshot
 from app.modulos.solicitudes.schemas import (
     RequestCreate,
     RequestUpdate,
@@ -223,8 +224,8 @@ def _build_request_response(request: Request) -> RequestResponse:
 
 
 def _build_project_metrics(db: Session, project: Project) -> ProjectMetricsResponse:
-    # Delega en M2, que recalcula y persiste (igual que su propio GET de detalle).
-    _, metrics = recalculate_project_metrics(db, project.id, commit=False)
+    # Delega en M2 (solo lectura: el gasto sale de los movimientos, decisión 5).
+    _, metrics = get_project_metrics_snapshot(db, project.id)
     return ProjectMetricsResponse(
         assigned_budget=project.assigned_budget,
         executed_budget=metrics["executed_budget"],
@@ -561,6 +562,8 @@ def approve_request(
     request.decided_at = _now()
     request.updated_at = _now()
     request.decision_reason = _append_section(request.decision_reason, TAG_APROBACION, payload.reason)
+    avisar(db, request.requester_user_id, "ok", f"Aprobaron tu solicitud {request.request_number}",
+           "/solicitudes", detalle=payload.reason)
 
     record_audit_log(
         db=db,
@@ -607,6 +610,8 @@ def reject_request(
     request.decided_at = _now()
     request.updated_at = _now()
     request.decision_reason = _append_section(request.decision_reason, TAG_RECHAZO, payload.reason)
+    avisar(db, request.requester_user_id, "err", f"Rechazaron tu solicitud {request.request_number}",
+           "/solicitudes", detalle=payload.reason)
 
     record_audit_log(
         db=db,
@@ -661,6 +666,8 @@ def execute_request(
     if payload.notes:
         execution_note += f". {payload.notes}"
     request.decision_reason = _append_section(request.decision_reason, TAG_EJECUCION, execution_note)
+    avisar(db, request.requester_user_id, "info", f"Se ejecutó el gasto {request.request_number}",
+           "/solicitudes", detalle=execution_note)
 
     # Recalculate project metrics (D10): M2 expone recalculate_project_metrics.
     recalculate_project_metrics(db, request.project_id, commit=False)
@@ -694,7 +701,8 @@ def get_approver_inbox(
     priority_case = _priority_case()
     requests = (
         db.query(Request)
-        .join(Project, Request.project_id == Project.id)
+        # outerjoin: las solicitudes de centro de costo general (reposición) no tienen proyecto (decisión 4)
+        .outerjoin(Project, Request.project_id == Project.id)
         .options(
             joinedload(Request.project),
             joinedload(Request.requester),
@@ -729,7 +737,7 @@ def list_prioritized_projects(
 
     result: List[PrioritizedProjectResponse] = []
     for p in projects:
-        _, metrics = recalculate_project_metrics(db, p.id, commit=False)
+        _, metrics = get_project_metrics_snapshot(db, p.id)
         result.append(
             PrioritizedProjectResponse(
                 id=p.id,
@@ -782,7 +790,7 @@ def change_project_priority(
     db.commit()
     db.refresh(project)
 
-    _, metrics = recalculate_project_metrics(db, project.id, commit=False)
+    _, metrics = get_project_metrics_snapshot(db, project.id)
     return PrioritizedProjectResponse(
         id=project.id,
         code=project.code,

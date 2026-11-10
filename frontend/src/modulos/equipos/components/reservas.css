@@ -1,0 +1,66 @@
+/* Vista 12, reservas. Copia de los estilos de docs/mockups/_fuente/12-reservas.html, dentro de
+   .vista-reservas porque .dos y .leyenda se repiten con otras medidas en otros mockups. */
+.vista-reservas {
+  display: contents;
+
+  .dos { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+  .cal-tarjeta { padding: 16px; display: grid; gap: 12px; min-width: 0; }
+  .cal-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cal-nav h2 { font-size: 18px; }
+  .cal-nav .flechas { display: flex; gap: 6px; }
+  .cal-env { overflow-x: auto; }
+  .cal { display: grid; grid-template-columns: 52px repeat(6, minmax(92px, 1fr)); min-width: 620px; }
+  .cal .dia { text-align: center; padding: 8px 4px; font-size: 13.5px; color: var(--muted); border-bottom: 1px solid var(--line); }
+  .cal .dia b { display: block; color: var(--text); font-size: 16px; font-variant-numeric: tabular-nums; }
+  .cal .dia.hoy b { color: var(--primary); }
+  .cal .horas { position: relative; height: 528px; }
+  .cal .horas span { position: absolute; right: 8px; font-size: 12px; color: var(--muted); transform: translateY(-50%); font-variant-numeric: tabular-nums; }
+  .cal .col { position: relative; height: 528px; border-left: 1px solid var(--line); background-image: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 48px); }
+  .blq { position: absolute; left: 4px; right: 4px; border-radius: var(--r-s); padding: 4px 6px; font-size: 12.5px; line-height: 1.3; overflow: hidden; }
+  .blq b { display: block; font-weight: 600; }
+  .blq.otro { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
+  .blq.mio { background: var(--primary); color: var(--on-primary); }
+  .blq.pend { background: repeating-linear-gradient(135deg, var(--surface) 0 6px, var(--surface-2) 6px 12px); border: 2px dashed var(--primary); color: var(--text); }
+  .blq.nuevo { background: transparent; border: 2px solid var(--err); color: var(--text); box-shadow: 0 0 0 3px var(--surface); }
+  .blq.libre { background: transparent; border: 2px dashed var(--ok); color: var(--text); }
+  .leyenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); }
+  .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .leyenda i { width: 16px; height: 12px; border-radius: 3px; display: inline-block; }
+  /* Una sola columna que se puede encoger: el selector con textos largos no ensancha la tarjeta (reflujo a 320 px) */
+  .form-r { padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .form-r h2 { font-size: 19px; }
+  .horas-f { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .libres { display: flex; gap: 8px; flex-wrap: wrap; }
+  .libres button { font: inherit; font-size: 14px; min-height: 40px; padding: 0 12px; border-radius: var(--r-m); border: 1px solid var(--ok); background: var(--surface); color: var(--text); cursor: pointer; }
+  .agenda { display: none; }
+  /* Tableta: el calendario necesita ancho; el formulario va debajo */
+  @media (max-width: 960px) {
+    .dos { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 760px) {
+    .dos { grid-template-columns: minmax(0, 1fr); }
+    .cal-env { display: none; }
+    .agenda { display: grid; gap: 8px; }
+    .agenda .d { font-weight: 600; margin-top: 4px; }
+    .agenda .it { display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-m); font-size: 15px; }
+    .agenda .it small { display: block; color: var(--muted); font-size: 13.5px; }
+  }
+
+  /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+  .cab .acc .campo { min-width: 260px; }
+  .cal .col.elegible { cursor: pointer; }
+  /* La reserva que se abrió desde el inicio ("Ver en el calendario") */
+  .blq.resaltada { outline: 2px solid var(--text); outline-offset: 2px; }
+  .blq a { color: inherit; text-decoration: none; display: block; }
+  .blq a:hover, .blq a:focus-visible { text-decoration: underline; }
+  .agenda .it.nuevo { border: 2px solid var(--err); }
+  .agenda .it.libre { border-style: dashed; border-color: var(--ok); }
+  .agenda .it.mio { border-color: var(--primary); border-width: 2px; }
+  .agenda .it.pend { border: 2px dashed var(--primary); }
+  .agenda .vacia { color: var(--muted); font-size: 15px; }
+  .resultado:focus { outline: none; }
+  .pend-lista { list-style: none; margin: 0; padding: 0; display: grid; }
+  .pend-lista li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; flex-wrap: wrap; }
+  .pend-lista li:first-child { border-top: 0; }
+  .pend-lista small { display: block; color: var(--muted); font-size: 14px; }
+}

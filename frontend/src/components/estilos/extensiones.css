@@ -1,0 +1,490 @@
+/* Ajustes de la app real y piezas que los mockups no dibujan.
+   Todo usa los mismos tokens y patrones del diseño aprobado (plan_frontend.md §7.1). */
+
+/* ---------- Marco en la app real ---------- */
+/* En el mockup el marco tenía un alto fijo de demostración; en la app ocupa la ventana */
+.mk {
+  min-height: 100dvh;
+}
+.app {
+  min-height: 100dvh;
+}
+/* El riel queda fijo al desplazarse, así la navegación siempre está a la vista (se ve igual arriba de la página) */
+.nav-lat {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+/* Si una etiqueta del riel no cabe en sus 76 px (por ejemplo, con un tamaño mínimo de letra mayor en el
+   navegador), se parte en lugar de cortarse por los costados */
+.nav-lat a.item span {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+/* Los diálogos se abren en un portal sobre toda la ventana, no dentro del marco del mockup */
+.capa {
+  position: fixed;
+  z-index: 50;
+  overflow-y: auto;
+}
+.dialogo {
+  position: relative;
+}
+
+.barra .marca-tel {
+  min-width: 0;
+}
+
+/* ---------- Escudo sin placa blanca ---------- */
+/* El escudo va sin fondo y sin placa blanca (identidad_visual.md §6, cambio del 28/10/2026) */
+.editorial img {
+  height: auto;
+}
+
+/* ---------- Acceso a la cuenta desde la barra (el riel ya no tiene pie; pedido del 28/10/2026) ---------- */
+.perfil-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: inherit;
+  text-decoration: none;
+}
+.perfil-btn .avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 13.5px;
+}
+.perfil-btn:hover .avatar,
+.perfil-btn[aria-current='page'] .avatar {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+/* ---------- Panel flotante de avisos ---------- */
+.flotante {
+  z-index: 40;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--r-l);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  padding: 8px;
+}
+.flotante:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.panel-avisos {
+  width: min(400px, calc(100vw - 20px));
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+  max-height: min(560px, calc(100dvh - 90px));
+  overflow-y: auto;
+}
+.panel-avisos .pend li {
+  padding: 12px 0;
+}
+.panel-avisos .pend a.tit {
+  color: var(--text);
+  text-decoration: none;
+}
+.panel-avisos .pend a.tit:hover {
+  text-decoration: underline;
+}
+.panel-avisos .pend li.leido .tit {
+  font-weight: 500;
+}
+.panel-avisos .pend .cuando {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-top: 2px;
+}
+.panel-avisos .vacio-avisos {
+  color: var(--muted);
+  padding: 12px 0;
+  font-size: 15px;
+}
+
+/* ---------- Cajón de navegación del teléfono ---------- */
+.cajon-capa {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: rgba(10, 15, 26, 0.45);
+}
+.cajon {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 46;
+  width: min(320px, 86vw);
+  background: var(--side-bg);
+  color: var(--side-fg);
+  border-right: 1px solid var(--line);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 10px;
+  gap: 12px;
+  overflow-y: auto;
+}
+.cajon:focus-visible {
+  outline: none;
+}
+.cajon-cab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.cajon-cab img {
+  width: 38px;
+  height: 38px;
+}
+.cajon-cab strong {
+  display: block;
+  font-family: var(--f-display);
+  font-size: 16px;
+  line-height: 1.2;
+}
+.cajon-cab span {
+  font-size: 13px;
+  color: var(--side-muted);
+}
+.cajon-cab .icono-btn {
+  margin-left: auto;
+}
+.cajon ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.cajon a.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: var(--r-m);
+  color: inherit;
+  text-decoration: none;
+  font-size: 15.5px;
+}
+.cajon a.item[aria-current='page'] {
+  background: var(--side-active);
+  font-weight: 600;
+  color: var(--primary);
+  box-shadow: inset 3px 0 0 var(--primary);
+  border-radius: 0 var(--r-m) var(--r-m) 0;
+}
+.cajon a.item .cuenta {
+  margin-left: auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  background: var(--side-mark);
+  color: var(--on-primary);
+}
+.tema-seg {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  padding: 3px;
+  gap: 2px;
+  background: var(--bg);
+}
+.tema-seg button {
+  flex: 1;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  min-height: 40px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tema-seg button[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+
+/* ---------- Estados de la vista ---------- */
+/* Estado vacío (vista 10, docs/mockups/_fuente/10-ficha-insumo.html L38-39) */
+.vacio {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 20px;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-l);
+}
+.vacio .ico {
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+}
+.vacio h2 {
+  font-size: 18px;
+}
+
+/* Esqueletos de carga: la forma de lo que va a aparecer, en el color de superficie destacada */
+.esqueleto {
+  display: block;
+  background: var(--surface-2);
+  border-radius: var(--r-s);
+  animation: esqueleto 1.4s ease-in-out infinite;
+}
+@keyframes esqueleto {
+  50% {
+    opacity: 0.55;
+  }
+}
+.esqueleto-linea {
+  height: 14px;
+}
+.esqueleto-titulo {
+  height: 30px;
+  width: min(360px, 70%);
+}
+
+/* Mensajes de error y "sin permiso" a página completa */
+.pagina-estado {
+  max-width: 640px;
+}
+.pagina-estado .codigo {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- Galería de componentes (solo en desarrollo) ---------- */
+.galeria-seccion {
+  display: grid;
+  gap: 14px;
+}
+.galeria-fila {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ---------- Controles compartidos que venían dentro de una vista ---------- */
+/* Contraseña con mostrar u ocultar (docs/mockups/_fuente/01-inicio-sesion.html L23-25) */
+.clave {
+  position: relative;
+}
+.clave .entrada {
+  padding-right: 52px;
+}
+.ver-clave {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  border-radius: var(--r-s);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+/* Entrada con prefijo, como US$ (docs/mockups/_fuente/06-proyectos.html L22-24) */
+.prefijo {
+  display: flex;
+}
+.prefijo .entrada {
+  border-radius: 0 var(--r-s) var(--r-s) 0;
+}
+.prefijo span {
+  display: grid;
+  place-items: center;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-right: 0;
+  border-radius: var(--r-s) 0 0 var(--r-s);
+  background: var(--bg);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ---------- Mi perfil (sin mockup; mismo lenguaje visual, plan §7.1) ---------- */
+.perfil-cab {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.perfil-cab .avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 22px;
+}
+.perfil-cab strong {
+  display: block;
+  font-size: 20px;
+  font-family: var(--f-display);
+}
+.perfil-cab .sec {
+  font-size: 15px;
+}
+.perfil-acc {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Un valor largo sin espacios (correo, código) se parte dentro de su columna en vez de salirse */
+.kv dd {
+  overflow-wrap: anywhere;
+}
+
+/* El contenido recibe el foco al cambiar de página (para el lector de pantalla), pero no es un control:
+   no se dibuja el anillo de foco a su alrededor */
+main.contenido:focus {
+  outline: none;
+}
+
+/* Los códigos (QUI-024, SOL-119) no se parten en el guion cuando la columna queda angosta */
+table.band .mono,
+table.band td.mono,
+.lista .mono,
+ul.pend .mono,
+.panel-avisos .mono {
+  white-space: nowrap;
+}
+
+/* "Saltar al contenido": en comun.css la regla .mk a gana por especificidad a .saltar y el texto queda
+   azul sobre azul (1,4:1). Se fuerza el color de texto sobre primario (WCAG 1.4.3) */
+.mk a.saltar {
+  color: var(--on-primary);
+}
+
+/* Códigos del sistema dentro de un texto (ConCodigos): nunca se parten en el guion ("FIS-" / "012") */
+.mono.codigo {
+  white-space: nowrap;
+}
+
+/* Barra de filtros en el teléfono: la búsqueda ocupa su propia fila. En el comparador de los mockups el
+   marco de 390 px deja ~266 px y todo se apila; en un teléfono real caben dos campos y la búsqueda
+   quedaba de 140 px con el texto de ayuda cortado */
+@media (max-width: 760px) {
+  .herr .busq {
+    flex-basis: 100%;
+  }
+}
+
+/* Botón ocupado ("Guardando…"): aria-disabled en lugar de disabled, porque un botón deshabilitado pierde
+   el foco y, si el servidor responde con un error, el teclado quedaba en <body> (WCAG 2.4.3) */
+.mk .btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* En la rejilla de un formulario cada campo toma su propio alto: en el mockup 06, cuando "Código" mostraba
+   su error, el selector de "Área" de al lado se estiraba hasta 78 px */
+.form-rejilla > * {
+  align-self: start;
+}
+
+/* Porcentaje que pasa de 100 (ejecución presupuestaria, F2.7): ícono de alerta junto al número */
+.mini-barra b.pasa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+.mini-barra b.pasa .ico {
+  width: 16px;
+  height: 16px;
+  color: var(--warn);
+}
+
+/* Pestañas: en app.css cada botón baja 1 px (margin-bottom: -1px) para tapar el borde inferior, y con
+   overflow-x: auto ese pixel desbordaba y Chrome en Windows pintaba una barra de desplazamiento vertical.
+   La línea se dibuja con una sombra interior: el subrayado de la activa la tapa igual, sin desbordar */
+.pestanas {
+  border-bottom: 0;
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+.pestanas button {
+  margin-bottom: 0;
+}
+/* Si no caben todas (teléfono), un degradado en el borde avisa que hay más pestañas y desaparece al llegar al
+   final: los dos primeros fondos tapan la sombra mientras el contenido está pegado a ese borde (REV-020) */
+.pestanas {
+  --sombra: color-mix(in srgb, var(--text) 20%, transparent);
+  background:
+    linear-gradient(to right, var(--bg) 30%, transparent) left center / 28px 100% no-repeat local,
+    linear-gradient(to left, var(--bg) 30%, transparent) right center / 28px 100% no-repeat local,
+    linear-gradient(to right, var(--sombra), transparent) left center / 12px 100% no-repeat scroll,
+    linear-gradient(to left, var(--sombra), transparent) right center / 12px 100% no-repeat scroll;
+}
+
+/* Gráficos de columnas (Recharts, plan §7.4): el SVG ocupa el ancho y el tooltip usa la superficie del tema */
+.grafico-columnas {
+  width: 100%;
+}
+.grafico-columnas svg {
+  overflow: visible;
+}
+/* Mismo tooltip que el del mockup 03 (.tip): texto claro sobre el color del texto */
+.grafico-tip {
+  display: grid;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 13.5px;
+  line-height: 1.4;
+  padding: 8px 10px;
+  border-radius: var(--r-s);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  max-width: 260px;
+}
+.grafico-tip span {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Paginación con muchas páginas (auditoría): "…" entre los números que no se muestran */
+.paginacion .pags .salto { min-width: 24px; display: grid; place-items: center; color: var(--muted); }
+
+/* Tablas apiladas en el teléfono: la fila marcada (corrección, despacho enlazado, registro elegido) se resalta
+   como una tarjeta entera, no línea por línea (REV-026) */
+@media (max-width: 760px) {
+  table.datos.apilable tr.comp td,
+  table.datos.apilable tr.resaltado td,
+  table.datos.apilable tr[aria-current='true'] td,
+  table.datos.apilable tr:focus-visible td {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  table.datos.apilable tr.comp {
+    background: var(--bg);
+    box-shadow: inset 4px 0 0 var(--info);
+    padding-inline: 12px;
+  }
+  table.datos.apilable tr.resaltado,
+  table.datos.apilable tr[aria-current='true'],
+  table.datos.apilable tr:focus-visible {
+    background: var(--surface-2);
+    box-shadow: inset 4px 0 0 var(--primary);
+    padding-inline: 12px;
+  }
+}

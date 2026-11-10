@@ -1,0 +1,36 @@
+/* Vista 04, usuarios. Copia de los estilos de docs/mockups/_fuente/04-usuarios.html. */
+.lista-usu { padding: 0; overflow: hidden; }
+.lista-usu .herr { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.lista-usu .tabla-env { padding: 0 8px; }
+.lista-usu .paginacion { padding: 12px 20px 16px; border-top: 1px solid var(--line); }
+.persona { display: flex; align-items: center; gap: 12px; }
+.persona .avatar { width: 36px; height: 36px; font-size: 13px; }
+.persona b { font-weight: 600; display: block; }
+.rol-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+.rol-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+.rol-chip.apr i { background: var(--accent); }
+.rol-chip.coo i { background: var(--info); }
+.impacto { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.impacto li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+.impacto .ico { margin-top: 2px; color: var(--muted); }
+
+/* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
+
+/* Resultado de la última acción, sobre la lista */
+.lista-usu .resultado { padding: 16px 20px 0; }
+.lista-usu .resultado:focus { outline: none; }
+.lista-usu .vacio { margin: 20px; }
+.lista-usu .chip-nota { display: block; margin-top: 4px; font-size: 13.5px; color: var(--muted); }
+
+/* "Acceso a la cuenta" dentro de la ficha: restablecer contraseña y desactivar (F1.3) */
+.acceso-cuenta { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 16px; }
+.acceso-cuenta b { display: block; font-weight: 600; }
+.acceso-cuenta .sec { font-size: 14px; }
+.acceso-cuenta .botones { display: flex; gap: 8px; flex-wrap: wrap; }
+.mk .acceso-cuenta .btn-sec.peligro { color: var(--err); border-color: var(--err); }
+
+/* Contraseña temporal: se muestra una sola vez para entregarla en persona */
+.clave-temporal { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border: 1px dashed var(--border); border-radius: var(--r-m); background: var(--surface-2); }
+.clave-temporal .etq { display: block; font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.clave-temporal .valor { font-family: var(--f-mono); font-size: 24px; font-weight: 500; letter-spacing: .08em; color: var(--text); }
+.clave-temporal .copiada { font-size: 14px; color: var(--muted); }
