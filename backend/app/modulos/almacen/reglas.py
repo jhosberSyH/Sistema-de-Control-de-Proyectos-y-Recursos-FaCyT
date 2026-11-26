@@ -65,20 +65,27 @@ def numero_linea(codigo: str, n: int) -> str:
 
 # --- Búsquedas por id público ----------------------------------------------------------------------
 
-def buscar_solicitud(db: Session, valor: Optional[str]) -> Optional[Request]:
+def _consulta(db: Session, modelo, bloquear: bool):
+    """Con bloquear=True la fila se toma con SELECT ... FOR UPDATE: dos peticiones en paralelo no pueden
+    pasar las dos la validación de estado (despachar dos veces, aprobar una corrección dos veces)."""
+    q = db.query(modelo)
+    return q.with_for_update(of=modelo).populate_existing() if bloquear else q
+
+
+def buscar_solicitud(db: Session, valor: Optional[str], bloquear: bool = False) -> Optional[Request]:
     """Por su número (SOL-…, REP-…), que es el id que ve el frontend, o por su UUID."""
     if not valor:
         return None
-    s = db.query(Request).filter(Request.request_number == valor).first()
+    s = _consulta(db, Request, bloquear).filter(Request.request_number == valor).first()
     if s is None and es_id_valido(valor, db):
-        s = db.get(Request, valor)
+        s = _consulta(db, Request, bloquear).filter(Request.id == valor).first()
     return s
 
 
-def buscar_correccion(db: Session, valor: str) -> Optional[DispatchCorrection]:
-    c = db.query(DispatchCorrection).filter(DispatchCorrection.correction_number == valor).first()
+def buscar_correccion(db: Session, valor: str, bloquear: bool = False) -> Optional[DispatchCorrection]:
+    c = _consulta(db, DispatchCorrection, bloquear).filter(DispatchCorrection.correction_number == valor).first()
     if c is None and es_id_valido(valor, db):
-        c = db.get(DispatchCorrection, valor)
+        c = _consulta(db, DispatchCorrection, bloquear).filter(DispatchCorrection.id == valor).first()
     return c
 
 
@@ -172,6 +179,9 @@ def aprobar_correccion(db: Session, c: DispatchCorrection, quien: User, ip: str)
     diferencia del lote, o traslada la línea a otro proyecto; el gasto ejecutado se recalcula solo
     (decisión 5). No hace commit."""
     _por_decidir(c)
+    if c.requested_by_user_id == quien.id:
+        # Separación de funciones: quien pidió la corrección no la aprueba (p. ej. tras un cambio de rol)
+        raise conflicto(f"{codigo_correccion(c)} la pediste tú: la tiene que aprobar otra persona.")
     e = efecto_correccion(db, c)
     linea, item = e["linea"], e["item"]
     if periodo_cerrado_en(db, fecha_local(linea.dispatched_at)):
@@ -242,8 +252,8 @@ def denegar_correccion(db: Session, c: DispatchCorrection, nota, quien: User, ip
     return {"id": codigo_correccion(c), "estado": "Denegado"}
 
 
-def correccion_o_404(db: Session, valor: str) -> DispatchCorrection:
-    c = buscar_correccion(db, valor)
+def correccion_o_404(db: Session, valor: str, bloquear: bool = False) -> DispatchCorrection:
+    c = buscar_correccion(db, valor, bloquear)
     if not c:
         raise HTTPException(status_code=404, detail=f"No encontramos la corrección {valor}.")
     return c

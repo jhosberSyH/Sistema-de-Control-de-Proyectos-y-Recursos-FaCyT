@@ -502,6 +502,9 @@ def registrar_lote(datos: DatosLote, request: Request, db: Session = Depends(get
         errores["ingreso"] = "Elige la fecha de ingreso."
     elif ingreso > dia:
         errores["ingreso"] = "La fecha de ingreso no puede ser posterior a hoy."
+    elif periodo_cerrado_en(db, ingreso):
+        # F7.2: un período cerrado no admite movimientos; un lote con fecha atrasada cambiaba sus costos
+        errores["ingreso"] = "Esa fecha cae en un período cerrado: usa una fecha del período abierto."
     vence = None if datos.vence in (None, "") else leer_fecha(datos.vence)
     if datos.vence not in (None, "") and not vence:
         errores["vence"] = "Escribe una fecha de vencimiento válida."
@@ -516,7 +519,9 @@ def registrar_lote(datos: DatosLote, request: Request, db: Session = Depends(get
     if not ubicacion or not ubicacion.is_active:
         errores["ubicacionId"] = "Elige dónde se guarda el lote."
     solicitud_id = texto(datos.solicitud, 64) or None
-    reposicion = buscar_solicitud(db, solicitud_id) if solicitud_id else None
+    # FOR UPDATE: dos recepciones simultáneas de la misma reposición no la ejecutan dos veces. Se toma antes
+    # que el candado del insumo, en el mismo orden que el despacho (solicitud y después stock).
+    reposicion = buscar_solicitud(db, solicitud_id, bloquear=True) if solicitud_id else None
     if reposicion is not None and (reposicion.request_type != REPOSICION or reposicion.status != "Aprobado"):
         reposicion = None
     linea_rep = reposicion.items[0] if reposicion is not None and reposicion.items else None
@@ -666,7 +671,7 @@ def preparar_despacho(solicitud: Optional[str] = None, db: Session = Depends(get
 def registrar_despacho(datos: DatosDespacho, request: Request, db: Session = Depends(get_db), quien: User = Depends(solo_aprobador)):
     """F6.2 y F6.3: en una sola operación se registra el despacho en la bitácora, se descuenta el stock de
     cada lote (F3.3), el retiro pasa a Ejecutado y el costo queda cargado al proyecto (F2.7, decisión 5)."""
-    s = buscar_solicitud(db, datos.solicitud if isinstance(datos.solicitud, str) else None)
+    s = buscar_solicitud(db, datos.solicitud if isinstance(datos.solicitud, str) else None, bloquear=True)
     if not s or s.request_type != "Retiro":
         raise HTTPException(status_code=404, detail="No encontramos ese retiro.")
     if s.status != "Aprobado":
@@ -910,7 +915,7 @@ def pedir_correccion(datos: DatosCorreccion, request: Request, db: Session = Dep
 
 @router.post("/correcciones/{correccion_id}/aprobar", response_model=EstadoPedido)
 def aprobar(correccion_id: str, request: Request, db: Session = Depends(get_db), quien: User = Depends(solo_aprobador)):
-    resultado = aprobar_correccion(db, correccion_o_404(db, correccion_id), quien, get_client_ip(request))
+    resultado = aprobar_correccion(db, correccion_o_404(db, correccion_id, bloquear=True), quien, get_client_ip(request))
     db.commit()
     return EstadoPedido(**resultado)
 
@@ -920,7 +925,7 @@ def denegar(
     correccion_id: str, request: Request, datos: Optional[DatosDenegar] = None,
     db: Session = Depends(get_db), quien: User = Depends(solo_aprobador),
 ):
-    c = correccion_o_404(db, correccion_id)
+    c = correccion_o_404(db, correccion_id, bloquear=True)
     resultado = denegar_correccion(db, c, datos.nota if datos else None, quien, get_client_ip(request))
     db.commit()
     return EstadoPedido(**resultado)
@@ -1038,6 +1043,9 @@ def registrar_uso(datos: DatosUso, request: Request, db: Session = Depends(get_d
         errores["fecha"] = "Elige la fecha."
     elif dia > hoy():
         errores["fecha"] = "La fecha no puede ser posterior a hoy."
+    elif periodo_cerrado_en(db, dia):
+        # F7.2: el consumo de un período cerrado ya se usó para repartir sus gastos compartidos
+        errores["fecha"] = "Esa fecha cae en un período cerrado: usa una fecha del período abierto."
     if errores:
         raise ErrorValidacion(errores)
 

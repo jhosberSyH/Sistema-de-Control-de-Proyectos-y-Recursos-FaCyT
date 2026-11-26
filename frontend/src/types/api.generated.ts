@@ -4753,7 +4753,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': unknown
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': unknown
         }
       }
       /** @description Validation Error */
@@ -5234,7 +5234,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': unknown
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': unknown
         }
       }
       /** @description Validation Error */

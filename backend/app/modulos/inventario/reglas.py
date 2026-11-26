@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from app.auditoria.service import record_audit_log
 from app.core.api import ErrorValidacion, conflicto
 from app.core.config import settings
+from app.core.database import candado_de_cierre
 from app.modulos.inventario.service import (
     _minuscula,
     check_and_create_replenishment,
@@ -114,7 +115,12 @@ def numero_valido(valor) -> Optional[float]:
         return None
     if isinstance(valor, float) and (math.isnan(valor) or math.isinf(valor)):
         return None
-    return float(valor)
+    try:
+        numero = float(valor)
+    except OverflowError:
+        # Un entero JSON enorme (10**400) no cabe en un float: es un dato inválido, no un error 500
+        return None
+    return None if math.isinf(numero) else numero
 
 
 def texto(valor, maximo: int) -> str:
@@ -140,7 +146,11 @@ def periodo_en_curso(db: Session) -> Optional[AccountingPeriod]:
 
 
 def periodo_cerrado_en(db: Session, dia: date) -> Optional[AccountingPeriod]:
-    """Período cerrado (o ya repartido) que contiene el día: ahí no entran movimientos (F7.2)."""
+    """Período cerrado (o ya repartido) que contiene el día: ahí no entran movimientos (F7.2).
+
+    Toma el candado de cierre compartido: si se está cerrando un período, espera a que termine, y el
+    cierre no puede colarse entre esta validación y el commit del movimiento."""
+    candado_de_cierre(db)
     return (
         db.query(AccountingPeriod)
         .filter(

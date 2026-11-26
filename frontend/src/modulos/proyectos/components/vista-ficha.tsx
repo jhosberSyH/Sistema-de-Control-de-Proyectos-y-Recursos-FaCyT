@@ -163,7 +163,7 @@ export function VistaFicha({ id, esAdministrador }: Props) {
             )}
             {p.estatus !== 'Finalizado' && (
               <BotonEnlace variante="pri" to={`/proyectos/${p.id}/plan`}>
-                {p.planConfirmado ? 'Cargar avance' : 'Armar el plan de hitos'}
+                {p.planConfirmado ? 'Cargar avance' : 'Armar el plan de puntos de control'}
               </BotonEnlace>
             )}
           </div>
@@ -244,7 +244,7 @@ export function VistaFicha({ id, esAdministrador }: Props) {
   )
 }
 
-/** Las tres métricas del mockup: avance físico (F2.6), ejecución (F2.7) y próximo hito. */
+/** Las tres métricas del mockup: avance físico (F2.6), ejecución (F2.7) y próximo punto de control. */
 function Metricas({ p }: { p: FichaProyecto }) {
   const completos = p.hitos.filter((h) => h.avance >= 100).length
   return (
@@ -256,8 +256,8 @@ function Metricas({ p }: { p: FichaProyecto }) {
             <span className="val">{porcentaje(p.avance)}</span>
             <BarraProgreso valor={p.avance} etiqueta={`Avance físico de ${p.codigo}`} />
             <span className="sec" style={{ fontSize: 14 }}>
-              {completos} de {p.hitos.length} {p.hitos.length === 1 ? 'hito completo' : 'hitos completos'}.
-              Calculado con los pesos de cada hito.
+              {completos} de {p.hitos.length} {p.hitos.length === 1 ? 'punto de control completo' : 'puntos de control completos'}.
+              Calculado con los pesos de cada punto de control.
             </span>
           </>
         ) : (
@@ -265,8 +265,8 @@ function Metricas({ p }: { p: FichaProyecto }) {
             <span className="val nd">No disponible</span>
             <span className="sec" style={{ fontSize: 14 }}>
               {p.hitos.length === 0
-                ? 'Todavía no hay plan de hitos.'
-                : `El plan de hitos no está confirmado: los pesos suman ${p.sumaPesos} de 100.`}
+                ? 'Todavía no hay plan de puntos de control.'
+                : `El plan de puntos de control no está confirmado: los pesos suman ${p.sumaPesos} de 100.`}
             </span>
           </>
         )}
@@ -307,8 +307,8 @@ function Metricas({ p }: { p: FichaProyecto }) {
         )}
       </section>
 
-      <section className="tarjeta met" aria-label="Próximo hito">
-        <span className="eti">Próximo hito</span>
+      <section className="tarjeta met" aria-label="Próximo punto de control">
+        <span className="eti">Próximo punto de control</span>
         {p.proximoHito ? (
           <>
             <span style={{ fontWeight: 600, fontSize: 17 }}>{p.proximoHito.nombre}</span>
@@ -319,7 +319,7 @@ function Metricas({ p }: { p: FichaProyecto }) {
           </>
         ) : (
           <span className="sec">
-            {p.hitos.length === 0 ? 'Todavía no hay plan de hitos.' : 'Todos los hitos están completos.'}
+            {p.hitos.length === 0 ? 'Todavía no hay plan de puntos de control.' : 'Todos los puntos de control están completos.'}
           </span>
         )}
       </section>
@@ -340,7 +340,7 @@ function Resumen({
     <div className="dos">
       <section className="tarjeta bloque" aria-labelledby="t-hitos">
         <div className="bloque-cab">
-          <h2 id="t-hitos">Hitos</h2>
+          <h2 id="t-hitos">Puntos de control</h2>
           {!esAdministrador && p.estatus !== 'Finalizado' && (
             <Link to={`/proyectos/${p.id}/plan${p.planConfirmado ? '?modo=editar' : ''}`}>Editar plan</Link>
           )}
@@ -348,15 +348,15 @@ function Resumen({
         {p.hitos.length === 0 ? (
           <p className="sec">
             {esAdministrador
-              ? 'Su coordinador todavía no carga el plan de hitos.'
-              : 'Todavía no cargas el plan de hitos. Ármalo para que el proyecto pueda pasar a En ejecución.'}
+              ? 'Su coordinador todavía no carga el plan de puntos de control.'
+              : 'Todavía no cargas el plan de puntos de control. Ármalo para que el proyecto pueda pasar a En ejecución.'}
           </p>
         ) : (
-          <TablaDatos apilable titulo="Hitos del proyecto" className="hitos-t">
+          <TablaDatos apilable titulo="Puntos de control del proyecto" className="hitos-t">
             <thead>
               <tr>
                 <th scope="col">#</th>
-                <th scope="col">Hito</th>
+                <th scope="col">Punto de control</th>
                 <th scope="col" className="n">
                   Peso
                 </th>
@@ -373,7 +373,7 @@ function Resumen({
                     {porcentaje(h.peso)}
                   </td>
                   <td>
-                    <MiniBarra valor={h.avance} etiqueta={`Avance del hito ${h.numero}`} />
+                    <MiniBarra valor={h.avance} etiqueta={`Avance del punto de control ${h.numero}`} />
                   </td>
                   <td data-e="Prevista:">{fechaCorta(h.fechaPrevista)}</td>
                 </tr>

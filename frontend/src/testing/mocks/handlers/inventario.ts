@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw'
+import { xlsx, type Hoja } from '../archivos'
 import { diasHasta, idDe, nombreUsuario, parametro } from '../consultas'
 import { dia } from '../datos/fechas'
 import { db } from '../db'
@@ -9,7 +10,7 @@ import { auditar, demora, error, errorValidacion, exigir } from '../utils'
 /*
  * Inventario (vista 09; F3.1, F3.4, F3.6; RN-02).
  *   GET  /api/insumos?q&tipo&ubicacion&alerta&pagina   catálogo con stock, lotes, vencimiento y estado
- *   GET  /api/insumos/exportar?…                       el mismo catálogo en CSV
+ *   GET  /api/insumos/exportar?…                       el mismo catálogo en Excel
  *   POST /api/insumos                                  alta (solo Administrador); nace con stock cero
  *   GET  /api/insumos/:id                              ficha (vista 10): lotes, último movimiento, reposición y pronóstico
  *   PATCH /api/insumos/:id/minimo                      cambiar el stock mínimo (solo Administrador, F3.2)
@@ -138,27 +139,30 @@ export const handlersInventario = [
       vencido: 'Lote vencido',
       ok: 'Al día',
     }
-    const num = (n: number) => String(n).replace('.', ',')
-    const celda = (v: string | number | null) => `"${String(v ?? '').replaceAll('"', '""')}"`
-    const csv = [
-      ['Insumo', 'Tipo', 'Unidad', 'Stock', 'Stock mínimo', 'Lotes', 'Próximo vencimiento', 'Estado'],
-      ...filas.map((v: Vista) => [
-        v.nombre,
-        v.tipo,
-        v.unidad,
-        num(v.stock),
-        num(v.stockMinimo),
-        v.lotes,
-        v.proximoVencimiento?.fecha ?? '',
-        ESTADO[v.estado],
-      ]),
-    ]
-      .map((fila) => fila.map(celda).join(';'))
-      .join('\r\n')
-    return new HttpResponse(`${String.fromCharCode(0xfeff)}${csv}`, {
+    const hoja: Hoja = {
+      titulo: 'Inventario de insumos',
+      lineas: [`Exportado el ${new Date().toLocaleDateString('es-VE')} · ${filas.length} insumo(s)`],
+      tablas: [{
+        columnas: [
+          { titulo: 'Insumo', formato: 'texto', ancho: 38 },
+          { titulo: 'Tipo de insumo', formato: 'texto', ancho: 29 },
+          { titulo: 'Unidad', formato: 'texto', ancho: 14 },
+          { titulo: 'Stock actual', formato: 'numero', ancho: 16 },
+          { titulo: 'Stock mínimo', formato: 'numero', ancho: 16 },
+          { titulo: 'Lotes', formato: 'numero', ancho: 11 },
+          { titulo: 'Próximo vencimiento', formato: 'texto', ancho: 23 },
+          { titulo: 'Estado', formato: 'texto', ancho: 25 },
+        ],
+        filas: filas.map((v: Vista) => [
+          v.nombre, v.tipo, v.unidad, v.stock, v.stockMinimo, v.lotes, v.proximoVencimiento?.fecha ?? '', ESTADO[v.estado],
+        ]),
+      }],
+      nota: null,
+    }
+    return new HttpResponse(xlsx(hoja), {
       headers: {
-        'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="inventario-${new Date().toISOString().slice(0, 10)}.csv"`,
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="inventario-${new Date().toISOString().slice(0, 10)}.xlsx"`,
       },
     })
   }),

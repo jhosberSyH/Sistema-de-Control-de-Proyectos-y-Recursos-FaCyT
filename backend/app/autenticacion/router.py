@@ -6,6 +6,7 @@ POST /api/auth/cambiar-clave    {clave}          -> Sesion (solo con contraseña
 POST /api/auth/cerrar-sesion                     -> 204
 """
 
+import secrets
 from datetime import datetime, timezone, timedelta
 from typing import Literal, Optional
 
@@ -20,6 +21,7 @@ from app.autenticacion.dependencies import (
     obtener_sesion,
     sesion_con_csrf,
 )
+from app.autenticacion.limite import limitador_login
 from app.core.api import ErrorValidacion, ModeloApi, iniciales, rol_api
 from app.core.config import settings
 from app.core.database import get_db
@@ -35,6 +37,27 @@ router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
 CLAVE_MINIMO = 12  # NIST SP 800-63B: largo antes que reglas de composición
 CLAVE_MAXIMO = 128
+LARGO_CORREO = 254  # RFC 5321: nada más largo es un correo; acota lo que se guarda en la auditoría
+
+# Hash de una clave al azar: se verifica contra él cuando el correo no existe, para que el tiempo de
+# respuesta sea el mismo que con una cuenta real (antes ~0,4 s frente a ~1,7 s).
+HASH_SENUELO = hash_password(secrets.token_urlsafe(24))
+
+CREDENCIALES_NO_COINCIDEN = (
+    "El correo o la contraseña no coinciden. Revisa que el correo esté bien escrito e inténtalo de nuevo."
+)
+
+
+def _rechazar_si_bloqueado(correo: str) -> None:
+    espera = limitador_login.segundos_bloqueado(correo)
+    if espera:
+        minutos = max(1, (espera + 59) // 60)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Hubo demasiados intentos fallidos con este correo. Espera {minutos} "
+                   f"{'minuto' if minutos == 1 else 'minutos'} e inténtalo de nuevo.",
+            headers={"Retry-After": str(espera)},
+        )
 
 
 # --- Esquemas del contrato -----------------------------------------------------------------------
@@ -123,19 +146,47 @@ def iniciar_sesion(payload: IniciarSesion, request: Request, response: Response,
     if errores:
         raise ErrorValidacion(errores)
 
+    correo = correo[:LARGO_CORREO]
     ip = get_client_ip(request)
-    user = db.query(User).filter(User.email == correo).first()
+
+    # Límite por correo (cuente o no la cuenta): frena la fuerza bruta sin revelar qué correos existen
+    _rechazar_si_bloqueado(correo)
+
+    # Una clave más larga que el máximo nunca es válida (no se pudo crear así): 401 sin verificar ni contar
+    # como fallo. Si contara, servía para llenar el limitador con correos al azar sin pagar argon2.
+    if len(payload.clave) > CLAVE_MAXIMO:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=CREDENCIALES_NO_COINCIDEN)
+
+    # Tope global de verificaciones argon2 simultáneas (64 MB cada una)
+    if not limitador_login.tomar_turno():
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Hay muchos inicios de sesión en este momento. Espera unos segundos e inténtalo de nuevo.",
+            headers={"Retry-After": "10"},
+        )
+    try:
+        # Se revisa de nuevo con el turno tomado: las peticiones que esperaban turno en paralelo no pueden
+        # seguir probando claves cuando otras ya llevaron el correo al tope de fallos.
+        _rechazar_si_bloqueado(correo)
+        user = db.query(User).filter(User.email == correo).first()
+        # Siempre se verifica una contraseña, exista o no la cuenta: si no, el tiempo de respuesta
+        # delataba qué correos están registrados.
+        clave_ok = verify_password(payload.clave, user.password_hash if user else HASH_SENUELO)
+        if not user or not clave_ok:
+            # Dentro del turno: el siguiente en entrar ya ve este fallo
+            limitador_login.registrar_fallo(correo)
+    finally:
+        limitador_login.soltar_turno()
+
     # El mismo mensaje para correo inexistente y contraseña errada: no revela qué cuentas existen (OWASP)
-    if not user or not verify_password(payload.clave, user.password_hash):
+    if not user or not clave_ok:
         record_audit_log(
             db=db, user_id=user.id if user else None, ip_address=ip, target_object="AUTH",
             action_type="LOGIN_FAILED", new_value={"attempted_email": correo},
         )
         db.commit()
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="El correo o la contraseña no coinciden. Revisa que el correo esté bien escrito e inténtalo de nuevo.",
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=CREDENCIALES_NO_COINCIDEN)
+    limitador_login.limpiar(correo)
     # F1.3: se informa solo después de validar la contraseña
     if not user.is_active:
         record_audit_log(

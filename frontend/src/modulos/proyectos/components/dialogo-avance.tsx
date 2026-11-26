@@ -82,7 +82,7 @@ export function DialogoAvance({ plan, hito, alCerrar, alListo, focoAlCerrar }: P
         if (!abierto) alCerrar()
       }}
       titulo="Cargar avance"
-      descripcion={`Hito ${hito.numero} · ${hito.nombre} · peso ${porcentaje(hito.peso)}`}
+      descripcion={`Punto de control ${hito.numero} · ${hito.nombre} · peso ${porcentaje(hito.peso)}`}
       alEnviar={(e) => {
         e.preventDefault()
         void enviar()
@@ -123,8 +123,8 @@ export function DialogoAvance({ plan, hito, alCerrar, alListo, focoAlCerrar }: P
           )}
           <p>
             {despues === antes
-              ? `Con ${porcentaje(escrito)} en este hito, el avance físico del proyecto se mantiene en ${porcentaje(antes)}.`
-              : `Con ${porcentaje(escrito)} en este hito, el avance físico del proyecto pasa de ${porcentaje(antes)} a ${porcentaje(despues)}.`}
+              ? `Con ${porcentaje(escrito)} en este punto de control, el avance físico del proyecto se mantiene en ${porcentaje(antes)}.`
+              : `Con ${porcentaje(escrito)} en este punto de control, el avance físico del proyecto pasa de ${porcentaje(antes)} a ${porcentaje(despues)}.`}
           </p>
         </Aviso>
       )}
@@ -136,7 +136,7 @@ export function DialogoAvance({ plan, hito, alCerrar, alListo, focoAlCerrar }: P
         ) : cargas.isError ? (
           <p className="sec">No pudimos traer las cargas anteriores. Igual puedes guardar esta.</p>
         ) : cargas.data.length === 0 ? (
-          <p className="sec">Todavía no hay cargas de este hito.</p>
+          <p className="sec">Todavía no hay cargas de este punto de control.</p>
         ) : (
           <ul className="hist-av">
             {cargas.data.map((c) => (

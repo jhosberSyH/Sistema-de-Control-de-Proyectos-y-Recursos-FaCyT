@@ -31,8 +31,12 @@ class CotizacionGuardada(ModeloApi):
     tamano: int
 
 
-def _solicitud(db: Session, request_id: str) -> Request:
-    s = db.query(Request).filter(Request.id == request_id).first() if es_id_valido(request_id, db) else None
+def _solicitud(db: Session, request_id: str, bloquear: bool = False) -> Request:
+    q = db.query(Request)
+    if bloquear:
+        # FOR UPDATE: el estado Borrador se valida con la fila tomada; enviarla a la vez espera a que termine
+        q = q.with_for_update(of=Request).populate_existing()
+    s = q.filter(Request.id == request_id).first() if es_id_valido(request_id, db) else None
     if not s:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Esa solicitud no existe.")
     return s
@@ -53,7 +57,7 @@ def _nombre_seguro(nombre: str) -> str:
 
 
 @router.post("/solicitudes/{request_id}/cotizacion", response_model=CotizacionGuardada)
-async def subir_cotizacion(
+def subir_cotizacion(  # síncrona: usa la BD y el almacenamiento bloqueantes; FastAPI la corre en el threadpool
     request_id: str,
     request: HttpRequest,
     archivo: UploadFile | None = File(None),
@@ -61,7 +65,7 @@ async def subir_cotizacion(
     u: User = Depends(get_current_user),
     almacen: Almacen = Depends(obtener_almacen),
 ):
-    s = _solicitud(db, request_id)
+    s = _solicitud(db, request_id, bloquear=True)
     if u.role != COORDINADOR:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el coordinador del proyecto adjunta la cotización.")
     if not _es_del_coordinador(s, u):
@@ -75,7 +79,7 @@ async def subir_cotizacion(
     if archivo is None:
         raise ErrorValidacion({"archivo": "Adjunta la cotización en PDF."})
     maximo = settings.MAX_COTIZACION_MB * 1024 * 1024
-    contenido = await archivo.read(maximo + 1)
+    contenido = archivo.file.read(maximo + 1)
     if not contenido:
         raise ErrorValidacion({"archivo": "El archivo está vacío."})
     if len(contenido) > maximo:

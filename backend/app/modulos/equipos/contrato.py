@@ -780,7 +780,9 @@ def solicitar_reserva(
 
 
 def _reserva_por_decidir(db: Session, reserva_id: str) -> EquipmentReservation:
-    r = db.get(EquipmentReservation, reserva_id) if es_id_valido(reserva_id, db) else None
+    # FOR UPDATE: dos decisiones simultáneas sobre la misma reserva no pasan las dos la validación
+    r = (db.get(EquipmentReservation, reserva_id, with_for_update=True, populate_existing=True)
+         if es_id_valido(reserva_id, db) else None)
     if not r:
         raise HTTPException(status_code=404, detail="No encontramos esa reserva.")
     if r.status != PENDIENTE:
@@ -800,6 +802,9 @@ def aprobar_reserva(
     r = _reserva_por_decidir(db, reserva_id)
     e = r.equipment
     codigo = r.project.code if r.project else ""
+    if r.reserved_by_user_id == quien.id:
+        # Separación de funciones: quien reservó no aprueba su propia reserva
+        raise conflicto(f"La reserva de {codigo} la hiciste tú: la tiene que aprobar otra persona.")
     if e.operational_status == "En mantenimiento":
         raise conflicto(f"{e.name} está en mantenimiento: rechaza la reserva o espera a que vuelva.")
     if h.a_utc(r.end_time) < h.ahora():

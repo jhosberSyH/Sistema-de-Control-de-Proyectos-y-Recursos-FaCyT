@@ -25,7 +25,7 @@ export function useInsumos(f: FiltrosInventario) {
   })
 }
 
-/** GET /api/insumos/exportar: el catálogo con los filtros actuales, en CSV. */
+/** GET /api/insumos/exportar: el catálogo con los filtros actuales, en Excel. */
 export function useExportarInventario() {
   return useMutation({
     mutationFn: async (f: FiltrosInventario) => {

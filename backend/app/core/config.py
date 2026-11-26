@@ -33,6 +33,17 @@ class Settings(BaseSettings):
     SESSION_ABSOLUTE_HOURS: int = 8
     ALLOWED_ORIGINS: List[str] = ["http://localhost:8080", "http://localhost:5173"]
 
+    # Inicio de sesión: límite de intentos fallidos por correo y verificaciones de contraseña simultáneas.
+    # argon2id usa 64 MB por verificación: el tope de simultáneas acota la memoria ante una ráfaga.
+    LOGIN_MAX_FALLOS: int = 5
+    LOGIN_VENTANA_MINUTOS: int = 15
+    LOGIN_VERIFICACIONES_SIMULTANEAS: int = 2
+
+    # Saltos de proxy de confianza que agregan su entrada al final de X-Forwarded-For. La IP del cliente
+    # es la entrada número PROXIES_CONFIABLES contando desde la derecha; lo que esté más a la izquierda lo
+    # escribió el cliente y no se cree. 0 = ignorar X-Forwarded-For y usar la conexión directa.
+    PROXIES_CONFIABLES: int = 1
+
     # Archivos (decisión 7): cotizaciones de gastos
     STORAGE_BACKEND: str = "local"  # local | supabase
     STORAGE_LOCAL_DIR: str = "./var/archivos"

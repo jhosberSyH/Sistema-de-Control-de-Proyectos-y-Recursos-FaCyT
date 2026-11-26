@@ -155,6 +155,15 @@ function faltantes(s: Solicitud) {
     s.lineas.forEach((l, i) => {
       if (!(l.cantidad > 0)) e[`lineas.${i}.cantidad`] = 'Escribe una cantidad mayor que cero.'
     })
+    const cantidades = new Map<string, number>()
+    s.lineas.forEach((l) => cantidades.set(l.insumoId, (cantidades.get(l.insumoId) ?? 0) + l.cantidad))
+    cantidades.forEach((solicitada, insumoId) => {
+      const maximo = disponible(insumoId)
+      if (solicitada > maximo) {
+        const indice = s.lineas.findIndex((l) => l.insumoId === insumoId)
+        e[`lineas.${indice}.cantidad`] = `El disponible cambió. El máximo actual es ${String(maximo).replace('.', ',')} ${insumo(insumoId)?.unidad ?? ''}.`.trim()
+      }
+    })
   }
   return e
 }

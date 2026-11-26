@@ -48,7 +48,8 @@
 
   /* Piezas sin dibujar, con el mismo lenguaje (plan §7.1) */
   .cab .acc .campo { min-width: 260px; }
-  .cal .col.elegible { cursor: pointer; }
+  .cal .col.elegible { cursor: crosshair; touch-action: none; user-select: none; }
+  .blq.seleccion-calendario { z-index: 2; pointer-events: none; background: color-mix(in srgb, var(--primary) 14%, transparent); border: 2px solid var(--primary); color: var(--text); }
   /* La reserva que se abrió desde el inicio ("Ver en el calendario") */
   .blq.resaltada { outline: 2px solid var(--text); outline-offset: 2px; }
   .blq a { color: inherit; text-decoration: none; display: block; }

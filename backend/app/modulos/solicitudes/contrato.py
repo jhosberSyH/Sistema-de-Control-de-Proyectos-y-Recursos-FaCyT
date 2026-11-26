@@ -40,7 +40,7 @@ from app.auditoria.service import record_audit_log
 from app.autenticacion.dependencies import get_client_ip, get_current_user, require_role
 from app.avisos.service import avisar, avisar_a, ids_por_rol
 from app.core.api import APROBADOR, COORDINADOR, ErrorValidacion, ModeloApi, conflicto, es_id_valido, normalizar
-from app.core.database import get_db
+from app.core.database import candado_de_cierre, get_db
 from app.modulos.equipos import horarios as h
 from app.modulos.equipos.contrato import choque_aprobado
 from app.modulos.usuarios.models import (
@@ -391,15 +391,24 @@ def _nombre(db: Session, user_id) -> Optional[str]:
     return u.full_name if u else None
 
 
-def _buscar(db: Session, ref: str) -> Optional[Request]:
-    """Por UUID o por número (los enlaces del inicio y los avisos viejos usan el número)."""
+def _buscar(db: Session, ref: str, bloquear: bool = False) -> Optional[Request]:
+    """Por UUID o por número (los enlaces del inicio y los avisos viejos usan el número).
+
+    Con bloquear=True toma la fila con SELECT ... FOR UPDATE: quien valida el estado y luego lo cambia
+    (aprobar, ejecutar, enviar) no puede pasar la validación dos veces en paralelo.
+    """
     if not ref:
         return None
+
+    def consulta():
+        q = db.query(Request)
+        return q.with_for_update(of=Request).populate_existing() if bloquear else q
+
     if es_id_valido(ref, db):
-        s = db.query(Request).filter(Request.id == ref).first()
+        s = consulta().filter(Request.id == ref).first()
         if s or db.get_bind().dialect.name == "postgresql":
             return s
-    return db.query(Request).filter(Request.request_number == ref).first()
+    return consulta().filter(Request.request_number == ref).first()
 
 
 def _disponible(db: Session, item_id) -> float:
@@ -487,9 +496,9 @@ def _detalle(db: Session, s: Request) -> Solicitud:
     )
 
 
-def _suya(db: Session, quien: User, ref: str) -> Request:
+def _suya(db: Session, quien: User, ref: str, bloquear: bool = False) -> Request:
     """RN-07: la solicitud tiene que ser de un proyecto del coordinador; si no, no existe para él."""
-    s = _buscar(db, ref)
+    s = _buscar(db, ref, bloquear)
     if not s or s.request_type not in ("Gasto", "Retiro") or not s.project or s.project.coordinator_id != quien.id:
         raise HTTPException(status_code=404, detail=f"No encontramos la solicitud {ref}.")
     return s
@@ -513,6 +522,7 @@ def _periodo_cerrado_hoy(db: Session) -> Optional[AccountingPeriod]:
 
 
 def _periodo_cerrado_en(db: Session, fecha) -> Optional[AccountingPeriod]:
+    candado_de_cierre(db)  # compartido: un cierre en curso termina antes de validar (F7.2)
     return (
         db.query(AccountingPeriod)
         .filter(AccountingPeriod.status.in_(["Cerrado", "Prorrateado"]),
@@ -633,7 +643,7 @@ def crear_borrador(datos: DatosBorrador, db: Session = Depends(get_db), quien: U
 @router.patch("/solicitudes/{ref}", response_model=Solicitud)
 def guardar_borrador(ref: str, datos: DatosBorrador, db: Session = Depends(get_db), quien: User = Depends(solo_coordinador)):
     """El borrador se guarda mientras se escribe (F5.1). Enviada, ya no se edita (F5.3, HU-15)."""
-    s = _suya(db, quien, ref)
+    s = _suya(db, quien, ref, bloquear=True)
     if s.status != "Borrador":
         raise conflicto(f"{s.request_number} ya se envió a aprobación: no se puede editar.")
     _aplicar(db, quien, s, datos)
@@ -666,12 +676,27 @@ def _faltantes(s: Request) -> Dict[str, str]:
 @router.post("/solicitudes/{ref}/enviar", response_model=Solicitud)
 def enviar_solicitud(ref: str, request: HttpRequest, db: Session = Depends(get_db), quien: User = Depends(solo_coordinador)):
     """F5.3: pasa a Pendiente de Aprobación si tiene los datos obligatorios, y llega a la bandeja."""
-    s = _suya(db, quien, ref)
+    s = _suya(db, quien, ref, bloquear=True)
     if s.status != "Borrador":
         raise conflicto(f"{s.request_number} ya se envió a aprobación.")
     if s.project.operational_status == "Finalizado":
         raise conflicto(f"{s.project.code} está finalizado: ya no pide recursos.")
     errores = _faltantes(s)
+    if s.request_type == "Retiro":
+        acumuladas: Dict[str, Decimal] = {}
+        primera_linea: Dict[str, int] = {}
+        for indice, linea in enumerate(s.items):
+            clave = str(linea.item_id)
+            acumuladas[clave] = acumuladas.get(clave, Decimal("0")) + Decimal(str(linea.requested_quantity))
+            primera_linea.setdefault(clave, indice)
+        for item_id, solicitada in acumuladas.items():
+            item = next((linea.item for linea in s.items if str(linea.item_id) == item_id), None)
+            disponible = Decimal(str(_disponible(db, item_id)))
+            if solicitada > disponible:
+                unidad = item.unit_of_measure if item else "unidades"
+                errores[f"lineas.{primera_linea[item_id]}.cantidad"] = (
+                    f"El disponible cambió. El máximo actual es {_legible(disponible, unidad)}."
+                )
     if errores:
         raise ErrorValidacion(errores)
     s.status = PENDIENTE
@@ -693,7 +718,7 @@ def enviar_solicitud(ref: str, request: HttpRequest, db: Session = Depends(get_d
 
 @router.delete("/solicitudes/{ref}", status_code=204, response_class=Response)
 def descartar_borrador(ref: str, db: Session = Depends(get_db), quien: User = Depends(solo_coordinador)):
-    s = _suya(db, quien, ref)
+    s = _suya(db, quien, ref, bloquear=True)
     if s.status != "Borrador":
         raise conflicto(f"{s.request_number} ya se envió: no se puede descartar.")
     db.delete(s)
@@ -706,7 +731,7 @@ def descartar_borrador(ref: str, db: Session = Depends(get_db), quien: User = De
 # =============================================================================
 
 def _por_decidir(db: Session, ref: str) -> Request:
-    s = _buscar(db, ref)
+    s = _buscar(db, ref, bloquear=True)
     if not s:
         raise HTTPException(status_code=404, detail=f"No encontramos la solicitud {ref}.")
     abierta = s.status in ("Borrador", PENDIENTE) if s.request_type == REPOSICION else s.status == PENDIENTE
@@ -731,6 +756,9 @@ def aprobar_solicitud(
     ip = get_client_ip(request)
     ahora = _ahora()
     if s.request_type != REPOSICION:
+        if s.requester_user_id == quien.id:
+            # Separación de funciones: quien la pidió no la aprueba (p. ej. un coordinador que pasó a aprobador)
+            raise conflicto(f"{s.request_number} la creaste tú: la tiene que aprobar otra persona.")
         for ri in s.items:
             if ri.approved_quantity is None:
                 ri.approved_quantity = ri.requested_quantity
@@ -836,7 +864,7 @@ def ejecutar_gasto(
     quien: User = Depends(solo_aprobador),
 ):
     """F5.5: el gasto aprobado ya se pagó. Ejecutado es final (RN-03) y el monto real se carga al proyecto."""
-    s = _buscar(db, ref)
+    s = _buscar(db, ref, bloquear=True)
     if not s:
         raise HTTPException(status_code=404, detail=f"No encontramos la solicitud {ref}.")
     if s.request_type == "Retiro":

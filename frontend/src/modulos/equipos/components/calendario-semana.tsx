@@ -1,4 +1,4 @@
-import type { MouseEvent } from 'react'
+import { useState, type PointerEvent } from 'react'
 import { Link } from 'react-router'
 import { diaYFecha, fechaIso, mayuscula } from '@/lib/formato'
 import { APERTURA, CIERRE, horaDe, sumarDias } from '@/lib/horarios'
@@ -12,8 +12,8 @@ const HORAS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
 type Props = {
   semana: string
   bloques: Bloque[]
-  /** Clic en un horario vacío: llena la fecha y la hora del formulario (atajo con el mouse; el formulario es la vía con teclado). */
-  alElegir?: (fecha: string, minutos: number) => void
+  /** Clic elige una hora; arrastrar selecciona un bloque de varias horas. */
+  alElegir?: (fecha: string, desde: number, hasta: number) => void
 }
 
 /**
@@ -21,17 +21,38 @@ type Props = {
  * En el teléfono se ve como agenda por día (mockup, @container 760 px).
  */
 export function CalendarioSemana({ semana, bloques, alElegir }: Props) {
+  const [seleccion, setSeleccion] = useState<{ fecha: string; ancla: number; inicio: number; fin: number } | null>(null)
   const hoy = fechaIso()
   const dias = Array.from({ length: DIAS }, (_, i) => sumarDias(semana, i))
   const corto = (f: string) => {
     const [nombre, fecha] = diaYFecha(f).split(' ')
     return { nombre: mayuscula(nombre.slice(0, 3)), numero: fecha.slice(0, 2) }
   }
-  const elegir = (fecha: string) => (e: MouseEvent<HTMLDivElement>) => {
-    if (!alElegir || e.target !== e.currentTarget) return
+  const minutoEn = (e: PointerEvent<HTMLDivElement>) => {
     const y = e.clientY - e.currentTarget.getBoundingClientRect().top
-    const minutos = APERTURA + Math.floor(y / PX_HORA) * 60
-    if (minutos >= APERTURA && minutos < CIERRE) alElegir(fecha, minutos)
+    return Math.max(APERTURA, Math.min(CIERRE, APERTURA + Math.floor(y / PX_HORA) * 60))
+  }
+  const iniciarSeleccion = (fecha: string) => (e: PointerEvent<HTMLDivElement>) => {
+    if (!alElegir || e.target !== e.currentTarget || e.button !== 0) return
+    const inicio = minutoEn(e)
+    if (inicio >= CIERRE) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setSeleccion({ fecha, ancla: inicio, inicio, fin: inicio + 60 })
+  }
+  const actualizarSeleccion = (fecha: string) => (e: PointerEvent<HTMLDivElement>) => {
+    if (!seleccion || seleccion.fecha !== fecha) return
+    const cursor = minutoEn(e)
+    const inicio = Math.min(seleccion.ancla, cursor)
+    const fin = cursor >= seleccion.ancla ? Math.max(seleccion.ancla + 60, cursor) : seleccion.ancla + 60
+    setSeleccion({ ...seleccion, inicio, fin: Math.min(CIERRE, fin) })
+  }
+  const terminarSeleccion = (fecha: string) => (e: PointerEvent<HTMLDivElement>) => {
+    if (!seleccion || seleccion.fecha !== fecha) return
+    const cursor = minutoEn(e)
+    const inicio = Math.min(seleccion.ancla, cursor)
+    const fin = Math.min(CIERRE, cursor >= seleccion.ancla ? Math.max(seleccion.ancla + 60, cursor) : seleccion.ancla + 60)
+    alElegir?.(fecha, inicio, Math.max(inicio + 60, fin))
+    setSeleccion(null)
   }
 
   return (
@@ -61,7 +82,10 @@ export function CalendarioSemana({ semana, bloques, alElegir }: Props) {
               className={cn('col', alElegir && 'elegible')}
               role="group"
               aria-label={mayuscula(diaYFecha(f))}
-              onClick={elegir(f)}
+              onPointerDown={iniciarSeleccion(f)}
+              onPointerMove={actualizarSeleccion(f)}
+              onPointerUp={terminarSeleccion(f)}
+              onPointerCancel={() => setSeleccion(null)}
             >
               {bloques
                 .filter((b) => b.fecha === f)
@@ -91,6 +115,18 @@ export function CalendarioSemana({ semana, bloques, alElegir }: Props) {
                     </div>
                   )
                 })}
+              {seleccion?.fecha === f && (
+                <div
+                  className="blq seleccion-calendario"
+                  aria-hidden="true"
+                  style={{
+                    top: ((seleccion.inicio - APERTURA) / 60) * PX_HORA + 2,
+                    height: ((seleccion.fin - seleccion.inicio) / 60) * PX_HORA - 4,
+                  }}
+                >
+                  {horaDe(seleccion.inicio)} a {horaDe(seleccion.fin)}
+                </div>
+              )}
             </div>
           ))}
         </div>
