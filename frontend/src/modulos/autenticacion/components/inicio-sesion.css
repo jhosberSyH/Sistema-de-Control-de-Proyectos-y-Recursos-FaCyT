@@ -9,9 +9,9 @@
 .banda .logo-iso { width: 48px; }
 .banda p { font-family: var(--f-mono); font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .banda strong { color: var(--text); font-weight: 500; }
-.lg { flex: 1; display: grid; grid-template-columns: 7fr 5fr; }
+.lg { flex: 1; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
 .lg-marca { display: flex; flex-direction: column; gap: 18px; padding: 64px 48px; justify-content: center; }
-.mk .lg-sistema { font-size: 54px; font-weight: 600; letter-spacing: -.02em; line-height: 1.05; max-width: 12ch; }
+.mk .lg-sistema { font-size: clamp(38px, 4.2vw, 54px); font-weight: 600; letter-spacing: -.035em; line-height: 1.04; max-width: 16ch; text-wrap: balance; }
 .lg-bajada { font-size: 17px; max-width: 40ch; color: var(--muted); }
 .lg-datos { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; border-top: 1px solid var(--line); max-width: 420px; }
 .lg-datos li { display: inline-flex; gap: 14px; align-items: baseline; border-bottom: 1px solid var(--line); padding: 10px 0; }
@@ -21,8 +21,6 @@
 .lg-tarjeta h2 { font-size: 26px; font-weight: 600; }
 .lg-tarjeta .btn-pri { width: 100%; }
 .lg-ayuda { font-size: 15px; color: var(--muted); }
-.lg-sesion { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
-.lg-sesion .ico { width: 18px; height: 18px; margin-top: 2px; }
 .lg-pie { font-size: 13px; color: var(--muted); padding: 14px 24px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
 /* Teléfono: una sola columna, sin la lista de áreas */
@@ -34,7 +32,7 @@
   .banda p { font-size: 11.5px; }
   .lg { grid-template-columns: 1fr; }
   .lg-marca { padding: 28px 16px 8px; gap: 12px; }
-  .mk .lg-sistema { font-size: 34px; }
+  .mk .lg-sistema { font-size: clamp(34px, 8vw, 42px); max-width: 14ch; }
   .lg-datos { display: none; }
   .lg-form { border-left: 0; padding: 20px 16px 32px; background: transparent; }
 }

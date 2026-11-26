@@ -33,7 +33,7 @@ describe('Proyectos (vista 06, F2.1, F2.2, F2.6, F2.7)', () => {
     )
     // F2.7: pasa de 100 % sin recortarse, y no depende solo del color
     expect(within(bio015).getByText(/109 %/)).toHaveTextContent('109 % (pasa del 100 %)')
-    expect(within(filas()[5]).getByText('Plan de hitos confirmado')).toBeInTheDocument()
+    expect(within(filas()[5]).getByText('Plan de puntos de control confirmado')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'En ejecución 7' })).toHaveAttribute('aria-pressed', 'false')
   })
 

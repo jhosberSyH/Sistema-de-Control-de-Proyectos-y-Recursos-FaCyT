@@ -67,7 +67,7 @@ export function useRegistrarProyecto() {
   })
 }
 
-/** GET /api/proyectos/exportar: la lista con los filtros actuales, en CSV. */
+/** GET /api/proyectos/exportar: la lista con los filtros actuales, en Excel. */
 export function useExportarProyectos() {
   return useMutation({
     mutationFn: async (f: FiltrosProyectos) => {

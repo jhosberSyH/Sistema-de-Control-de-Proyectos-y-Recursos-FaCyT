@@ -1,7 +1,8 @@
 """FastAPI main application entrypoint."""
 
+import re
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -164,22 +165,53 @@ async def lifespan(app: FastAPI):
     yield
 
 
+ES_PRODUCCION = settings.APP_ENV == "production"
+
+# En producción no se publica el contrato de la API (Swagger, ReDoc ni openapi.json): le daba a cualquiera
+# el mapa completo de rutas y esquemas. En desarrollo siguen disponibles (npm run api:tipos los usa).
 app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
-    docs_url=f"{settings.API_PREFIX}/docs",
-    openapi_url=f"{settings.API_PREFIX}/openapi.json",
+    docs_url=None if ES_PRODUCCION else f"{settings.API_PREFIX}/docs",
+    redoc_url=None if ES_PRODUCCION else "/redoc",
+    openapi_url=None if ES_PRODUCCION else f"{settings.API_PREFIX}/openapi.json",
     lifespan=lifespan
 )
 
-# CORS Middleware (supports local development with Vite)
+# CORS: los orígenes locales (Vite, nginx en localhost) solo fuera de producción. En producción se quitan
+# aunque vengan en ALLOWED_ORIGINS (su valor por defecto los trae): un sitio servido en localhost no debe
+# poder leer respuestas con la sesión de un usuario.
+ORIGEN_LOCAL = re.compile(r"^https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$")
+if ES_PRODUCCION:
+    ORIGENES = [o for o in settings.ALLOWED_ORIGINS if not ORIGEN_LOCAL.match(o)]
+else:
+    ORIGENES = settings.ALLOWED_ORIGINS + ["http://localhost:5173", "http://127.0.0.1:5173"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS + ["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=ORIGENES,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+RUTAS_DOCS = (f"{settings.API_PREFIX}/docs", "/redoc")
+
+
+@app.middleware("http")
+async def cabeceras_seguridad(request: Request, call_next):
+    """Cabeceras base en todas las respuestas de la API (antes no llevaba ninguna)."""
+    respuesta = await call_next(request)
+    h = respuesta.headers
+    h.setdefault("X-Content-Type-Options", "nosniff")
+    h.setdefault("X-Frame-Options", "DENY")
+    h.setdefault("Referrer-Policy", "no-referrer")
+    if not request.url.path.startswith(RUTAS_DOCS):
+        # La API solo devuelve JSON y archivos: no necesita cargar nada ni ser enmarcada
+        h.setdefault("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+        # Datos de una sesión: que ningún caché intermedio ni del navegador los guarde
+        h.setdefault("Cache-Control", "no-store")
+    return respuesta
 
 # Mount module routers under /api
 app.include_router(auth_router, prefix=settings.API_PREFIX)
@@ -203,6 +235,6 @@ registrar_manejadores(app)
 
 @app.get(f"{settings.API_PREFIX}/health")
 def health_check():
-    """Health check endpoint."""
-    return {"status": "ok", "environment": settings.APP_ENV}
+    """Health check endpoint (sin datos del entorno: es público)."""
+    return {"status": "ok"}
 

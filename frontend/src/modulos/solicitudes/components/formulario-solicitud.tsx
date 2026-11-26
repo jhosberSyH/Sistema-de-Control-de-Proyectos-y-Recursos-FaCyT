@@ -73,7 +73,15 @@ export function FormularioSolicitud({
   )
   const [lineas, setLineas] = useState<Linea[]>(() => {
     const desde = base?.lineas.length
-      ? base.lineas.map((l) => ({ insumoId: l.insumoId, cantidad: numero(l.cantidad, 3) }))
+      ? base.lineas.map((l) => {
+          const maximo = insumos.find((i) => i.id === l.insumoId)?.disponible
+          const escrita = numero(l.cantidad, 3)
+          const valor = leerMonto(escrita)
+          return {
+            insumoId: l.insumoId,
+            cantidad: valor !== null && maximo !== undefined && valor > maximo ? numero(maximo, 3) : escrita,
+          }
+        })
       : [
           {
             insumoId: semilla.insumo && insumos.some((i) => i.id === semilla.insumo) ? semilla.insumo : '',
@@ -213,8 +221,11 @@ export function FormularioSolicitud({
     } else {
       lineas.forEach((l, i) => {
         if (!l.insumoId) e[`lineas.${i}.insumoId`] = 'Elige el insumo.'
-        if (!((leerMonto(l.cantidad) ?? 0) > 0))
+        const valor = leerMonto(l.cantidad) ?? 0
+        if (!(valor > 0))
           e[`lineas.${i}.cantidad`] = 'Escribe una cantidad mayor que cero.'
+        else if (insumoDe(l.insumoId) && valor > insumoDe(l.insumoId)!.disponible)
+          e[`lineas.${i}.cantidad`] = `El máximo disponible es ${cantidad(insumoDe(l.insumoId)!.disponible, insumoDe(l.insumoId)!.unidad)}.`
       })
       if (lineas.length === 0) e.lineas = 'Agrega al menos un insumo.'
     }
@@ -281,14 +292,6 @@ export function FormularioSolicitud({
 
   const proyectoActual = misProyectos.find((p) => p.id === proyecto)
   const insumoDe = (insumoId: string) => insumos.find((i) => i.id === insumoId)
-  const excedidos = lineas
-    .map((l) => ({ i: insumoDe(l.insumoId), c: leerMonto(l.cantidad) }))
-    .filter((x): x is { i: InsumoPedido; c: number } => Boolean(x.i) && x.c !== null && x.c > x.i!.disponible)
-  /** "acetona grado analítico" o "acetona grado analítico y metanol grado HPLC" */
-  const nombres = (lista: InsumoPedido[]) => {
-    const n = lista.map((i) => minuscula(i.nombre))
-    return n.length > 1 ? `${n.slice(0, -1).join(', ')} y ${n[n.length - 1]}` : n[0]
-  }
   const errorGeneral =
     (guardar.error && !esApiError(guardar.error)) ||
     (enviar.error && !(esApiError(enviar.error) && enviar.error.status === 422))
@@ -392,10 +395,8 @@ export function FormularioSolicitud({
                 <div className="items">
                   {lineas.map((l, n) => {
                     const ins = insumoDe(l.insumoId)
-                    const c = leerMonto(l.cantidad)
-                    const excede = Boolean(ins && c !== null && c > ins.disponible)
                     return (
-                      <div key={l.clave} className={cn('item', excede && 'excede')}>
+                      <div key={l.clave} className="item">
                         <Campo etiqueta="Insumo" id={`i${l.clave}`} error={errores[`lineas.${n}.insumoId`]}>
                           {(cc) => (
                             <Selector
@@ -436,13 +437,20 @@ export function FormularioSolicitud({
                               {...cc}
                               className="num"
                               inputMode="decimal"
+                              max={ins?.disponible}
                               autoComplete="off"
                               style={{ textAlign: 'right' }}
                               value={l.cantidad}
                               onChange={(e) => {
+                                const escrito = e.target.value
+                                const valor = leerMonto(escrito)
+                                const cantidadLimitada =
+                                  ins && valor !== null && valor > ins.disponible
+                                    ? numero(ins.disponible, 3)
+                                    : escrito
                                 setLineas((ls) =>
                                   ls.map((x) =>
-                                    x.clave === l.clave ? { ...x, cantidad: e.target.value } : x,
+                                    x.clave === l.clave ? { ...x, cantidad: cantidadLimitada } : x,
                                   ),
                                 )
                                 cambio(`lineas.${n}.cantidad`)
@@ -451,17 +459,11 @@ export function FormularioSolicitud({
                           )}
                         </Campo>
                         <p className="disp" aria-live="polite">
-                          {ins &&
-                            (excede ? (
-                              <span className="estado warn">
-                                <Icono nombre="alerta" />
-                                Pides {cantidad(c!, ins.unidad)} y hay {cantidad(ins.disponible, ins.unidad)}
-                              </span>
-                            ) : (
-                              <>
-                                Disponible <b>{cantidad(ins.disponible, ins.unidad)}</b>
-                              </>
-                            ))}
+                          {ins && (
+                            <>
+                              Máximo disponible <b>{cantidad(ins.disponible, ins.unidad)}</b>
+                            </>
+                          )}
                         </p>
                         <button
                           className="quitar"
@@ -509,19 +511,6 @@ export function FormularioSolicitud({
                 </p>
               )}
             </div>
-            {/* F5.2: pedir más de lo disponible se avisa, pero no se bloquea */}
-            {excedidos.length > 0 && (
-              <Aviso tipo="warn">
-                <p>
-                  Puedes enviarla así: el aprobador verá que {nombres(excedidos.map((x) => x.i))}{' '}
-                  {excedidos.length === 1 ? 'no alcanza' : 'no alcanzan'}.
-                  {excedidos
-                    .filter((x) => x.i.reposicionEnCurso)
-                    .map((x) => ` Ya hay una reposición de ${minuscula(x.i.nombre)} en curso.`)
-                    .join('')}
-                </p>
-              </Aviso>
-            )}
           </>
         ) : (
           <>

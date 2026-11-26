@@ -37,11 +37,11 @@ export function VistaPlan({ id }: Props) {
 
   const finalizado = plan.data?.estatus === 'Finalizado'
   const editando = !plan.data?.planConfirmado || (params.get('modo') === 'editar' && !finalizado)
-  useTituloPagina(editando ? 'Plan de hitos' : 'Hitos')
+  useTituloPagina(editando ? 'Plan de puntos de control' : 'Puntos de control')
 
   if (plan.isPending) {
     return (
-      <Cargando etiqueta="Cargando el plan de hitos…">
+      <Cargando etiqueta="Cargando el plan de puntos de control…">
         <Esqueleto className="esqueleto-titulo" />
         <Esqueleto ancho="60%" />
         <Esqueleto alto={320} />
@@ -80,11 +80,11 @@ export function VistaPlan({ id }: Props) {
               <li className="mono">
                 <Link to={`/proyectos/${p.id}`}>{p.codigo}</Link>
               </li>
-              <li aria-current="page">{editando ? 'Plan de hitos' : 'Hitos'}</li>
+              <li aria-current="page">{editando ? 'Plan de puntos de control' : 'Puntos de control'}</li>
             </ol>
           </nav>
           <h1>
-            {editando ? 'Plan de hitos de' : 'Hitos de'} <span className="mono">{p.codigo}</span>
+            {editando ? 'Plan de puntos de control de' : 'Puntos de control de'} <span className="mono">{p.codigo}</span>
           </h1>
           <p className="sub">
             {!editando
@@ -121,11 +121,11 @@ export function VistaPlan({ id }: Props) {
               avisar(
                 <>
                   <p>
-                    <b>Confirmaste el plan de hitos de {r.codigo}.</b>
+                    <b>Confirmaste el plan de puntos de control de {r.codigo}.</b>
                   </p>
                   <p>
                     El avance físico empieza en {porcentaje(r.avance ?? 0)} y ya puedes cargar el avance de
-                    cada hito.
+                    cada punto de control.
                     {r.estatus === 'Propuesta' &&
                       ' El administrador ya puede pasar el proyecto a En ejecución.'}
                   </p>
@@ -177,10 +177,10 @@ function TablaAvance({
         </Aviso>
       )}
       <section className="tarjeta bloque">
-        <TablaDatos apilable titulo={`Hitos de ${plan.codigo}`}>
+        <TablaDatos apilable titulo={`Puntos de control de ${plan.codigo}`}>
           <thead>
             <tr>
-              <th scope="col">Hito</th>
+              <th scope="col">Punto de control</th>
               <th scope="col" className="n">
                 Peso
               </th>
@@ -201,7 +201,7 @@ function TablaAvance({
                   {porcentaje(h.peso)}
                 </td>
                 <td>
-                  <MiniBarra valor={h.avance} etiqueta={`Avance del hito ${h.numero}`} />
+                  <MiniBarra valor={h.avance} etiqueta={`Avance del punto de control ${h.numero}`} />
                 </td>
                 <td data-e="Última carga:">
                   {h.ultimaCarga ? (
@@ -226,7 +226,7 @@ function TablaAvance({
                           setAbierto(h)
                         }}
                       >
-                        Cargar avance <span className="vh">del hito {h.numero}</span>
+                        Cargar avance <span className="vh">del punto de control {h.numero}</span>
                       </button>
                     )
                   )}
@@ -252,8 +252,8 @@ function TablaAvance({
             alResultado(
               <p>
                 {r.completo
-                  ? `El hito ${r.hito} quedó completo.`
-                  : `Guardaste ${porcentaje(r.porcentaje)} en el hito ${r.hito}.`}{' '}
+                  ? `El punto de control ${r.hito} quedó completo.`
+                  : `Guardaste ${porcentaje(r.porcentaje)} en el punto de control ${r.hito}.`}{' '}
                 {cambio}
               </p>,
             )

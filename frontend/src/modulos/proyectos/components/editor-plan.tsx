@@ -186,9 +186,9 @@ export function EditorPlan({ plan, alGuardar, alCancelar }: Props) {
             }}
           >
             <div className="bloque-cab">
-              <h2 id="t-plan">Hitos</h2>
+              <h2 id="t-plan">Puntos de control</h2>
               <span className="conteo">
-                {fields.length} {fields.length === 1 ? 'hito' : 'hitos'}
+                {fields.length} {fields.length === 1 ? 'punto de control' : 'puntos de control'}
               </span>
             </div>
             <div>
@@ -205,7 +205,7 @@ export function EditorPlan({ plan, alGuardar, alCancelar }: Props) {
                       id={`h${i}`}
                       etiqueta={
                         <>
-                          Hito <span className="vh">{i + 1}</span>
+                          Punto de control <span className="vh">{i + 1}</span>
                         </>
                       }
                       error={e?.nombre?.message}
@@ -217,7 +217,7 @@ export function EditorPlan({ plan, alGuardar, alCancelar }: Props) {
                       id={`f${i}`}
                       etiqueta={
                         <>
-                          Fecha prevista <span className="vh">del hito {i + 1}</span>
+                          Fecha prevista <span className="vh">del punto de control {i + 1}</span>
                         </>
                       }
                       error={e?.fechaPrevista?.message}
@@ -229,7 +229,7 @@ export function EditorPlan({ plan, alGuardar, alCancelar }: Props) {
                       id={`p${i}`}
                       etiqueta={
                         <>
-                          Peso <span className="vh">del hito {i + 1}</span>
+                          Peso <span className="vh">del punto de control {i + 1}</span>
                         </>
                       }
                       error={e?.peso?.message}
@@ -251,8 +251,8 @@ export function EditorPlan({ plan, alGuardar, alCancelar }: Props) {
                       data-quitar={i}
                       aria-label={
                         conCargas
-                          ? `Quitar hito ${i + 1} (no se puede: ya tiene cargas de avance)`
-                          : `Quitar hito ${i + 1}`
+                          ? `Quitar punto de control ${i + 1} (no se puede: ya tiene cargas de avance)`
+                          : `Quitar punto de control ${i + 1}`
                       }
                       aria-disabled={conCargas || undefined}
                       onClick={() => {
@@ -268,12 +268,12 @@ export function EditorPlan({ plan, alGuardar, alCancelar }: Props) {
             <div className="agregar">
               <button className="btn btn-sec" type="button" data-agregar onClick={agregar}>
                 <Icono nombre="mas" />
-                Agregar hito
+                Agregar punto de control
               </button>
             </div>
             {hayConCargas && (
               <p className="nota-plan">
-                Los hitos con el candado ya tienen cargas de avance: no se pueden quitar, para no perder su
+                Los puntos de control con el candado ya tienen cargas de avance: no se pueden quitar, para no perder su
                 historial.
               </p>
             )}
@@ -325,7 +325,7 @@ export function EditorPlan({ plan, alGuardar, alCancelar }: Props) {
               <h2 id="t-como">Cómo se calcula el avance</h2>
             </div>
             <p style={{ fontSize: 15 }}>
-              El avance físico suma el avance de cada hito multiplicado por su peso. Por ejemplo, un hito de
+              El avance físico suma el avance de cada punto de control multiplicado por su peso. Por ejemplo, un punto de control de
               peso 60 al 50 % y uno de peso 40 al 100 % dan 70 %.
             </p>
             {!confirmado && (
@@ -345,7 +345,7 @@ export function EditorPlan({ plan, alGuardar, alCancelar }: Props) {
           if (!abierto) bloqueo.reset?.()
         }}
         titulo="¿Salir sin guardar el plan?"
-        descripcion="Los cambios en los hitos todavía no están guardados. Si sales, se pierden."
+        descripcion="Los cambios en los puntos de control todavía no están guardados. Si sales, se pierden."
         confirmar="Salir sin guardar"
         cancelar="Seguir editando"
         peligro

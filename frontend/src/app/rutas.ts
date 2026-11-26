@@ -87,7 +87,7 @@ export const RUTAS = {
   },
   planHitos: {
     ruta: '/proyectos/:id/plan',
-    datos: { titulo: 'Plan de hitos y avance', roles: [COO], paso: 8, mockup: '08-plan-hitos' },
+    datos: { titulo: 'Plan de puntos de control y avance', roles: [COO], paso: 8, mockup: '08-plan-hitos' },
   },
   inventario: {
     ruta: '/inventario',

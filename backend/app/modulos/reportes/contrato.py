@@ -369,6 +369,9 @@ def xlsx(hoja: Dict) -> bytes:
             ws.append(list(fila))
             for i, c in enumerate(tabla["columnas"], start=1):
                 celda = ws.cell(row=ws.max_row, column=i)
+                if isinstance(celda.value, str) and celda.value.startswith("="):
+                    # openpyxl guarda como fórmula todo texto que empieza con "=" (p. ej. un nombre de usuario)
+                    celda.data_type = "s"
                 if c["formato"] == "moneda" and isinstance(celda.value, (int, float)):
                     celda.number_format = "#,##0.00"
                 elif c["formato"] == "porcentaje" and isinstance(celda.value, (int, float)):

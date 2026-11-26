@@ -1,5 +1,6 @@
 """Authentication and authorization dependencies (RFC 10017, OWASP)."""
 
+import ipaddress
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
@@ -16,12 +17,34 @@ METODOS_SEGUROS = {"GET", "HEAD", "OPTIONS"}
 CSRF_HEADER = "X-CSRF-Token"
 
 
+LARGO_IP = 45  # columna ip_address VARCHAR(45): el largo máximo de una IPv6 en texto
+
+
+def _ip_valida(valor: str) -> Optional[str]:
+    try:
+        return str(ipaddress.ip_address(valor.strip()))[:LARGO_IP]
+    except ValueError:
+        return None
+
+
 def get_client_ip(request: Request) -> str:
-    """Extract client IP address considering proxy headers."""
+    """IP del cliente para auditoría y sesiones.
+
+    X-Forwarded-For se arma de izquierda a derecha y cada proxy agrega al final la IP que vio. Lo que está
+    a la izquierda lo pudo escribir el propio cliente, así que solo se cree la entrada que agregó el último
+    proxy de confianza (PROXIES_CONFIABLES contando desde la derecha). Antes se tomaba la primera entrada y
+    cualquiera podía poner la IP que quisiera en la auditoría; una entrada larga además daba 500.
+    """
+    saltos = settings.PROXIES_CONFIABLES
     forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "127.0.0.1"
+    if saltos > 0 and forwarded:
+        entradas = [e for e in (x.strip() for x in forwarded.split(",")) if e]
+        ip = _ip_valida(entradas[-saltos]) if len(entradas) >= saltos else None
+        # Con X-Forwarded-For presente, uvicorn (--proxy-headers) ya reescribió request.client con la
+        # primera entrada: no sirve de respaldo. Si la entrada confiable no es una IP, no se inventa una.
+        return ip or "desconocida"
+    directa = request.client.host if request.client else "127.0.0.1"
+    return _ip_valida(directa) or directa[:LARGO_IP]
 
 
 @dataclass

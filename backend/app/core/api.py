@@ -12,6 +12,7 @@ Los mensajes se muestran tal cual en la interfaz, así que van en español.
 
 import unicodedata
 import uuid
+from decimal import InvalidOperation
 from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException, Request
@@ -20,7 +21,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
-from sqlalchemy.exc import DataError
+from sqlalchemy.exc import DataError, IntegrityError
 
 
 class ModeloApi(BaseModel):
@@ -33,6 +34,8 @@ class ModeloApi(BaseModel):
         # En las respuestas, un campo con valor por defecto igual viaja siempre: en el OpenAPI de salida
         # se marca como obligatorio para que los tipos generados del frontend no lo vean opcional.
         json_schema_serialization_defaults_required=True,
+        # Infinity y NaN llegan como float desde el JSON: daban 500 al redondear o se guardaban como 0
+        allow_inf_nan=False,
     )
 
 
@@ -84,6 +87,7 @@ MENSAJES_VALIDACION = {
     "int_from_float": "Escribe un número entero.",
     "float_type": "Escribe un número.",
     "float_parsing": "Escribe un número.",
+    "finite_number": "Escribe un número válido.",
     "decimal_parsing": "Escribe un número.",
     "bool_type": "Indica sí o no.",
     "bool_parsing": "Indica sí o no.",
@@ -132,9 +136,29 @@ def registrar_manejadores(app: FastAPI) -> None:
     async def _dato_invalido(request: Request, exc: DataError):
         # Un id que no es UUID llega hasta PostgreSQL ("invalid input syntax for type uuid") y daba 500.
         # Para quien pide, ese recurso simplemente no existe.
-        if type(getattr(exc, "orig", None)).__name__ == "InvalidTextRepresentation":
+        causa = type(getattr(exc, "orig", None)).__name__
+        if causa == "InvalidTextRepresentation":
             return JSONResponse(status_code=404, content={"detail": "No encontramos lo que buscas."})
+        # Un número que no cabe en la columna (NUMERIC(15,2), NUMERIC(12,3)) o un texto demasiado largo
+        if causa in ("NumericValueOutOfRange", "StringDataRightTruncation"):
+            return JSONResponse(status_code=422, content={"detail": [
+                {"loc": ["body"], "msg": "Un valor es demasiado grande o demasiado largo.", "type": "value_error"}]})
         raise exc
+
+    @app.exception_handler(IntegrityError)
+    async def _choque_de_unicidad(request: Request, exc: IntegrityError):
+        # Dos peticiones simultáneas que pasan la validación chocan en un índice único o un EXCLUDE de la BD
+        # (dos usos abiertos del mismo equipo, un reparto doble, dos reservas solapadas): es un conflicto, no un 500.
+        if type(getattr(exc, "orig", None)).__name__ in ("UniqueViolation", "ExclusionViolation"):
+            return JSONResponse(status_code=409, content={
+                "detail": "Otra operación cambió estos datos al mismo tiempo. Recarga la página y revisa antes de seguir."})
+        raise exc
+
+    @app.exception_handler(InvalidOperation)
+    async def _numero_fuera_de_rango(request: Request, exc: InvalidOperation):
+        # Decimal(...).quantize falla con números enormes (1e300): es un dato inválido, no un error del servidor
+        return JSONResponse(status_code=422, content={"detail": [
+            {"loc": ["body"], "msg": "Un número es demasiado grande.", "type": "value_error"}]})
 
     @app.exception_handler(RequestValidationError)
     async def _validacion_fastapi(request: Request, exc: RequestValidationError):
@@ -157,6 +181,21 @@ def normalizar(texto: Optional[str]) -> str:
     base = unicodedata.normalize("NFD", texto or "")
     sin_tildes = "".join(c for c in base if unicodedata.category(c) != "Mn")
     return " ".join(sin_tildes.split()).lower()
+
+
+def sin_formula(valor: Any) -> Any:
+    """Celda de CSV a salvo de inyección de fórmulas (OWASP CSV Injection).
+
+    Un texto que empieza con = + - @ (o tabulador/retorno) se abre en Excel como fórmula: se le antepone
+    un apóstrofo. Los números negativos escritos como texto ("-5", "-1,5") se dejan igual.
+    """
+    if not isinstance(valor, str) or not valor or valor[0] not in "=+-@\t\r":
+        return valor
+    try:
+        float(valor.replace(",", "."))
+        return valor
+    except ValueError:
+        return "'" + valor
 
 
 def iniciales(nombre: str) -> str:

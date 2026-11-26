@@ -65,7 +65,7 @@ export function itemPendiente(p: Pendiente, i: number): ItemPendiente {
         ),
         detalle: p.motivo
           ? `Quedó sin coordinador ${p.motivo}${p.fecha ? ` el ${diaMes(p.fecha)}` : ''}.`
-          : 'Asígnale uno para que pueda cargar hitos y pedir insumos.',
+          : 'Asígnale uno para que pueda cargar puntos de control y pedir insumos.',
         accion: {
           texto: 'Asignar coordinador',
           a: `/proyectos/${p.proyectoId}?asignar=coordinador`,
@@ -79,7 +79,7 @@ export function itemPendiente(p: Pendiente, i: number): ItemPendiente {
         icono: 'info',
         titulo: (
           <>
-            <Codigo>{p.proyecto}</Codigo> tiene su plan de hitos confirmado
+            <Codigo>{p.proyecto}</Codigo> tiene su plan de puntos de control confirmado
           </>
         ),
         detalle: 'Está en Propuesta. Puedes pasarlo a En ejecución.',

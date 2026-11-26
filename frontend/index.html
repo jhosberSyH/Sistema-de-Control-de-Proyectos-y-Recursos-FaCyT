@@ -9,13 +9,8 @@
       content="Control de proyectos y recursos de los laboratorios de la FaCyT, Universidad de Carabobo"
     />
     <title>Control de Proyectos · FaCyT</title>
-    <script>
-      // Aplica el tema guardado antes de pintar, para que no parpadee (ver src/lib/tema.ts).
-      try {
-        var t = localStorage.getItem('cpq-tema')
-        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t)
-      } catch (e) {}
-    </script>
+    <!-- Tema guardado antes de pintar; en archivo aparte para que la CSP no permita scripts en línea -->
+    <script src="/tema-inicial.js"></script>
   </head>
   <body class="mk">
     <div id="root"></div>

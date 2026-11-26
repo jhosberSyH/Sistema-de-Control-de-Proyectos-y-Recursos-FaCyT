@@ -29,7 +29,7 @@ from app.auditoria.service import record_audit_log
 from app.autenticacion.dependencies import get_client_ip, require_role
 from app.avisos.service import avisar
 from app.core.api import APROBADOR, COORDINADOR, ErrorValidacion, ModeloApi, conflicto, es_id_valido
-from app.core.database import get_db
+from app.core.database import candado_de_cierre, get_db
 from app.modulos.inventario.service import recalculate_consumption_forecasts
 from app.modulos.reportes.formato import (
     centavos,
@@ -270,6 +270,7 @@ def periodo_en_curso(db: Session) -> Optional[AccountingPeriod]:
 
 def periodo_cerrado_en(db: Session, fecha: date) -> Optional[AccountingPeriod]:
     """Período cerrado (o repartido) que contiene la fecha: ahí no entran movimientos (F7.2)."""
+    candado_de_cierre(db)
     return (
         db.query(AccountingPeriod)
         .filter(AccountingPeriod.status.in_(CERRADOS), AccountingPeriod.start_date <= fecha,
@@ -458,7 +459,9 @@ def calcular_reparto(db: Session, p: AccountingPeriod) -> Dict:
 
 
 def _periodo_o_404(db: Session, periodo_id: str) -> AccountingPeriod:
-    p = db.get(AccountingPeriod, periodo_id) if es_id_valido(periodo_id, db) else None
+    # Solo lo usan las escrituras (cerrar, repartir, recordatorios): FOR UPDATE evita cerrar o repartir dos veces en paralelo
+    p = (db.get(AccountingPeriod, periodo_id, with_for_update=True, populate_existing=True)
+         if es_id_valido(periodo_id, db) else None)
     if not p:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=PERIODO_NO_EXISTE)
     return p
@@ -711,6 +714,7 @@ def cerrar_periodo(
     """F7.2: el período cerrado ya no admite despachos, gastos ni correcciones con fecha en su rango y
     queda listo para el reparto. Se puede cerrar sin todas las confirmaciones (SP-08); el registro guarda
     cuáles faltaban."""
+    candado_de_cierre(db, exclusivo=True)  # espera a los movimientos que ya validaron su fecha
     p = _periodo_o_404(db, periodo_id)
     if p.status not in EN_CURSO:
         raise conflicto("Ese período ya está cerrado.")
@@ -823,6 +827,7 @@ def aplicar_reparto(
 ):
     """Aplica el criterio elegido: cada monto entra al gasto ejecutado de su proyecto (F2.7, vista
     app.v_project_spend) y el período no se reparte dos veces."""
+    candado_de_cierre(db, exclusivo=True)
     p = _periodo_o_404(db, periodo_id)
     if p.status == "Prorrateado":
         raise conflicto(f"Los gastos compartidos de {nombre_periodo(p)} ya se repartieron.")

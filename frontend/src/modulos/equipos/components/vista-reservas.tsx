@@ -179,7 +179,7 @@ function Calendario({
   bloques: Bloque[]
   ir: (c: { semana: string }) => void
   aprobador?: boolean
-  alElegir?: (fecha: string, minutos: number) => void
+  alElegir?: (fecha: string, desde: number, hasta: number) => void
   /** El formulario sigue a la semana que se mira. */
   alCambiarSemana?: (lunes: string) => void
 }) {
@@ -531,10 +531,10 @@ function Solicitud({
         alElegir={
           enMantenimiento
             ? undefined
-            : (f, minutos) => {
+            : (f, desde, hasta) => {
                 setFecha(f)
-                setDesde(horaDe(minutos))
-                setHasta(horaDe(Math.min(minutos + 120, CIERRE)))
+                setDesde(horaDe(desde))
+                setHasta(horaDe(Math.min(hasta, CIERRE)))
                 limpiar()
               }
         }
@@ -659,7 +659,7 @@ function Solicitud({
               </Aviso>
             ) : (
               <p className="sec" style={{ fontSize: 14 }}>
-                Elige un horario libre: escríbelo aquí o haz clic en el calendario. Los laboratorios atienden
+                Elige un horario libre: escríbelo aquí o selecciona en el calendario. Arrastra para elegir la duración; un clic elige una hora. Los laboratorios atienden
                 de lunes a sábado, de {horaDe(APERTURA)} a {horaDe(CIERRE)}.
               </p>
             )}

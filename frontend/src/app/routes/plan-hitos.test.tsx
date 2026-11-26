@@ -6,14 +6,14 @@ import { idProyecto } from '@/testing/mocks/datos/proyectos'
 
 const proyecto = (codigo: string) => db.proyectos.findFirst((q) => q.where({ codigo }))
 
-describe('Plan de hitos y avance (vista 08, F2.4 a F2.6, HU-05)', () => {
+describe('Puntos de control y avance (vista 08, F2.4 a F2.6, HU-05)', () => {
   it('con 90 de peso no confirma y dice cuánto falta; con 100 confirma el plan', async () => {
     conSesion('coord.quimica@cpq.local')
     const { usuario } = renderApp(`/proyectos/${idProyecto('QUI-035')}/plan`)
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Plan de hitos de QUI-035' }),
+      await screen.findByRole('heading', { level: 1, name: 'Plan de puntos de control de QUI-035' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('4 hitos')).toBeInTheDocument()
+    expect(screen.getByText('4 puntos de control')).toBeInTheDocument()
     expect(screen.getByText('Faltan 10 % para llegar a 100 %.')).toBeInTheDocument()
 
     const confirmar = screen.getByRole('button', { name: 'Confirmar plan' })
@@ -24,41 +24,41 @@ describe('Plan de hitos y avance (vista 08, F2.4 a F2.6, HU-05)', () => {
     )
     expect(proyecto('QUI-035')?.planConfirmado).toBe(false)
 
-    const peso = screen.getByLabelText('Peso del hito 1')
+    const peso = screen.getByLabelText('Peso del punto de control 1')
     await usuario.clear(peso)
     await usuario.type(peso, '25')
     expect(screen.getByText('Los pesos suman 100 %. Ya puedes confirmar el plan.')).toBeInTheDocument()
     await usuario.click(screen.getByRole('button', { name: 'Confirmar plan' }))
 
-    expect(await screen.findByText('Confirmaste el plan de hitos de QUI-035.')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1, name: 'Hitos de QUI-035' })).toBeInTheDocument()
+    expect(await screen.findByText('Confirmaste el plan de puntos de control de QUI-035.')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Puntos de control de QUI-035' })).toBeInTheDocument()
     expect(proyecto('QUI-035')?.planConfirmado).toBe(true)
     expect(
       db.auditoria.findFirst((q) =>
-        q.where({ descripcion: 'Daniela Rivas confirmó el plan de hitos de QUI-035 (4 hitos, 100 %)' }),
+        q.where({ descripcion: 'Daniela Rivas confirmó el plan de puntos de control de QUI-035 (4 puntos de control, 100 %)' }),
       ),
     ).toBeDefined()
     // En Propuesta, el administrador ya puede pasarlo a En ejecución (F2.3)
     expect(
       db.avisos.findFirst((q) =>
-        q.where({ usuarioId: 'u-adm', titulo: 'QUI-035 tiene su plan de hitos confirmado' }),
+        q.where({ usuarioId: 'u-adm', titulo: 'QUI-035 tiene su plan de puntos de control confirmado' }),
       ),
     ).toBeDefined()
   })
 
-  it('agrega y quita hitos, valida cada fila y guarda el borrador', async () => {
+  it('agrega y quita puntos de control, valida cada fila y guarda el borrador', async () => {
     conSesion('coord.quimica@cpq.local')
     const { usuario } = renderApp(`/proyectos/${idProyecto('QUI-035')}/plan`)
-    await usuario.click(await screen.findByRole('button', { name: 'Agregar hito' }))
-    expect(screen.getByText('5 hitos')).toBeInTheDocument()
-    expect(screen.getByLabelText('Hito 5')).toHaveFocus()
+    await usuario.click(await screen.findByRole('button', { name: 'Agregar punto de control' }))
+    expect(screen.getByText('5 puntos de control')).toBeInTheDocument()
+    expect(screen.getByLabelText('Punto de control 5')).toHaveFocus()
 
     await usuario.click(screen.getByRole('button', { name: 'Guardar borrador' }))
-    expect(await screen.findByText('Escribe el nombre del hito.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Hito 5')).toHaveFocus()
+    expect(await screen.findByText('Escribe el nombre del punto de control.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Punto de control 5')).toHaveFocus()
 
-    await usuario.click(screen.getByRole('button', { name: 'Quitar hito 5' }))
-    expect(screen.getByText('4 hitos')).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: 'Quitar punto de control 5' }))
+    expect(screen.getByText('4 puntos de control')).toBeInTheDocument()
     await usuario.click(screen.getByRole('button', { name: 'Guardar borrador' }))
     expect(
       await screen.findByText(/Guardaste el borrador del plan\. Los pesos suman 90 %/),
@@ -66,22 +66,22 @@ describe('Plan de hitos y avance (vista 08, F2.4 a F2.6, HU-05)', () => {
     expect(
       db.auditoria.findFirst((q) =>
         q.where({
-          descripcion: 'Daniela Rivas guardó el borrador del plan de hitos de QUI-035 (4 hitos, 90 %)',
+          descripcion: 'Daniela Rivas guardó el borrador del plan de puntos de control de QUI-035 (4 puntos de control, 90 %)',
           usuarioId: 'u-qui',
         }),
       ),
     ).toBeDefined()
   })
 
-  it('carga el avance de un hito: rechaza 120 y recalcula el avance físico', async () => {
+  it('carga el avance de un punto de control: rechaza 120 y recalcula el avance físico', async () => {
     conSesion('coord.quimica@cpq.local')
     const { usuario } = renderApp(`/proyectos/${idProyecto('QUI-024')}/plan`)
-    expect(await screen.findByRole('heading', { level: 1, name: 'Hitos de QUI-024' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Puntos de control de QUI-024' })).toBeInTheDocument()
     expect(
       screen.getByText('Síntesis de catalizadores de óxido de cerio · avance físico 62 %.'),
     ).toBeInTheDocument()
 
-    await usuario.click(screen.getByRole('button', { name: 'Cargar avance del hito 3' }))
+    await usuario.click(screen.getByRole('button', { name: 'Cargar avance del punto de control 3' }))
     const dialogo = await screen.findByRole('dialog', { name: 'Cargar avance' })
     // F2.5: las cargas anteriores siguen ahí
     expect(await within(dialogo).findByText('DRX de 4 de 6 muestras')).toBeInTheDocument()
@@ -104,7 +104,7 @@ describe('Plan de hitos y avance (vista 08, F2.4 a F2.6, HU-05)', () => {
     await usuario.type(avance, '85')
     expect(
       await within(dialogo).findByText(
-        'Con 85 % en este hito, el avance físico del proyecto pasa de 62 % a 66,5 %.',
+        'Con 85 % en este punto de control, el avance físico del proyecto pasa de 62 % a 66,5 %.',
       ),
     ).toBeInTheDocument()
     await usuario.type(within(dialogo).getByLabelText(/Comentario/), 'DRX de las 6 muestras listo')
@@ -112,30 +112,30 @@ describe('Plan de hitos y avance (vista 08, F2.4 a F2.6, HU-05)', () => {
 
     expect(
       await screen.findByText(
-        'Guardaste 85 % en el hito 3. El avance físico de QUI-024 pasó de 62 % a 66,5 %.',
+        'Guardaste 85 % en el punto de control 3. El avance físico de QUI-024 pasó de 62 % a 66,5 %.',
       ),
     ).toBeInTheDocument()
     expect(db.hitos.findFirst((q) => q.where({ id: 'QUI-024-h3' }))?.avance).toBe(85)
     expect(db.avances.findMany((q) => q.where({ hitoId: 'QUI-024-h3' }))).toHaveLength(4)
   })
 
-  it('edita un plan confirmado sin quitar hitos con avance y avisa antes de salir sin guardar', async () => {
+  it('edita un plan confirmado sin quitar puntos de control con avance y avisa antes de salir sin guardar', async () => {
     conSesion('coord.quimica@cpq.local')
     const { usuario, router } = renderApp(`/proyectos/${idProyecto('QUI-024')}/plan?modo=editar`)
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Plan de hitos de QUI-024' }),
+      await screen.findByRole('heading', { level: 1, name: 'Plan de puntos de control de QUI-024' }),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('button', { name: 'Quitar hito 1 (no se puede: ya tiene cargas de avance)' }),
+      screen.getByRole('button', { name: 'Quitar punto de control 1 (no se puede: ya tiene cargas de avance)' }),
     ).toHaveAttribute('aria-disabled', 'true')
-    expect(screen.getByRole('button', { name: 'Quitar hito 5' })).not.toHaveAttribute('aria-disabled')
+    expect(screen.getByRole('button', { name: 'Quitar punto de control 5' })).not.toHaveAttribute('aria-disabled')
 
-    const peso5 = screen.getByLabelText('Peso del hito 5')
+    const peso5 = screen.getByLabelText('Peso del punto de control 5')
     await usuario.clear(peso5)
     await usuario.type(peso5, '5')
     expect(screen.getByText('Faltan 5 % para llegar a 100 %.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Guardar cambios' })).toHaveAttribute('aria-disabled', 'true')
-    const peso4 = screen.getByLabelText('Peso del hito 4')
+    const peso4 = screen.getByLabelText('Peso del punto de control 4')
     await usuario.clear(peso4)
     await usuario.type(peso4, '30')
     // 62 + 5 × 24 / 100 = 63,2

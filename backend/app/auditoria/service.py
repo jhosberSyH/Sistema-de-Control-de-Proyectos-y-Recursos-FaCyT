@@ -28,8 +28,9 @@ def record_audit_log(
 
     log_entry = AuditLog(
         user_id=user_id,
-        ip_address=ip_address or "127.0.0.1",
-        target_object=resolved_target_object,
+        # Recortes al largo de las columnas: un nombre largo (p. ej. "ITEM:<nombre>") abortaba la operación con 500
+        ip_address=(ip_address or "127.0.0.1")[:45],
+        target_object=resolved_target_object[:100],
         target_table=resolved_target_table,
         target_id=target_id,
         action_type=action_type,

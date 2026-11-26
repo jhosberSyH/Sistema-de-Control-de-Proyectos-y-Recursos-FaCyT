@@ -77,7 +77,7 @@ describe('Inicio por rol (vista 02)', () => {
       'href',
       `/proyectos/${idProyecto('BIO-015')}?asignar=coordinador`,
     )
-    expect(screen.getByText(/tiene su plan de hitos confirmado/)).toBeInTheDocument()
+    expect(screen.getByText(/tiene su plan de puntos de control confirmado/)).toBeInTheDocument()
     const actividad = screen.getByRole('region', { name: 'Actividad reciente' })
     const items = within(actividad).getAllByRole('listitem')
     expect(items).toHaveLength(3)

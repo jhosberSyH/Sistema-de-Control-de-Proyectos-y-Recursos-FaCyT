@@ -28,12 +28,21 @@ from sqlalchemy import create_engine, event, text  # noqa: E402
 from sqlalchemy.engine import make_url  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
+from app.autenticacion.limite import limitador_login  # noqa: E402
 from app.core.database import ESQUEMA_APP, get_db  # noqa: E402
 from app.main import app  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parents[2]
 SCRIPTS_BD = [RAIZ / "database" / n for n in ("schema.sql", "02_constraints_triggers.sql", "seeders.sql")]
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
+
+
+@pytest.fixture(autouse=True)
+def _limitador_limpio():
+    """El límite de intentos de login vive en memoria del proceso: cada prueba empieza sin fallos previos."""
+    limitador_login.reiniciar()
+    yield
+    limitador_login.reiniciar()
 
 
 @pytest.fixture(scope="session")

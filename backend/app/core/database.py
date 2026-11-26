@@ -1,7 +1,7 @@
 """Database connection and session management."""
 
 from typing import Generator
-from sqlalchemy import create_engine, event, String
+from sqlalchemy import create_engine, event, String, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from app.core.config import settings
@@ -80,6 +80,20 @@ if ES_POSTGRES:
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+
+def candado_de_cierre(db: Session, exclusivo: bool = False) -> None:
+    """Candado consultivo que ordena los movimientos frente al cierre de un período (F7.2).
+
+    Cada operación que revisa "¿la fecha cae en un período cerrado?" lo toma en modo compartido; cerrar
+    y repartir un período lo toman en modo exclusivo. Así el cierre espera a los movimientos que ya
+    validaron su fecha y los que llegan después ven el período cerrado. Los movimientos no se bloquean
+    entre sí. Dura hasta el fin de la transacción. En SQLite (pruebas rápidas) no hace nada.
+    """
+    if db.get_bind().dialect.name != "postgresql":
+        return
+    funcion = "pg_advisory_xact_lock" if exclusivo else "pg_advisory_xact_lock_shared"
+    db.execute(text(f"SELECT {funcion}(hashtext('cierre-de-periodo'))"))
 
 
 def get_db() -> Generator[Session, None, None]:

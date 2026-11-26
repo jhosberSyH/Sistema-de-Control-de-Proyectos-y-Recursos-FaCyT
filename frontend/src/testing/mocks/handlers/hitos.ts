@@ -69,7 +69,7 @@ const resumen = (hitos: Pick<Hito, 'nombre' | 'peso'>[]) =>
 
 function finalizado(p: Proyecto) {
   return p.estatus === 'Finalizado'
-    ? error(409, `${p.codigo} está finalizado: su plan de hitos ya no cambia.`)
+    ? error(409, `${p.codigo} está finalizado: su plan de puntos de control ya no cambia.`)
     : null
 }
 
@@ -95,7 +95,7 @@ export const handlersHitos = [
 
     const cuerpo = (await request.json().catch(() => ({}))) as { hitos?: unknown; confirmar?: unknown }
     const lista = Array.isArray(cuerpo.hitos) ? (cuerpo.hitos as EntradaHito[]) : []
-    if (lista.length === 0) return errorValidacion({ hitos: 'Agrega al menos un hito.' })
+    if (lista.length === 0) return errorValidacion({ hitos: 'Agrega al menos un punto de control.' })
 
     const actuales = hitosDe(p.codigo)
     const errores: Record<string, string> = {}
@@ -104,11 +104,11 @@ export const handlersHitos = [
       const fechaPrevista = typeof h.fechaPrevista === 'string' ? h.fechaPrevista : ''
       const peso = typeof h.peso === 'number' ? h.peso : NaN
       const id = typeof h.id === 'string' ? h.id : null
-      if (!nombre) errores[`hitos.${i}.nombre`] = 'Escribe el nombre del hito.'
+      if (!nombre) errores[`hitos.${i}.nombre`] = 'Escribe el nombre del punto de control.'
       else if (nombre.length > MAX_NOMBRE)
         errores[`hitos.${i}.nombre`] = `Usa como máximo ${MAX_NOMBRE} caracteres.`
       else if (id && !actuales.some((a) => a.id === id)) {
-        errores[`hitos.${i}.nombre`] = 'Este hito ya no existe. Recarga la página.'
+        errores[`hitos.${i}.nombre`] = 'Este punto de control ya no existe. Recarga la página.'
       }
       if (!FECHA.test(fechaPrevista)) errores[`hitos.${i}.fechaPrevista`] = 'Elige la fecha.'
       if (!Number.isInteger(peso) || peso < 1 || peso > 100) {
@@ -133,7 +133,7 @@ export const handlersHitos = [
     const quitados = actuales.filter((a) => !limpios.some((h) => h.id === a.id))
     const conCargas = quitados.find((a) => cargasDe(a.id).length > 0)
     if (conCargas) {
-      return error(409, `El hito «${conCargas.nombre}» ya tiene cargas de avance: no se puede quitar.`)
+      return error(409, `El punto de control «${conCargas.nombre}» ya tiene cargas de avance: no se puede quitar.`)
     }
 
     const yaConfirmado = p.planConfirmado
@@ -169,15 +169,15 @@ export const handlersHitos = [
         })
       : p
 
-    const cuantos = `${limpios.length} ${limpios.length === 1 ? 'hito' : 'hitos'}`
+    const cuantos = `${limpios.length} ${limpios.length === 1 ? 'punto de control' : 'puntos de control'}`
     await auditar(
       quien,
       'edicion',
       yaConfirmado
-        ? `${quien.nombre} cambió el plan de hitos de ${p.codigo} (${cuantos})`
+        ? `${quien.nombre} cambió el plan de puntos de control de ${p.codigo} (${cuantos})`
         : confirmar
-          ? `${quien.nombre} confirmó el plan de hitos de ${p.codigo} (${cuantos}, 100 %)`
-          : `${quien.nombre} guardó el borrador del plan de hitos de ${p.codigo} (${cuantos}, ${porcentaje(suma)})`,
+        ? `${quien.nombre} confirmó el plan de puntos de control de ${p.codigo} (${cuantos}, 100 %)`
+        : `${quien.nombre} guardó el borrador del plan de puntos de control de ${p.codigo} (${cuantos}, ${porcentaje(suma)})`,
       {
         entidad: `proyecto:${p.codigo}`,
         valorAnterior: resumen(actuales) || null,
@@ -193,7 +193,7 @@ export const handlersHitos = [
           id: `av-plan-${p.codigo}-${adm.id}-${Date.now()}`,
           usuarioId: adm.id,
           tipo: 'info',
-          titulo: `${p.codigo} tiene su plan de hitos confirmado`,
+          titulo: `${p.codigo} tiene su plan de puntos de control confirmado`,
           detalle: 'Está en Propuesta. Puedes pasarlo a En ejecución.',
           enlace: `/proyectos/${p.id}`,
           fecha: ahora,
@@ -211,7 +211,7 @@ export const handlersHitos = [
     const hito = db.hitos.findFirst((q) =>
       q.where({ id: String(params.hitoId), proyecto: acceso.proyecto.codigo }),
     )
-    if (!hito) return error(404, 'No encontramos ese hito. Recarga la página.')
+    if (!hito) return error(404, 'No encontramos ese punto de control. Recarga la página.')
     return HttpResponse.json(
       cargasDe(hito.id).map((a) => ({
         id: a.id,
@@ -232,10 +232,10 @@ export const handlersHitos = [
     const cerrado = finalizado(p)
     if (cerrado) return cerrado
     if (!p.planConfirmado) {
-      return error(409, 'Primero confirma el plan de hitos: el avance se carga cuando los pesos suman 100.')
+      return error(409, 'Primero confirma el plan de puntos de control: el avance se carga cuando los pesos suman 100.')
     }
     const hito = db.hitos.findFirst((q) => q.where({ id: String(params.hitoId), proyecto: p.codigo }))
-    if (!hito) return error(404, 'No encontramos ese hito. Recarga la página.')
+    if (!hito) return error(404, 'No encontramos ese punto de control. Recarga la página.')
 
     const cuerpo = (await request.json().catch(() => ({}))) as {
       porcentaje?: unknown
@@ -278,7 +278,7 @@ export const handlersHitos = [
     await auditar(
       quien,
       'creacion',
-      `${quien.nombre} cargó ${porcentaje(nuevo)} en el hito ${hito.numero} de ${p.codigo}`,
+      `${quien.nombre} cargó ${porcentaje(nuevo)} en el punto de control ${hito.numero} de ${p.codigo}`,
       {
         entidad: `proyecto:${p.codigo}`,
         justificacion: comentario || null,

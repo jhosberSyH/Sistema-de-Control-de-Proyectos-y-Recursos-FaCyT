@@ -1,7 +1,7 @@
 """Módulo 3 (Inventario) con el contrato del frontend (vistas 09 y 10; F3.1, F3.2, F3.4, F3.6, F3.7; RN-02).
 
   GET   /api/insumos?q&tipo&ubicacion&alerta&pagina  catálogo con stock, lotes, vencimiento y estado
-  GET   /api/insumos/exportar?…                     el mismo catálogo en CSV
+  GET   /api/insumos/exportar?…                     el mismo catálogo en Excel
   POST  /api/insumos                                alta (solo Administrador); nace con stock cero
   GET   /api/insumos/{id}                           ficha: lotes, último movimiento, reposición y pronóstico
   PATCH /api/insumos/{id}/minimo                    cambiar el stock mínimo (solo Administrador, F3.2)
@@ -12,17 +12,23 @@ La especificación es frontend/src/testing/mocks/handlers/inventario.ts.
 """
 
 import math
+from io import BytesIO
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
 from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.worksheet.table import Table, TableStyleInfo
 from sqlalchemy.orm import Session
 
 from app.auditoria.service import record_audit_log
 from app.autenticacion.dependencies import get_client_ip, require_role
-from app.core.api import ADMINISTRADOR, APROBADOR, COORDINADOR, ErrorValidacion, ModeloApi, es_id_valido, iso, normalizar
+from app.core.api import (
+    ADMINISTRADOR, APROBADOR, COORDINADOR, ErrorValidacion, ModeloApi, es_id_valido, iso, normalizar,
+)
 from app.core.database import get_db
 from app.modulos.inventario.reglas import (
     anticipacion,
@@ -47,7 +53,7 @@ POR_PAGINA = 20
 TIPOS = ("Materia prima", "Consumible de proyecto", "Consumible de uso general")
 UNIDADES = ("L", "mL", "g", "kg", "unidades", "cajas", "bolsas", "rollos")
 ORDEN_ESTADO = {"bajo": 0, "vence": 1, "vencido": 2, "ok": 3}
-ESTADO_CSV = {"bajo": "Bajo el mínimo", "vence": "Lote próximo a vencer", "vencido": "Lote vencido", "ok": "Al día"}
+ESTADO_EXPORTACION = {"bajo": "Bajo el mínimo", "vence": "Lote próximo a vencer", "vencido": "Lote vencido", "ok": "Al día"}
 
 leer = require_role([APROBADOR, ADMINISTRADOR, COORDINADOR])
 leer_ficha = require_role([APROBADOR, ADMINISTRADOR])
@@ -293,7 +299,10 @@ def listar_insumos(
     )
 
 
-@router.get("/insumos/exportar")
+@router.get(
+    "/insumos/exportar",
+    responses={200: {"content": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}}}},
+)
 def exportar_insumos(
     q: str = "",
     tipo: Optional[str] = None,
@@ -302,22 +311,82 @@ def exportar_insumos(
     db: Session = Depends(get_db),
     quien: User = Depends(leer),
 ):
-    def celda(valor) -> str:
-        return '"' + str("" if valor is None else valor).replace('"', '""') + '"'
+    registros = _filtrar(db, q, tipo, ubicacion, alerta)
+    libro = Workbook()
+    hoja = libro.active
+    hoja.title = "Inventario"
+    hoja.sheet_view.showGridLines = False
+    hoja.merge_cells("A1:H1")
+    hoja["A1"] = "Inventario de insumos"
+    hoja["A1"].font = Font(name="Aptos Display", size=18, bold=True, color="FFFFFF")
+    hoja["A1"].fill = PatternFill("solid", fgColor="153A5B")
+    hoja["A1"].alignment = Alignment(vertical="center")
+    hoja.row_dimensions[1].height = 34
+    hoja.merge_cells("A2:H2")
+    hoja["A2"] = f"Exportado el {hoy().strftime('%d/%m/%Y')} · {len(registros)} insumo(s)"
+    hoja["A2"].font = Font(name="Aptos", size=10, color="526579", italic=True)
+    encabezados = ["Insumo", "Tipo de insumo", "Unidad", "Stock actual", "Stock mínimo", "Lotes", "Próximo vencimiento", "Estado"]
+    for columna, encabezado in enumerate(encabezados, start=1):
+        celda = hoja.cell(row=4, column=columna, value=encabezado)
+        celda.font = Font(name="Aptos", bold=True, color="FFFFFF")
+        celda.fill = PatternFill("solid", fgColor="176B87")
+        celda.alignment = Alignment(vertical="center", wrap_text=True)
 
-    filas = [["Insumo", "Tipo", "Unidad", "Stock", "Stock mínimo", "Lotes", "Próximo vencimiento", "Estado"]]
-    for v in _filtrar(db, q, tipo, ubicacion, alerta):
-        filas.append([
+    colores_estado = {
+        "Bajo el mínimo": ("FCE8E6", "9C2F25"),
+        "Lote próximo a vencer": ("FFF3CD", "805B00"),
+        "Lote vencido": ("FCE8E6", "9C2F25"),
+        "Al día": ("E5F3EA", "27613A"),
+    }
+    for fila, v in enumerate(registros, start=5):
+        estado = ESTADO_EXPORTACION[v["estado"]]
+        valores = [
             v["nombre"], v["tipo"], v["unidad"], num(v["stock"]), num(v["stock_minimo"]), v["lotes"],
-            v["proximo_vencimiento"]["fecha"] if v["proximo_vencimiento"] else "", ESTADO_CSV[v["estado"]],
-        ])
-    csv = "\r\n".join(";".join(celda(c) for c in fila) for fila in filas)
-    return Response(
-        content=("﻿" + csv).encode("utf-8"),
-        media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f'attachment; filename="inventario-{hoy().isoformat()}.csv"'},
-    )
+            date.fromisoformat(v["proximo_vencimiento"]["fecha"]) if v["proximo_vencimiento"] else None, estado,
+        ]
+        for columna, valor in enumerate(valores, start=1):
+            celda = hoja.cell(row=fila, column=columna, value=valor)
+            celda.font = Font(name="Aptos", size=10, color="203040")
+            celda.alignment = Alignment(vertical="center", wrap_text=columna in (1, 2, 8))
+            if isinstance(valor, str):
+                celda.data_type = "s"
+            if columna in (4, 5):
+                celda.number_format = "#,##0.###"
+                celda.alignment = Alignment(horizontal="right", vertical="center")
+            elif columna == 6:
+                celda.number_format = "#,##0"
+                celda.alignment = Alignment(horizontal="center", vertical="center")
+            elif columna == 7 and valor:
+                celda.number_format = "dd/mm/yyyy"
+                celda.alignment = Alignment(horizontal="center", vertical="center")
+        fondo, texto = colores_estado[estado]
+        hoja.cell(row=fila, column=8).fill = PatternFill("solid", fgColor=fondo)
+        hoja.cell(row=fila, column=8).font = Font(name="Aptos", size=10, bold=True, color=texto)
+        hoja.row_dimensions[fila].height = 24
 
+    ultima_fila = 4 + len(registros)
+    hoja.freeze_panes = "A5"
+    hoja.auto_filter.ref = f"A4:H{ultima_fila}"
+    if registros:
+        tabla = Table(displayName="TablaInventario", ref=f"A4:H{ultima_fila}")
+        tabla.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showFirstColumn=False, showLastColumn=False,
+                                              showRowStripes=True, showColumnStripes=False)
+        hoja.add_table(tabla)
+    for columna, ancho in {"A": 38, "B": 29, "C": 14, "D": 16, "E": 16, "F": 11, "G": 23, "H": 25}.items():
+        hoja.column_dimensions[columna].width = ancho
+    hoja.row_dimensions[4].height = 32
+    hoja.sheet_properties.pageSetUpPr.fitToPage = True
+    hoja.page_setup.orientation = "landscape"
+    hoja.page_setup.fitToWidth = 1
+    hoja.page_setup.fitToHeight = 0
+    hoja.print_title_rows = "1:4"
+    salida = BytesIO()
+    libro.save(salida)
+    return Response(
+        content=salida.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="inventario-{hoy().isoformat()}.xlsx"'},
+    )
 
 @router.post("/insumos", response_model=InsumoCreado, status_code=status.HTTP_201_CREATED)
 def registrar_insumo(datos: DatosInsumo, request: Request, db: Session = Depends(get_db), quien: User = Depends(solo_admin)):

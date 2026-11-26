@@ -15,7 +15,7 @@ describe('Ficha de proyecto (vista 07, F2.2 a F2.7)', () => {
     // F2.6: 10·100 + 25·100 + 30·70 + 25·24 + 10·0, entre 100 = 62 %
     const avance = screen.getByRole('region', { name: 'Avance físico' })
     expect(within(avance).getByText('62 %')).toBeInTheDocument()
-    expect(within(avance).getByText(/2 de 5 hitos completos/)).toBeInTheDocument()
+    expect(within(avance).getByText(/2 de 5 puntos de control completos/)).toBeInTheDocument()
 
     // F2.7: gastos + despachos + gastos compartidos = gasto ejecutado
     const ejecucion = screen.getByRole('region', { name: 'Ejecución presupuestaria' })
@@ -26,7 +26,7 @@ describe('Ficha de proyecto (vista 07, F2.2 a F2.7)', () => {
     expect(within(ejecucion).getByText('US$ 4.812,00')).toBeInTheDocument()
 
     expect(
-      within(screen.getByRole('region', { name: 'Próximo hito' })).getByText(
+      within(screen.getByRole('region', { name: 'Próximo punto de control' })).getByText(
         'Calcinación y caracterización por DRX',
       ),
     ).toBeInTheDocument()
@@ -34,7 +34,7 @@ describe('Ficha de proyecto (vista 07, F2.2 a F2.7)', () => {
     // REV-009: la lista mezcla cargos, cargas de avance y gastos compartidos
     const movimientos = screen.getByRole('region', { name: 'Movimientos recientes' })
     expect(within(movimientos).getAllByRole('listitem')).toHaveLength(4)
-    expect(within(movimientos).getByText(/^Avance del hito \d cargado: \d+ %/)).toBeInTheDocument()
+    expect(within(movimientos).getByText(/^Avance del punto de control \d cargado: \d+ %/)).toBeInTheDocument()
     expect(within(movimientos).getByText(/^Gastos compartidos de /)).toBeInTheDocument()
 
     await usuario.click(screen.getByRole('tab', { name: 'Historial' }))
@@ -96,10 +96,10 @@ describe('Ficha de proyecto (vista 07, F2.2 a F2.7)', () => {
     await usuario.click(await screen.findByRole('button', { name: 'Cambiar estatus' }))
     const dialogo = await screen.findByRole('dialog', { name: 'Cambiar estatus de BIO-017' })
     expect(within(dialogo).getByRole('radio', { name: 'En ejecución' })).toBeDisabled()
-    expect(within(dialogo).getByText(/todavía no confirma el plan de hitos/)).toBeInTheDocument()
+    expect(within(dialogo).getByText(/todavía no confirma el plan de puntos de control/)).toBeInTheDocument()
     // La ficha también lo dice: los pesos suman 70
     expect(
-      screen.getByText('El plan de hitos no está confirmado: los pesos suman 70 de 100.'),
+      screen.getByText('El plan de puntos de control no está confirmado: los pesos suman 70 de 100.'),
     ).toBeInTheDocument()
   })
 

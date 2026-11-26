@@ -85,8 +85,8 @@ export function VistaProyectos({ esAdministrador }: Props) {
       <p>
         Registraste <Link to={`/proyectos/${p.id}`}>{p.codigo}</Link> en estatus Propuesta.{' '}
         {p.coordinador
-          ? `${p.coordinador.nombre} ya lo ve en sus proyectos y puede cargar el plan de hitos.`
-          : 'Asígnale un coordinador desde su ficha para que puedan cargar el plan de hitos.'}
+          ? `${p.coordinador.nombre} ya lo ve en sus proyectos y puede cargar el plan de puntos de control.`
+          : 'Asígnale un coordinador desde su ficha para que puedan cargar el plan de puntos de control.'}
       </p>,
     )
   }

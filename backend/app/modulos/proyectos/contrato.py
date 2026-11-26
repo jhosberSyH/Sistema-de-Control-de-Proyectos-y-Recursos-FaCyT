@@ -2,7 +2,7 @@
 
 Proyectos
   GET   /api/proyectos?q&area&prioridad&estatus&pagina   Administrador: todos. Coordinador: solo los suyos (RN-07)
-  GET   /api/proyectos/exportar?…                         la misma lista en CSV
+  GET   /api/proyectos/exportar?…                         la misma lista en Excel
   GET   /api/proyectos/coordinadores                      cuentas activas con rol Coordinador (F2.2), Administrador
   POST  /api/proyectos                                    nace en Propuesta; código único (409 con el que choca)
   GET   /api/proyectos/{id}                               ficha (vista 07)
@@ -29,11 +29,15 @@ import re
 from collections import defaultdict
 from datetime import date, datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal
+from io import BytesIO
 from typing import Any, Dict, Iterable, List, Literal, Optional
 from zoneinfo import ZoneInfo
 
 from pydantic import Field
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.worksheet.table import Table, TableStyleInfo
 from sqlalchemy.orm import Session, joinedload
 
 from app.auditoria.models import AuditLog
@@ -85,7 +89,7 @@ MAX_COMENTARIO = 300
 MAX_PRESUPUESTO = 10 ** 13  # NUMERIC(15, 2)
 
 PROYECTO_NO_EXISTE = "Ese proyecto no existe."
-HITO_NO_EXISTE = "No encontramos ese hito. Recarga la página."
+HITO_NO_EXISTE = "No encontramos ese punto de control. Recarga la página."
 
 # F2.3: Finalizado es el final; Suspendido puede volver a En ejecución (mockup 07, SP-13)
 TRANSICIONES: Dict[str, List[str]] = {
@@ -440,7 +444,7 @@ def _bloqueo(p: Project, estatus: str) -> Optional[str]:
         if not p.coordinator_id:
             return "Primero asígnale un coordinador."
         if not p.plan_confirmed:
-            return "Su coordinador todavía no confirma el plan de hitos (los pesos tienen que sumar 100)."
+            return "Su coordinador todavía no confirma el plan de puntos de control (los pesos tienen que sumar 100)."
     return None
 
 
@@ -527,7 +531,10 @@ def listar_proyectos(
     )
 
 
-@router.get("/proyectos/exportar")
+@router.get(
+    "/proyectos/exportar",
+    responses={200: {"content": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}}}},
+)
 def exportar_proyectos(
     q: str = "",
     area: Optional[str] = None,
@@ -543,33 +550,71 @@ def exportar_proyectos(
     hitos = _hitos_de(db, [str(p.id) for p in lista])
     filas = [_vista(p, hitos[str(p.id)]) for p in lista]
 
-    def celda(valor) -> str:
-        texto = "" if valor is None else str(valor)
-        return '"' + texto.replace('"', '""') + '"'
-
-    def dinero(valor: float) -> str:
-        return f"{valor:.2f}".replace(".", ",")
-
-    encabezado = [
-        "Código", "Nombre", "Área", "Coordinador", "Estatus", "Prioridad", "Presupuesto (US$)",
+    libro = Workbook()
+    hoja = libro.active
+    hoja.title = "Proyectos"
+    hoja.sheet_view.showGridLines = False
+    hoja.merge_cells("A1:J1")
+    hoja["A1"] = "Control de proyectos"
+    hoja["A1"].font = Font(name="Aptos Display", size=18, bold=True, color="FFFFFF")
+    hoja["A1"].fill = PatternFill("solid", fgColor="153A5B")
+    hoja.row_dimensions[1].height = 34
+    hoja.merge_cells("A2:J2")
+    hoja["A2"] = f"Exportado el {_hoy().strftime('%d/%m/%Y')} · {len(filas)} proyecto(s)"
+    hoja["A2"].font = Font(name="Aptos", size=10, color="526579", italic=True)
+    encabezados = [
+        "Código", "Proyecto", "Área", "Coordinador", "Estatus", "Prioridad", "Presupuesto (US$)",
         "Gasto ejecutado (US$)", "Avance físico (%)", "Ejecución (%)",
     ]
-    cuerpo = [
-        [
-            p.codigo, p.nombre, p.area, p.coordinador.nombre if p.coordinador else "Sin coordinador",
-            p.estatus, p.prioridad, dinero(p.presupuesto), dinero(p.gasto_ejecutado),
-            _numero(p.avance) if p.avance is not None else "", p.ejecucion,
-        ]
-        for p in filas
-    ]
-    csv = "\r\n".join(";".join(celda(v) for v in fila) for fila in [encabezado, *cuerpo])
-    # BOM para que Excel abra bien las tildes; punto y coma, como espera Excel en español
-    return Response(
-        content="﻿" + csv,
-        media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f'attachment; filename="proyectos-{_hoy().isoformat()}.csv"'},
-    )
+    for columna, encabezado in enumerate(encabezados, start=1):
+        celda = hoja.cell(row=4, column=columna, value=encabezado)
+        celda.font = Font(name="Aptos", bold=True, color="FFFFFF")
+        celda.fill = PatternFill("solid", fgColor="176B87")
+        celda.alignment = Alignment(vertical="center", wrap_text=True)
 
+    for fila, p in enumerate(filas, start=5):
+        valores = [
+            p.codigo, p.nombre, p.area, p.coordinador.nombre if p.coordinador else "Sin coordinador",
+            p.estatus, p.prioridad, p.presupuesto, p.gasto_ejecutado,
+            p.avance if p.avance is not None else None, p.ejecucion,
+        ]
+        for columna, valor in enumerate(valores, start=1):
+            celda = hoja.cell(row=fila, column=columna, value=valor)
+            celda.font = Font(name="Aptos", size=10, color="203040")
+            celda.alignment = Alignment(vertical="center", wrap_text=columna in (2, 4))
+            if isinstance(valor, str):
+                celda.data_type = "s"
+            if columna in (7, 8):
+                celda.number_format = '"US$" #,##0.00'
+                celda.alignment = Alignment(horizontal="right", vertical="center")
+            elif columna in (9, 10) and valor is not None:
+                celda.number_format = '0.0" %"'
+                celda.alignment = Alignment(horizontal="right", vertical="center")
+        hoja.row_dimensions[fila].height = 24
+
+    ultima_fila = 4 + len(filas)
+    hoja.freeze_panes = "A5"
+    hoja.auto_filter.ref = f"A4:J{ultima_fila}"
+    if filas:
+        tabla = Table(displayName="TablaProyectos", ref=f"A4:J{ultima_fila}")
+        tabla.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showFirstColumn=False, showLastColumn=False,
+                                              showRowStripes=True, showColumnStripes=False)
+        hoja.add_table(tabla)
+    for columna, ancho in {"A": 16, "B": 42, "C": 18, "D": 28, "E": 20, "F": 16, "G": 22, "H": 24, "I": 20, "J": 16}.items():
+        hoja.column_dimensions[columna].width = ancho
+    hoja.row_dimensions[4].height = 34
+    hoja.sheet_properties.pageSetUpPr.fitToPage = True
+    hoja.page_setup.orientation = "landscape"
+    hoja.page_setup.fitToWidth = 1
+    hoja.page_setup.fitToHeight = 0
+    hoja.print_title_rows = "1:4"
+    salida = BytesIO()
+    libro.save(salida)
+    return Response(
+        content=salida.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="proyectos-{_hoy().isoformat()}.xlsx"'},
+    )
 
 @router.get("/proyectos/coordinadores", response_model=List[Coordinador])
 def listar_coordinadores(db: Session = Depends(get_db), quien: User = Depends(solo_admin)):
@@ -654,7 +699,7 @@ def registrar_proyecto(
     if coordinador:
         # F2.2: el proyecto aparece en la bandeja del coordinador
         avisar(db, coordinador.id, "info", f"Te asignaron el proyecto {codigo}", f"/proyectos/{p.id}",
-               f"{nombre}. Está en Propuesta: carga su plan de hitos para que pueda pasar a En ejecución.")
+               f"{nombre}. Está en Propuesta: carga su plan de puntos de control para que pueda pasar a En ejecución.")
     vista = _vista_de(db, p)
     db.commit()
     return vista
@@ -779,7 +824,7 @@ def _movimientos(cargos: List[Dict[str, Any]], hitos: List[ProjectMilestone],
             fecha = a.progress_date.isoformat()
             todos.append((fecha, _marca(a.reported_at), Movimiento(
                 id=str(a.id), fecha=fecha,
-                texto=f"Avance del hito {numero.get(hito_id, '?')} cargado: {_numero(a.new_progress_pct)} %",
+                texto=f"Avance del punto de control {numero.get(hito_id, '?')} cargado: {_numero(a.new_progress_pct)} %",
                 referencia=None, monto=None, nota=a.notes, tipo="Avance",
             )))
     todos.sort(key=lambda t: (t[0], t[1]), reverse=True)
@@ -972,7 +1017,7 @@ def _plan(db: Session, p: Project) -> PlanProyecto:
 
 def _no_finalizado(p: Project) -> None:
     if p.operational_status == "Finalizado":
-        raise conflicto(f"{p.code} está finalizado: su plan de hitos ya no cambia.")
+        raise conflicto(f"{p.code} está finalizado: su plan de puntos de control ya no cambia.")
 
 
 def _resumen_plan(hitos: List[Dict[str, Any]]) -> str:
@@ -996,7 +1041,7 @@ def guardar_plan(
     _no_finalizado(p)
     lista = datos.hitos if isinstance(datos.hitos, list) else []
     if not lista:
-        raise ErrorValidacion({"hitos": "Agrega al menos un hito."})
+        raise ErrorValidacion({"hitos": "Agrega al menos un punto de control."})
 
     actuales = _hitos_de(db, [str(p.id)])[str(p.id)]
     por_id = {str(h.id): h for h in actuales}
@@ -1009,11 +1054,11 @@ def guardar_plan(
         peso = h.get("peso")
         hito_id = h.get("id") if isinstance(h.get("id"), str) and h.get("id") else None
         if not nombre:
-            errores[f"hitos.{i}.nombre"] = "Escribe el nombre del hito."
+            errores[f"hitos.{i}.nombre"] = "Escribe el nombre del punto de control."
         elif len(nombre) > MAX_NOMBRE_HITO:
             errores[f"hitos.{i}.nombre"] = f"Usa como máximo {MAX_NOMBRE_HITO} caracteres."
         elif hito_id and hito_id not in por_id:
-            errores[f"hitos.{i}.nombre"] = "Este hito ya no existe. Recarga la página."
+            errores[f"hitos.{i}.nombre"] = "Este punto de control ya no existe. Recarga la página."
         if fecha is None:
             errores[f"hitos.{i}.fechaPrevista"] = "Elige la fecha."
         if not _es_entero(peso) or not 1 <= peso <= 100:
@@ -1037,7 +1082,7 @@ def guardar_plan(
     cargas = _cargas_por_hito(db, [str(h.id) for h in quitados])
     con_cargas = next((h for h in quitados if cargas[str(h.id)]), None)
     if con_cargas:
-        raise conflicto(f"El hito «{con_cargas.name}» ya tiene cargas de avance: no se puede quitar.")
+        raise conflicto(f"El punto de control «{con_cargas.name}» ya tiene cargas de avance: no se puede quitar.")
 
     antes = _resumen_plan([{"nombre": h.name, "peso": h.weight} for h in actuales])
     ahora = datetime.now(timezone.utc)
@@ -1062,13 +1107,13 @@ def guardar_plan(
     db.flush()
     _guardar_avance_fisico(p, _hitos_de(db, [str(p.id)])[str(p.id)])
 
-    cuantos = f"{len(limpios)} {'hito' if len(limpios) == 1 else 'hitos'}"
+    cuantos = f"{len(limpios)} {'punto de control' if len(limpios) == 1 else 'puntos de control'}"
     if ya_confirmado:
-        descripcion = f"{quien.full_name} cambió el plan de hitos de {p.code} ({cuantos})"
+        descripcion = f"{quien.full_name} cambió el plan de puntos de control de {p.code} ({cuantos})"
     elif confirmar:
-        descripcion = f"{quien.full_name} confirmó el plan de hitos de {p.code} ({cuantos}, 100 %)"
+        descripcion = f"{quien.full_name} confirmó el plan de puntos de control de {p.code} ({cuantos}, 100 %)"
     else:
-        descripcion = f"{quien.full_name} guardó el borrador del plan de hitos de {p.code} ({cuantos}, {_porcentaje(suma)})"
+        descripcion = f"{quien.full_name} guardó el borrador del plan de puntos de control de {p.code} ({cuantos}, {_porcentaje(suma)})"
     _auditar(
         db, quien, get_client_ip(request), p, "MILESTONE_PLAN_SAVED", descripcion,
         anterior={"plan": antes or None}, nuevo={"plan": _resumen_plan(limpios), "plan_confirmed": bool(p.plan_confirmed)},
@@ -1076,7 +1121,7 @@ def guardar_plan(
 
     # Un plan recién confirmado en Propuesta queda listo para pasar a En ejecución (F2.3)
     if confirmar and not ya_confirmado and p.operational_status == "Propuesta":
-        avisar_a(db, ids_por_rol(db, ADMINISTRADOR), "info", f"{p.code} tiene su plan de hitos confirmado",
+        avisar_a(db, ids_por_rol(db, ADMINISTRADOR), "info", f"{p.code} tiene su plan de puntos de control confirmado",
                  f"/proyectos/{p.id}", "Está en Propuesta. Puedes pasarlo a En ejecución.")
     plan = _plan(db, p)
     db.commit()
@@ -1120,7 +1165,7 @@ def cargar_avance(
     p = _acceso(db, quien, proyecto_id)
     _no_finalizado(p)
     if not p.plan_confirmed:
-        raise conflicto("Primero confirma el plan de hitos: el avance se carga cuando los pesos suman 100.")
+        raise conflicto("Primero confirma el plan de puntos de control: el avance se carga cuando los pesos suman 100.")
     h = _hito_del_proyecto(db, p, hito_id)
 
     valor = datos.porcentaje
@@ -1162,7 +1207,7 @@ def cargar_avance(
     despues = _avance(p, hitos)
     _auditar(
         db, quien, get_client_ip(request), p, "MILESTONE_PROGRESS",
-        f"{quien.full_name} cargó {_porcentaje(nuevo)} en el hito {h.position} de {p.code}",
+        f"{quien.full_name} cargó {_porcentaje(nuevo)} en el punto de control {h.position} de {p.code}",
         anterior={"milestone_id": str(h.id), "progress": _porcentaje(previo)},
         nuevo={"milestone_id": str(h.id), "progress": _porcentaje(nuevo), "progress_date": fecha.isoformat()},
         justificacion=comentario or None,

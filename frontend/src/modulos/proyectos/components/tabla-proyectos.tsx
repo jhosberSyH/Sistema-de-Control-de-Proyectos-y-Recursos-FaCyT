@@ -63,14 +63,14 @@ export function TablaProyectos({ proyectos, esAdministrador }: Props) {
             </td>
             <td data-e="Avance físico:">
               {p.estatus === 'Propuesta' ? (
-                // Todavía no se ejecuta: lo que importa es si el plan de hitos está listo (F2.4)
+                // Todavía no se ejecuta: lo que importa es si el plan de puntos de control está listo (F2.4)
                 <span className="sec">
-                  {p.planConfirmado ? 'Plan de hitos confirmado' : 'Plan de hitos sin confirmar'}
+                  {p.planConfirmado ? 'Plan de puntos de control confirmado' : 'Plan de puntos de control sin confirmar'}
                 </span>
               ) : p.avance !== null ? (
                 <MiniBarra valor={p.avance} etiqueta={`Avance físico de ${p.codigo}`} />
               ) : (
-                <span className="sec">Sin plan de hitos</span>
+                <span className="sec">Sin plan de puntos de control</span>
               )}
             </td>
             <td data-e="Ejecución:">

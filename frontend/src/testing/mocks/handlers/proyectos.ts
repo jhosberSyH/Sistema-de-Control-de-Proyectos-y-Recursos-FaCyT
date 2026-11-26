@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw'
+import { xlsx, type Hoja } from '../archivos'
 import {
   avanceDe,
   nombreEquipo,
@@ -13,7 +14,7 @@ import { auditar, demora, error, errorValidacion, exigir, type RolMock } from '.
 /*
  * Proyectos (F2.1, F2.2, F2.6, F2.7; RN-05, RN-07).
  *   GET  /api/proyectos?q&area&prioridad&estatus&pagina   Administrador: todos. Coordinador: solo los suyos (RN-07).
- *   GET  /api/proyectos/exportar?…                        la misma lista en CSV
+ *   GET  /api/proyectos/exportar?…                        la misma lista en Excel
  *   GET  /api/proyectos/coordinadores                     cuentas activas con rol Coordinador, para asignar (F2.2)
  *   POST /api/proyectos                                   nace en Propuesta; código único (409 con el que choca)
  *   GET  /api/proyectos/:id                               ficha (vista 07)
@@ -125,40 +126,33 @@ export const handlersProyectos = [
       .filter((p) => !f.estatus || p.estatus === f.estatus)
       .sort(orden)
       .map(vista)
-    const celda = (v: string | number | null) => `"${String(v ?? '').replaceAll('"', '""')}"`
-    const csv = [
-      [
-        'Código',
-        'Nombre',
-        'Área',
-        'Coordinador',
-        'Estatus',
-        'Prioridad',
-        'Presupuesto (US$)',
-        'Gasto ejecutado (US$)',
-        'Avance físico (%)',
-        'Ejecución (%)',
-      ],
-      ...filas.map((p) => [
-        p.codigo,
-        p.nombre,
-        p.area,
-        p.coordinador?.nombre ?? 'Sin coordinador',
-        p.estatus,
-        p.prioridad,
-        p.presupuesto.toFixed(2).replace('.', ','),
-        p.gastoEjecutado.toFixed(2).replace('.', ','),
-        p.avance,
-        p.ejecucion,
-      ]),
-    ]
-      .map((fila) => fila.map(celda).join(';'))
-      .join('\r\n')
-    // BOM para que Excel abra bien las tildes; punto y coma, como espera Excel en español.
-    return new HttpResponse(`${String.fromCharCode(0xfeff)}${csv}`, {
+    const hoja: Hoja = {
+      titulo: 'Control de proyectos',
+      lineas: [`Exportado el ${new Date().toLocaleDateString('es-VE')} · ${filas.length} proyecto(s)`],
+      tablas: [{
+        columnas: [
+          { titulo: 'Código', formato: 'texto', ancho: 16 },
+          { titulo: 'Proyecto', formato: 'texto', ancho: 42 },
+          { titulo: 'Área', formato: 'texto', ancho: 18 },
+          { titulo: 'Coordinador', formato: 'texto', ancho: 28 },
+          { titulo: 'Estatus', formato: 'texto', ancho: 20 },
+          { titulo: 'Prioridad', formato: 'texto', ancho: 16 },
+          { titulo: 'Presupuesto (US$)', formato: 'moneda', ancho: 22 },
+          { titulo: 'Gasto ejecutado (US$)', formato: 'moneda', ancho: 24 },
+          { titulo: 'Avance físico (%)', formato: 'porcentaje', ancho: 20 },
+          { titulo: 'Ejecución (%)', formato: 'porcentaje', ancho: 16 },
+        ],
+        filas: filas.map((p) => [
+          p.codigo, p.nombre, p.area, p.coordinador?.nombre ?? 'Sin coordinador', p.estatus, p.prioridad,
+          p.presupuesto, p.gastoEjecutado, p.avance ?? '', p.ejecucion,
+        ]),
+      }],
+      nota: null,
+    }
+    return new HttpResponse(xlsx(hoja), {
       headers: {
-        'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="proyectos-${new Date().toISOString().slice(0, 10)}.csv"`,
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="proyectos-${new Date().toISOString().slice(0, 10)}.xlsx"`,
       },
     })
   }),
@@ -256,7 +250,7 @@ export const handlersProyectos = [
         usuarioId: coordinador.id,
         tipo: 'info',
         titulo: `Te asignaron el proyecto ${codigo}`,
-        detalle: `${nombre}. Está en Propuesta: carga su plan de hitos para que pueda pasar a En ejecución.`,
+        detalle: `${nombre}. Está en Propuesta: carga su plan de puntos de control para que pueda pasar a En ejecución.`,
         enlace: `/proyectos/${nuevo.id}`,
         fecha: new Date().toISOString(),
         leido: false,
@@ -497,7 +491,7 @@ function bloqueoTransicion(p: Proyecto, estatus: (typeof ESTATUS)[number]) {
   if (p.estatus === 'Propuesta' && estatus === 'En ejecución') {
     if (!p.coordinadorId) return 'Primero asígnale un coordinador.'
     if (!p.planConfirmado) {
-      return 'Su coordinador todavía no confirma el plan de hitos (los pesos tienen que sumar 100).'
+      return 'Su coordinador todavía no confirma el plan de puntos de control (los pesos tienen que sumar 100).'
     }
   }
   return null
@@ -547,7 +541,7 @@ function movimientosRecientes(codigo: string) {
       return {
         id: a.id,
         fecha: a.fecha,
-        texto: `Avance del hito ${hito?.numero ?? '?'} cargado: ${a.porcentaje} %`,
+        texto: `Avance del punto de control ${hito?.numero ?? '?'} cargado: ${a.porcentaje} %`,
         referencia: null,
         monto: null,
         nota: a.comentario,

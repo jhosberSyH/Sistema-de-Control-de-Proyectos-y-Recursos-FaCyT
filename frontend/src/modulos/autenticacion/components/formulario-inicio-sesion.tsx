@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
-import { Icono } from '@/components/icono'
 import { Aviso } from '@/components/ui/aviso'
 import { Campo, Clave, Entrada } from '@/components/ui/campo'
 import { esApiError } from '@/lib/api-client'
@@ -102,13 +101,6 @@ export function FormularioInicioSesion({ alEntrar, avisoPrevio }: Props) {
       <p className="lg-ayuda">
         ¿Olvidaste tu contraseña o todavía no tienes cuenta? Pídela al administrador del sistema de la
         facultad.
-      </p>
-      <p className="lg-sesion">
-        <Icono nombre="candado" />
-        <span>
-          La sesión se cierra tras 30 minutos sin actividad. Te avisamos 2 minutos antes y tu borrador queda
-          guardado.
-        </span>
       </p>
     </form>
   )

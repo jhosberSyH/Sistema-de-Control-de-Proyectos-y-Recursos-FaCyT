@@ -103,7 +103,7 @@ export const SOLICITUDES: SolicitudSemilla[] = [
     decididaPor: 'u-apr',
     insumoServicio: 'Kit de extracción de ADN genómico',
     cantidadGasto: '1 kit de 50 extracciones',
-    justificacion: 'Extracción de ADN de los aislados resistentes para la secuenciación del hito 3.',
+    justificacion: 'Extracción de ADN de los aislados resistentes para la secuenciación del punto de control 3.',
     cotizacion: 'cotizacion-biolab.pdf',
   }),
   s({
@@ -161,7 +161,7 @@ export const SOLICITUDES: SolicitudSemilla[] = [
     fecha: momento(-1, '16:05'),
     insumoServicio: 'Nitrato de cerio hexahidratado',
     cantidadGasto: '500 g',
-    justificacion: 'Precursor para las pruebas catalíticas del hito 4. Se agotó el lote anterior.',
+    justificacion: 'Precursor para las pruebas catalíticas del punto de control 4. Se agotó el lote anterior.',
     cotizacion: 'cotizacion-quimica-valencia.pdf',
   }),
   // Retiro ya despachado (DES-0318, el último movimiento de la acetona en el mockup 10)

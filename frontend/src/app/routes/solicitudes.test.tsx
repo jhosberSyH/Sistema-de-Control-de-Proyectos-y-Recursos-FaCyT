@@ -115,14 +115,16 @@ describe('Mis solicitudes (vista 14, F5.1 a F5.3, HU-15)', () => {
     ).toBeDefined()
   })
 
-  it('un retiro avisa si pide más de lo disponible, pero deja guardar (F5.2)', async () => {
+  it('un retiro limita la cantidad al máximo disponible (F5.2)', async () => {
     conSesion('coord.quimica@cpq.local')
     const { usuario } = renderApp(`/solicitudes?id=${idSolicitudSemilla('SOL-125')}`)
-    expect(await screen.findByText('Pides 4 L y hay 2,5 L')).toBeInTheDocument()
-    expect(screen.getByText('Disponible')).toHaveTextContent('Disponible 28 L')
-    expect(screen.getByText(/Puedes enviarla así/)).toHaveTextContent(
-      'el aprobador verá que acetona grado analítico no alcanza. Ya hay una reposición de acetona grado analítico en curso.',
-    )
+    const cantidades = await screen.findAllByLabelText('Cantidad (L)')
+    expect(cantidades[0]).toHaveValue('2,5')
+    expect(screen.getByText('Máximo disponible')).toHaveTextContent('Máximo disponible 2,5 L')
+    await usuario.clear(cantidades[0])
+    await usuario.type(cantidades[0], '4')
+    expect(cantidades[0]).toHaveValue('2,5')
+    expect(screen.queryByText(/Puedes enviarla así/)).not.toBeInTheDocument()
 
     await usuario.click(screen.getByRole('button', { name: 'Agregar insumo' }))
     const nuevo = screen.getAllByLabelText('Insumo').at(-1)!
